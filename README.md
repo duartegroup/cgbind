@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/196167631.svg)](https://zenodo.org/badge/latestdoi/196167631)
 ![alt text](cgbind/common/llogo.png)
 
 ### *C*a*g*e*Bind*ing: A tool to for automated binding affinity calculations
