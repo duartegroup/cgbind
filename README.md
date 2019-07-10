@@ -21,11 +21,7 @@ If the requirements are already satisfied
 python setup.py install
 ```
 
-Alternately for a one line fresh install with miniconda on Mac OSX
-```
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh && bash Miniconda3-latest-MacOSX-x86_64.sh && source ~/.bash_profile && conda install -c rdkit rdkit && git clone https://tyoung31@bitbucket.org/duartegroup/cgbind.git && cd cgbind && python setup.py install
-```
-
+See [here](https://vimeo.com/347275041) for a fresh installation walk-though on Mac OS X.
 
 ## Usage
 To load as a module:
