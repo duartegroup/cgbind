@@ -173,6 +173,10 @@ def calc_distance_matrix(xyzs):
     return distance_matrix
 
 
+def calc_dist(xyzs, atom_i, atom_j):
+    return np.linalg.norm(xyz2coord(xyzs[atom_i]) - xyz2coord(xyzs[atom_j]))
+
+
 def calc_midpoint(coord1, coord2):
     """
     Calculate the midpoint between two atoms

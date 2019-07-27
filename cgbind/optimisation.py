@@ -17,19 +17,17 @@ def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):
     :return: The new xyzs and the energy in Hartrees
     """
 
-    energy = 0.0
+    energy = None
     if xyzs is None:
         logger.error('Have no xyzs. Skipping optimisation')
         return None, energy
 
-    if not Config.suppress_print:
-        print("{:<30s}{:<50s}{:>10s}".format('Optimisation of', name, 'Running'))
+    print_output('Optimisation of', name, 'Running')
 
     if Config.code == 'orca':
         if Config.path_to_orca is None:
             logger.error('path_to_orca needs to be set for an ORCA optimisation. Skipping the optimisation')
-            if not Config.suppress_print:
-                print("{:<30s}{:<50s}{:>10s}".format('', '', 'Failed'), '\n')
+            print_output('', '', 'Failed')
             return xyzs, energy
 
         inp_filename = name + '_orca_opt.inp'
@@ -81,7 +79,6 @@ def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):
         logger.error('No xyz lines found. Returning the non-optimised xyz')
         return xyzs, energy
 
-    if not Config.suppress_print:
-        print("{:<30s}{:<50s}{:>10s}".format('', name, 'Done'), '\n')
+    print_output('', name, 'Done')
 
     return opt_xyzs, energy

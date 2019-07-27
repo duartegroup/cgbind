@@ -5,10 +5,14 @@ from . import m4l6
 from .log import logger
 from .config import Config
 from .input_output import xyzfile2xyzs
+from .input_output import print_output
 from .optimisation import opt_geom
+from .single_point import singlepoint
 from .geom import is_geom_reasonable
 from .geom import calc_midpoint
 from .geom import xyz2coord
+from .architectures import M2L4
+from .architectures import M4L6
 
 
 class Cage(object):
@@ -93,85 +97,18 @@ class Cage(object):
         else:
             self.xyzs, self.energy = opt_geom(self.xyzs, self.name, charge=self.charge, n_cores=n_cores)
 
-        return 0
+    def singlepoint(self, n_cores=1):
+        self.energy = singlepoint(self, n_cores)
 
-    def optimise_cage_substrate(self, opt_atom_ids=None, n_cores=1):
-        """
-        Like optimise, but with a cage.substrate species
-        :param opt_atom_ids: Atom ids to optimise, possible to just optimise the substrate within the cage,
-        providing a considerable computational speedup
-        :param n_cores: Number of cores to use for the optimisation
-        :return:
-        """
-        logger.info('Optimising a cage-substrate complex')
+    def calc_charge(self, metal_charge):
+        return self.arch.n_metals * metal_charge + self.arch.n_linkers * self.linker.charge
 
-        self.cage_substrate_xyzs, self.cage_substrate_energy = opt_geom(self.cage_substrate_xyzs,
-                                                                        self.cage_substrate_name,
-                                                                        charge=self.charge,
-                                                                        opt_atom_ids=opt_atom_ids,
-                                                                        n_cores=n_cores)
-        return 0
-
-    def add_substrate(self, substrate):
-        """
-        Add a substrate to a cage.
-        The binding mode will be determined by the number of heteroatoms etc. in the case of an M2L4 cage,
-        :param substrate: Substrate object
-        :return:
-        """
-
-        if self.xyzs is None or substrate.xyzs is None:
-            logger.error("Cage and/or substrate has no xyzs. Can't add a substrate")
-            return 1
-
-        if not Config.suppress_print:
-            print("{:<30s}{:<50s}{:>10s}".format('Addition of ', substrate.name, 'Running'))
-
-        self.cage_substrate_name = self.name + '_' + substrate.name
-        self.substrate = substrate
-        self.cage_substrate_xyzs = self.add_substrate_xyzs(substrate)
-        self.charge += substrate.charge
-        if self.cage_substrate_xyzs:
-            self.cage_subst_reasonable_geometry = is_geom_reasonable(self.cage_substrate_xyzs)
-            if not Config.suppress_print:
-                print("{:<30s}{:<50s}{:>10s}".format('', substrate.name, 'Done'))
-                return 0
-
-        return 1
-
-    def add_substrate_xyzs(self, substrate):
-        """
-        Add the substrate to the cavity in a mode defined by the number of heteroatoms.
-
-        :param substrate:
-        :return:
-        """
-        logger.info('Adding substrate xyzs to cage')
-
-        xyzs = None
-
-        if self.arch == 'm2l4':
-            if substrate.x_x_atom_ids:
-                if all(substrate.x_x_atom_ids) is not None:
-                    xyzs = m2l4.add_substrate_x_x(self, substrate)
-            elif substrate.x_atom_ids:
-                xyzs = m2l4.add_substrate_x(self, substrate)
-            else:
-                xyzs = m2l4.add_substrate_com(self, substrate)
-
-        if self.arch == 'm4l6':
-            # TODO add substrate with M4L6 cage
-            logger.critical('Adding a substrate to an M4L6 cage. NOT IMPLEMENTED YET')
-            exit()
-
-        return xyzs
-
-    def __init__(self, linker, metal='Pd', total_charge=4, name='cage', arch='m2l4'):
+    def __init__(self, linker, metal='Pd', metal_charge=0, name='cage', arch=M2L4):
         """
         Initialise a cage object
         :param linker: Linker object
         :param metal: Metal atom label (str)
-        :param total_charge: Total charge on the cage i.e. metals + linkers (int)
+        :param metal_charge: Total charge on the cage i.e. metals + linkers (int)
         :param name: Name of the metallocage (str)
         :param arch: Cage architecture. Currently only 'm2l4' or 'm4l4' are supported
         """
@@ -179,24 +116,23 @@ class Cage(object):
 
         self.name = name
         self.metal = metal
-        self.charge = total_charge
-        self.arch = arch.lower()
+        self.arch = arch
         self.linker = linker
+        self.metal_charge = metal_charge
+        self.charge = self.calc_charge(metal_charge)
+
         self.reasonable_geometry = True
-        self.cage_subst_reasonable_geometry = False
         self.energy, self.xyzs, self.m_ids = None, None, None
-        self.substrate, self.cage_substrate_name, self.substrate_atom_ids = None, None, None
-        self.cage_substrate_xyzs, self.cage_substrate_energy = None, None
 
         if not linker.xyzs:
             self.reasonable_geometry = False
             logger.error('Linker has no xyzs. Can\'t build a cage')
             return
 
-        if self.arch == 'm2l4':
+        if self.arch == M2L4:
             self.xyzs = m2l4.build(self, linker)
 
-        elif self.arch == 'm4l6':
+        elif self.arch == M4L6:
             self.xyzs = m4l6.build(self, linker)
 
         else:
@@ -211,5 +147,4 @@ class Cage(object):
         self.m_ids = self.get_metal_atom_ids()
         self.reasonable_geometry = is_geom_reasonable(self.xyzs)
 
-        if not Config.suppress_print:
-            print("{:<30s}{:<50s}{:>10s}".format('Cage', self.name, 'Built'))
+        print_output('Cage', self.name, 'Built')

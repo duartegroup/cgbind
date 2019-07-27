@@ -1,5 +1,4 @@
 from rdkit import Chem
-from .config import Config
 from .log import logger
 import os
 
@@ -40,8 +39,5 @@ def confomer_mol_files_to_xyzs(filenames, n_atoms):
         else:
             os.remove(filename)
             xyzs.append(mol_file_xyzs)
-
-    if not Config.suppress_print:
-        print("{:<30s}{:<50s}{:>10s}".format('', '', 'Done'))
 
     return xyzs

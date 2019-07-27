@@ -1,6 +1,7 @@
 import os
 from .log import logger
 from datetime import date
+from .config import Config
 
 
 def print_binding_affinities(ligand_names, substrate_names, binding_affinities, units_kj_mol=False):
@@ -86,3 +87,11 @@ def xyzfile2xyzs(xyz_filename):
         return None
 
     return xyzs
+
+
+def print_output(process, name, state):
+
+    if not Config.suppress_print:
+        print("{:<30s}{:<50s}{:>10s}".format(process, name, state))
+
+    return None

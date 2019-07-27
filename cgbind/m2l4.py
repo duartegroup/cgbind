@@ -1,13 +1,14 @@
 import numpy as np
 from copy import deepcopy
 from .log import logger
-from .config import Config
+from .input_output import print_output
 from .geom import rotation_matrix
 from .geom import xyz2coord
 from .geom import calc_midpoint
 from .geom import get_closest_bonded_atom_id
 from .geom import calc_normalised_vector
 from .geom import calc_com
+from .geom import calc_dist
 from .geom import cat_cage_subst_coords
 
 
@@ -39,46 +40,98 @@ def get_best_linker_conformer(linker, cavity_size=2.2):
     logger.info('Getting the best linker conformer for {}'.format(linker.name))
     logger.warning('Will only consider N atoms as donor atoms')  # TODO extend to other possible donor atoms
 
+    if linker.conf_ids is None or linker.conf_xyzs is None:
+        return None
+
     best_conf_id = None
     best_conf_n_n_dist = 9999.9
 
     for conf_id in linker.conf_ids:
-        max_n_n_dist = 0.0
-        n1_atom_id, n2_atom_id = 0, 1
-        xyzs = linker.conf_xyzs[conf_id]
-        for i in range(len(xyzs)):
-            for j in range(len(xyzs)):
-                if i > j:
-                    line_i, line_j = xyzs[i], xyzs[j]
-                    dist = np.linalg.norm(np.array(line_i[1:4]) - np.array(line_j[1:4]))
-                    if line_i[0] == 'N' and line_j[0] == 'N':
-                        if dist > max_n_n_dist:
-                            max_n_n_dist = dist
-                            n1_atom_id, n2_atom_id = i, j
 
-        x_x_midpoint = (np.array(xyzs[n1_atom_id][1:4]) + np.array(xyzs[n2_atom_id][1:4])) / 2.0
+        xyzs = linker.conf_xyzs[conf_id]
+        n1_atom_id, n2_atom_id = get_furthest_away_nitrogen_atoms(xyzs)
+        if n1_atom_id is None or n2_atom_id is None:
+            logger.error('Linker did not have two nitrogen atoms')
+            return None
+
+        n1_n2_dist = calc_dist(xyzs, atom_i=n1_atom_id, atom_j=n2_atom_id)
+
+        x_x_midpoint = (xyz2coord(xyzs[n1_atom_id]) + xyz2coord(xyzs[n2_atom_id])) / 2.0
         suitable_confomer = True
 
         for line_i in xyzs:
-            dist_atom_midpoint = np.linalg.norm(np.array(line_i[1:4]) - x_x_midpoint)
+            dist_atom_midpoint = np.linalg.norm(xyz2coord(line_i) - x_x_midpoint)
             if dist_atom_midpoint < cavity_size:
                 suitable_confomer = False
 
         if suitable_confomer:
-            if max_n_n_dist < best_conf_n_n_dist:
+            if n1_n2_dist < best_conf_n_n_dist:
                 best_conf_id = conf_id
-                best_conf_n_n_dist = max_n_n_dist
+                best_conf_n_n_dist = n1_n2_dist
                 linker.x_atom_ids = [n1_atom_id, n2_atom_id]
 
     if best_conf_id is None:
         logger.warning('Could not find a best conformer for {}'.format(linker.name))
         return None
 
-    if not Config.suppress_print:
-        print("{:<30s}{:<50s}{:>10s}".format('Best conformer of', linker.name, 'Found'))
-
+    print_output('Best conformer of', linker.name, 'Found')
     logger.info('Found a suitable conformer with id {}'.format(best_conf_id))
     return best_conf_id
+
+
+def get_furthest_away_nitrogen_atoms(xyzs):
+    """
+    Get the pair of nitrogen atoms that are the furthest away in space. This is perhaps not the best way to find the
+    donor nitrogen atoms...
+
+    :param xyzs: (list(list))
+    :return: (tuple) atom indexes
+    """
+
+    max_n_n_dist = 0.0
+    n1_atom_id, n2_atom_id = None, None
+
+    for i, line_i in enumerate(xyzs):
+        for j, line_j in enumerate(xyzs):
+            if i > j and line_i[0] == 'N' and line_j[0] == 'N':
+                dist = np.linalg.norm(xyz2coord(line_i) - xyz2coord(line_j))
+                if dist > max_n_n_dist:
+                    max_n_n_dist = dist
+                    n1_atom_id, n2_atom_id = i, j
+
+    return n1_atom_id, n2_atom_id
+
+
+def get_mid_atom_id(linker):
+    """
+    For a linker then the 'mid_atom' is needed to define a plane from which the M2L4 cage may be built. This is
+    found by calculating the abs difference in the A-X1, A-X2 distances for all atoms A, the minimum of which will
+    be the atom closest to the midpoint of the linker as possible.
+    :return: The ID of the atom in the xyz list
+    """
+    logger.info('Calculating mid atom id for linker {}'.format(linker.name))
+
+    if linker.xyzs is None:
+        logger.error('Linker xyzs were None. Cannot find the mid atom id')
+    if linker.x_atom_ids is None:
+        logger.error('Could not find the mid atom. Have no x_atom_ids')
+        return None
+
+    mid_atom_id = 0
+    x1_atom_id, x2_atom_id = linker.x_atom_ids
+    x1_coords, x2_coords = xyz2coord(linker.xyzs[x1_atom_id]), xyz2coord(linker.xyzs[x2_atom_id])
+    linker.x_x_midpoint = calc_midpoint(x1_coords, x2_coords)
+
+    min_dist_diff = 999.9
+
+    for i in range(len(linker.xyzs)):
+        atom_i_coords = xyz2coord(linker.xyzs[i])
+        dist_diff = np.abs(np.linalg.norm(atom_i_coords - x1_coords) - np.linalg.norm(atom_i_coords - x2_coords))
+        if dist_diff < min_dist_diff:
+            min_dist_diff = dist_diff
+            mid_atom_id = i
+
+    return mid_atom_id
 
 
 def build(cage, linker):
@@ -90,6 +143,9 @@ def build(cage, linker):
     :return: The xyzs of the full cage
     """
     logger.info('Building M2L4 metallocage'.format(cage.name))
+
+    if any(k is None for k in (linker.mid_atom_id, linker.xyzs, linker.x_x_midpoint, linker.x_atom_ids)):
+        return None
 
     x_x_dist = 4.1  # X - X distance in a N-M-N unit
     delta_x_x_dist = 999.9

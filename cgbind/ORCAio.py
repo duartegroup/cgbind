@@ -1,10 +1,11 @@
 import os
 from .log import logger
+from .input_output import print_output
 from .config import Config
 from subprocess import Popen
 
 
-def singlepointenergy(xyzs, name, keywords, solvent=None, charge=0, mult=1, n_cores=1):
+def get_single_point_energy(xyzs, name, keywords, solvent=None, charge=0, mult=1, n_cores=1):
     logger.info('Running an ORCA single point of {}'.format(name))
 
     if not Config.code == 'orca':
@@ -30,11 +31,9 @@ def singlepointenergy(xyzs, name, keywords, solvent=None, charge=0, mult=1, n_co
         logger.error('path_to_orca needs to be set for an ORCA single point. Skipping')
         return
 
-    if not Config.suppress_print:
-        print("{:<30s}{:<50s}{:>10s}".format('Single point calculation of', name, 'Running'))
+    print_output('Single point calculation of', name, 'Running')
     orca_out_lines = run_orca(inp_filename, out_filename)
-    if not Config.suppress_print:
-        print("{:<30s}{:<50s}{:>10s}".format(' ', name, 'Done'))
+    print_output(' ', name, 'Done')
     for line in orca_out_lines:
         if 'FINAL SINGLE POINT ENERGY' in line:
             energy = float(line.split()[4])

@@ -9,6 +9,8 @@ from . import geom
 from .linker import Linker
 from .cage import Cage
 from .substrate import Substrate
+from .architectures import M2L4
+from .architectures import M4L6
 
 __version__ = '1.0.0'
 
@@ -24,5 +26,7 @@ __all__ = [
     'geom',
     'Linker',
     'Cage',
-    'Substrate'
+    'Substrate',
+    'M2L4',
+    'M4L6'
     ]
