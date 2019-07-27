@@ -1,6 +1,6 @@
 [![DOI](https://zenodo.org/badge/196167631.svg)](https://zenodo.org/badge/latestdoi/196167631)
 ![alt text](cgbind/common/llogo.png)
-### *C*a*g*e*Bind*ing: A tool to for automated binding affinity calculations
+### *C*a*g*e*Bind*ing: A tool to for automated metallocage binding affinity calculations
 ***
 
 **cgbind** automates the process of generating M2L4 metallocage structures from just SMILES strings of the corresponding
@@ -25,8 +25,7 @@ If the requirements are already satisfied
 ```
 python setup.py install
 ```
-
-See [here](https://vimeo.com/347275041) for a fresh installation walk-though on Mac OS X.
+Otherwise, see  _installation_ for how to install **cgbind** on Windows and Mac.
 
 ***
 
