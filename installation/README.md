@@ -32,14 +32,14 @@ cd cgbind/
 ```
 conda config --append channels conda-forge && conda env create --file requirements.txt --name cgbind-env
 ```
-which will take a few minute to download then install all the Python dependencies to a new virtual environment 
+which will take a few minutes to download then install all the Python dependencies to a new virtual environment 
 (_cgbind-env_)
 
 9.Run
 ```
 conda init bash
 ```
-and reopen _Git bash_
+and **reopen** _Git bash_
 
 10.Activate the virtual Python environment with
 ```
