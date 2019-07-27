@@ -17,30 +17,40 @@ box
 cd Downloads/
 ```
 and hitting enter.
+
 6.Copy this directory wih
 ```
 git clone https://github.com/duartegroup/cgbind.git
 ```
-7.Run 
+
+7.Change directories into _cgbind/_
+```
+cd cgbind/
+```
+
+8.Run 
 ```
 conda config --append channels conda-forge && conda env create --file requirements.txt --name cgbind-env
 ```
-which will take a minute to download then install all the Python dependencies to a new virtual environment 
+which will take a few minute to download then install all the Python dependencies to a new virtual environment 
 (_cgbind-env_)
-8.Run
+
+9.Run
 ```
 conda init bash
 ```
 and reopen _Git bash_
 
-9.Activate the virtual Python environment with
+10.Activate the virtual Python environment with
 ```
 conda activate cgbind-env
 ```
-10.Change directories into _cgbind_
+
+7.Change directories back to _cgbind/_
 ```
-cd cgbind/
+cd Downloads/cgbind/
 ```
+
 11.Finally, **cgbind** installed with
 ```
 python setup.py install
@@ -69,7 +79,7 @@ to grab the latest Miniconda version
 ```
 bash Miniconda3-latest-MacOSX-x86_64.sh
 ```
-and follow the instructions (keep hitting enter) to install Miniconda. 
+and follow the instructions (keep hitting enter and typing yes where appropriate) to install Miniconda. 
 
 4.To install **cgbind** we'll need the files in this repository. Download them with git 
 ```
