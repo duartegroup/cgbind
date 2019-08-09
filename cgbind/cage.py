@@ -37,7 +37,7 @@ class Cage(object):
 
         try:
 
-            if self.arch == 'm2l4':
+            if self.arch == M2L4:
                 min_r_midpoint_atom = 999.9
                 m_m_midpoint = calc_midpoint(xyz2coord(self.xyzs[self.m_ids[0]]), xyz2coord(self.xyzs[self.m_ids[1]]))
                 for i in range(len(self.xyzs)):
@@ -48,9 +48,9 @@ class Cage(object):
 
                 cavity_vol = (4.0 / 3.0) * np.pi * min_r_midpoint_atom**3
 
-            if self.arch == 'm4l6':
-                # TODO calc cavity vol for M4L6 cages
-                pass
+            if self.arch == M4L6:
+                logger.critical('Calculating the cavity volume in a M4L6 cage. NOT IMPLEMENTED')
+                exit()
 
         except TypeError or ValueError or AttributeError:
             logger.error('Could not calculate the cavity volume')
@@ -66,11 +66,11 @@ class Cage(object):
         m_m_dist = 0.0
 
         try:
-            if self.arch == 'm2l4':
+            if self.arch == M2L4:
                 logger.info('Calculating the M–M distance in a M2L4 cage')
                 m_m_dist = np.linalg.norm(xyz2coord(self.xyzs[self.m_ids[0]]) - xyz2coord(self.xyzs[self.m_ids[1]]))
 
-            if self.arch == 'm4l6':
+            if self.arch == M4L6:
                 logger.critical('Calculating the average M–M distance in a M4L6 cage. NOT IMPLEMENTED')
                 exit()
 
