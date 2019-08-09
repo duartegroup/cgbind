@@ -2,7 +2,6 @@ from .log import logger
 import numpy as np
 from .atoms import avg_bond_lengths
 from .atoms import atomic_masses
-from .config import Config
 
 
 def calc_com(xyzs):
@@ -198,13 +197,15 @@ def is_geom_reasonable(xyzs, supress_print=False):
     logger.info('Checking to see whether the geometry is reasonable')
 
     for n in range(len(xyzs)):
-        for j in range(len(xyzs)):
-            if n > j:
-                line_i, line_j = xyzs[n], xyzs[j]
+        for m in range(len(xyzs)):
+            if n > m:
+                line_i, line_j = xyzs[n], xyzs[m]
                 dist = np.linalg.norm(np.array(line_i[1:4]) - np.array(line_j[1:4]))
                 if dist < 0.8:
-                    if not Config.suppress_print and not supress_print:
-                        print('WARNING:  There is a distance < 0.8 Å. There is likely a problem with the geometry')
+                    logger.warning('There is a distance < 0.8 Å. There is likely a problem with the geometry')
+                    return False
+                if dist > 100:
+                    logger.warning('There is a distance > 100 Å. There is likely a problem with the geometry')
                     return False
 
     return True

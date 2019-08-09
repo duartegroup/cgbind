@@ -141,7 +141,7 @@ class Cage(object):
 
         if self.xyzs is None:
             self.reasonable_geometry = False
-            logger.error("Couldn't build a cage")
+            print_output('Cage build for', self.name, 'Failed')
             return
 
         self.m_ids = self.get_metal_atom_ids()

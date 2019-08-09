@@ -200,7 +200,7 @@ def build(cage, linker):
         if trns_dist > 100:
             cage.reasonable_geometry = False
             logger.warning("No sensible geometry can be found for {}".format(linker.name))
-            break
+            return None
 
     # ------ Add the M atoms ----------
 
