@@ -108,8 +108,7 @@ def run_orca(inp_filename, out_filename):
         for line in reversed(out_lines):
             if 'ORCA TERMINATED NORMALLY' in line:
                 orca_terminated_normally = True
-                if not Config.suppress_print:
-                    print("{:<30s}{:<50s}{:>10s}".format('Found ORCA run done for', inp_filename, 'Skipping'))
+                print_output('Found ORCA run done for', inp_filename, 'Skipping')
                 break
 
     if not orca_terminated_normally:
