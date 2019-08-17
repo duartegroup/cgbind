@@ -27,11 +27,20 @@ def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):
     if Config.code == 'orca':
         if Config.path_to_orca is None:
             logger.error('path_to_orca needs to be set for an ORCA optimisation. Skipping the optimisation')
-            print_output('', '', 'Failed')
+            print_output('', name, 'Failed')
             return xyzs, energy
 
         inp_filename = name + '_orca_opt.inp'
         out_filename = inp_filename.replace('.inp', '.out')
+
+        if os.path.exists(out_filename):
+            logger.info('Out file already exists. Checking to see whether it completed')
+            if orca_not_finished(out_filename):
+                logger.info('ORCA did not finish normally. Will try to get xyzs')
+                final_xyzs = get_orca_xyzs(out_filename=out_filename)
+                if final_xyzs is not None:
+                    logger.info('Got final xyzs from {}'.format(out_filename))
+                    xyzs = final_xyzs
 
         gen_orca_inp(inp_filename, xyzs, charge, mult, opt=True, opt_atom_ids=opt_atom_ids, n_cores=n_cores)
         orca_output_file_lines = run_orca(inp_filename, out_filename)
@@ -40,8 +49,7 @@ def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):
     elif Config.code == 'xtb':
         if Config.path_to_xtb is None:
             logger.error('path_to_xtb needs to be set for a XTB optimisation. Skipping the optimisation')
-            if not Config.suppress_print:
-                print("{:<30s}{:<50s}{:>10s}".format('', '', 'Failed'), '\n')
+            print_output('', name, 'Failed')
             return xyzs, energy
 
         xtb_filename = name + '_xtb_opt'
@@ -52,8 +60,7 @@ def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):
     elif Config.code == 'mopac':
         if Config.path_to_mopac is None or Config.path_to_mopac_licence is None:
             logger.error('path_to_mopac and path_to_mopac_licence need to be set. Skipping the optimisation')
-            if not Config.suppress_print:
-                print("{:<30s}{:<50s}{:>10s}".format('', '', 'Failed'), '\n')
+            print_output('', name, 'Failed')
             return xyzs, energy
 
         mop_filename = name + '_mopac_opt.mop'
@@ -65,14 +72,12 @@ def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):
 
     elif Config.code is None:
         logger.error('An optimisation was called but no code was set. Skipping the optimisation')
-        if not Config.suppress_print:
-            print("{:<30s}{:<50s}{:>10s}".format('', '', 'Failed'), '\n')
+        print_output('', name, 'Failed')
         return xyzs, energy
 
     else:
         logger.error('No available code with name "{}". Skipping the optimisation'.format(Config.code))
-        if not Config.suppress_print:
-            print("{:<30s}{:<50s}{:>10s}".format('', '', 'Failed'), '\n')
+        print_output('', name, 'Failed')
         return xyzs, energy
 
     if len(opt_xyzs) == 0:

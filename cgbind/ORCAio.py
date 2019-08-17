@@ -108,8 +108,7 @@ def run_orca(inp_filename, out_filename):
         for line in reversed(out_lines):
             if 'ORCA TERMINATED NORMALLY' in line:
                 orca_terminated_normally = True
-                if not Config.suppress_print:
-                    print("{:<30s}{:<50s}{:>10s}".format('Found ORCA run done for', inp_filename, 'Skipping'))
+                print_output('Found ORCA run done for', inp_filename, 'Skipping')
                 break
 
     if not orca_terminated_normally:
@@ -150,3 +149,52 @@ def get_orca_xyzs_energy(out_lines):
         logger.warning('Could not find energy in ORCA output')
 
     return opt_xyzs, energy
+
+
+def orca_not_finished(out_filename):
+    """
+    Check to see if an ORCA calculation was started but didn't finish correctly
+    :param out_filename: (str) name of the .out filename. MUST EXIST
+    :return: (bool)
+    """
+
+    out_lines = [line for line in open(out_filename, 'r', encoding="utf-8")]
+    for i, line in enumerate(reversed(out_lines)):
+        if 'ORCA TERMINATED NORMALLY' in line:
+            return False
+        if i > 50:
+            return True
+
+
+def get_orca_xyzs(out_lines=None, out_filename=None):
+    """
+    For a set of ORCa output lines OR a filename grab the final set of xyzs
+    :param out_lines: (list)
+    :param out_filename: (str)
+    :return:
+    """
+
+    if out_filename:
+        out_lines = [line for line in open(out_filename, 'r', encoding="utf-8")]
+
+    n_atoms, xyz_lines = 0, None
+    for i, line in enumerate(out_lines):
+        if 'Number of atoms' in line:
+            n_atoms = int(line.split()[-1])
+
+        if 'CARTESIAN COORDINATES (ANGSTROEM)' in line:
+            try:
+                xyz_lines = out_lines[i+2:i+2+n_atoms]
+            except IndexError:
+                pass
+
+    if xyz_lines is not None:
+        xyzs = []
+        for line in xyz_lines:
+            atom_label, x, y, z = line.split()
+            xyzs.append([atom_label, float(x), float(y), float(z)])
+
+        return xyzs
+
+    else:
+        return None
