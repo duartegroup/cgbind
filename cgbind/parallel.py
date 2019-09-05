@@ -217,7 +217,7 @@ def gen_cage_subst_complexes_parallel(linker_dict, substrate_dict, opt_linker=Fa
 
 
 def calc_binding_affinity(linker_name=None, linker_smiles=None, substrate_name=None, substrate_smiles=None,
-                          substrate_charge=0, opt_linker=True, opt_cage=True, opt_substrate=True, opt_cage_subst=True,
+                          opt_linker=True, opt_cage=True, opt_substrate=True, opt_cage_subst=True,
                           fix_cage_geom=False, metal_label='Pd', metal_charge=2, n_cores_pp=None, sp_cage=True,
                           sp_substrate=True, sp_cage_subst=True, units_kcal_mol=True, units_kj_mol=False,
                           cage_obj=None, subst_obj=None, arch=M2L4):
@@ -233,10 +233,9 @@ def calc_binding_affinity(linker_name=None, linker_smiles=None, substrate_name=N
 
     if not cage_obj and not subst_obj:
         cage_obj, subst_obj = gen_cage_subst_complex(linker_name, linker_smiles, substrate_name, substrate_smiles,
-                                                     substrate_charge, opt_linker, opt_cage, opt_substrate,
-                                                     opt_cage_subst, fix_cage_geom, metal_label,
-                                                     metal_charge, n_cores_pp, sp_cage, sp_substrate, sp_cage_subst,
-                                                     cage_obj, subst_obj, arch)
+                                                     opt_linker, opt_cage, opt_substrate, opt_cage_subst, fix_cage_geom,
+                                                     metal_label, metal_charge, n_cores_pp, sp_cage, sp_substrate,
+                                                     sp_cage_subst, cage_obj, subst_obj, arch)
 
     try:
         binding_affinity_ha = cage_obj.cage_substrate_energy - (cage_obj.energy + subst_obj.energy)
@@ -249,7 +248,7 @@ def calc_binding_affinity(linker_name=None, linker_smiles=None, substrate_name=N
         return binding_affinity_ha * Constants.ha2kJmol
 
 
-def calc_binding_affinities_parallel(linker_dict, substrate_dict, substrate_charge=0, opt_linker=True, opt_cage=True,
+def calc_binding_affinities_parallel(linker_dict, substrate_dict, opt_linker=True, opt_cage=True,
                                      opt_substrate=True, opt_cage_subst=True, metal_label='Pd', metal_charge=2,
                                      fix_cage_geom=False, sp_cage=True, sp_substrate=True, sp_cage_subst=True,
                                      units_kcal_mol=True, units_kj_mol=False, heatplot=True, arch=M2L4):
@@ -267,10 +266,9 @@ def calc_binding_affinities_parallel(linker_dict, substrate_dict, substrate_char
          [     c,            d      ],]     # linker 2
     """
 
-    cage_objs_subst_objs = gen_cage_subst_complexes_parallel(linker_dict, substrate_dict, substrate_charge,
-                                                             opt_linker, opt_cage, opt_substrate, opt_cage_subst,
-                                                             fix_cage_geom, metal_label, metal_charge, sp_cage,
-                                                             sp_substrate, sp_cage_subst, arch)
+    cage_objs_subst_objs = gen_cage_subst_complexes_parallel(linker_dict, substrate_dict, opt_linker, opt_cage,
+                                                             opt_substrate, opt_cage_subst, fix_cage_geom, metal_label,
+                                                             metal_charge, sp_cage, sp_substrate, sp_cage_subst, arch)
 
     if not Config.suppress_print:
         print("{:<30s}{:<50s}{:<10s}".format('Calculation of binding affinities', ' ', 'Running'))

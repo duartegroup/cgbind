@@ -4,8 +4,10 @@ from rdkit import Chem
 from .optimisation import opt_geom
 from .single_point import singlepoint
 from .input_output import print_output
+from .input_output import xyzs2xyzfile
 from .confomers import gen_conformer_mol_files
 from .confomers import confomer_mol_files_to_xyzs
+from .geom import calc_com
 
 
 class Molecule(object):
@@ -16,9 +18,15 @@ class Molecule(object):
     def singlepoint(self, n_cores=1):
         self.energy = singlepoint(self, n_cores)
 
+    def print_xyzfile(self):
+        xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
+
     def set_charge(self, charge):
         assert type(charge) == int
         self.charge = charge
+
+    def set_com(self):
+        self.com = calc_com(self.xyzs)
 
     def init_smiles(self, smiles):
         """
@@ -60,6 +68,7 @@ class Molecule(object):
         self.energy = None
         self.mol_obj = None
         self.n_atoms = None
+        self.com = None
 
         self.conf_ids = None
         self.conf_filenames = None
