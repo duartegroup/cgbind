@@ -54,7 +54,7 @@ def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):
 
         xtb_filename = name + '_xtb_opt'
         xtb_input_file = xyzs2xyzfile(xyzs, xtb_filename + '.xyz')
-        xtb_output_lines = run_xtb(xtb_input_file, opt=True, charge=charge)
+        xtb_output_lines = run_xtb(xtb_input_file, opt=True, charge=charge, n_cores=n_cores)
         opt_xyzs, energy = get_XTB_xyzs_energy(out_lines=xtb_output_lines)
 
     elif Config.code == 'mopac':

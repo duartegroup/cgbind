@@ -11,8 +11,7 @@ def singlepoint(mol, n_cores):
         return None
 
     if Config.code != 'orca':
-        logger.error('Only ORCA single point calculations are implemented')
-        return None
+        logger.error('Only ORCA single point calculations are implemented. Attempting anyway')
 
     print_output('Single point calculation of', mol.name, 'Running')
 

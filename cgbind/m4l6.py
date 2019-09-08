@@ -144,6 +144,7 @@ def get_best_linker_conformer(linker, max_x_x_dist=4.0, max_e_e_dist=2.0):
     :param max_e_e_dist:
     :return: Best conformer id
     """
+    linker.set_com()
 
     n_xeex_motifs = 0
     xeex_atom_ids = []
@@ -160,7 +161,12 @@ def get_best_linker_conformer(linker, max_x_x_dist=4.0, max_e_e_dist=2.0):
                     for e2 in [xj_nn, xj_nnn]:
                         if is_xeex_motif(first_xyzs, i, e1, e2, j, max_x_x_dist, max_e_e_dist):
                             n_xeex_motifs += 1
-                            xeex_atom_ids.append([i, e1, e2, j])
+                            # The XEEX motifs are defined from the linker COM to the furthest atom
+                            if (np.linalg.norm(xyz2coord(first_xyzs[j]) - linker.com) >
+                                    np.linalg.norm(xyz2coord(first_xyzs[i]) - linker.com)):
+                                xeex_atom_ids.append([i, e1, e2, j])
+                            else:
+                                xeex_atom_ids.append([j, e2, e1, i])
 
     # TODO allow for > 2 xeex motifs
     if n_xeex_motifs != 2:

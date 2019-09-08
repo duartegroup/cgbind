@@ -8,6 +8,7 @@ from .cage_subt import CageSubstrateComplex
 from .substrate import Substrate
 from .input_output import xyzs2xyzfile
 from .input_output import xyzfile2xyzs
+from .input_output import print_output
 from .constants import Constants
 from .plotting import plot_heatmap
 from .input_output import print_binding_affinities
@@ -38,6 +39,16 @@ def calc_n_cores_pp(dict1, dict2=None):
               'core(s). Splitting into', int(Config.n_cores / n_cores_pp), 'thread(s)...')
 
     return n_cores_pp
+
+
+def gen_substrate(smiles=None, name='substrate', n_confs=10, opt=False, sp=False, n_cores=1):
+    subst_obj = Substrate(smiles, name, n_confs)
+    if opt:
+        subst_obj.optimise(n_cores=n_cores)
+    if sp:
+        subst_obj.singlepoint(n_cores=n_cores)
+
+    return subst_obj
 
 
 def gen_cage(linker_name, linker_smiles, opt_linker=False, opt_cage=False, metal_label='Pd', metal_charge=2,
@@ -187,18 +198,11 @@ def gen_cage_subst_complexes_parallel(linker_dict, substrate_dict, opt_linker=Fa
     n_cores_per_process = calc_n_cores_pp(substrate_dict)
     with Pool(processes=int(Config.n_cores / n_cores_per_process)) as pool:
 
-        results = [pool.apply_async(Substrate, (subst_smiles, subst_name, 50, n_cores_per_process))
+        results = [pool.apply_async(gen_substrate, (subst_smiles, subst_name, 50, opt_substrate, sp_substrate,
+                                                    n_cores_per_process))
                    for subst_name, subst_smiles in substrate_dict.items()]
 
         subst_objs = [res.get(timeout=None) for res in results]
-
-        if opt_substrate:
-            results = [pool.apply_async(mol_opt, (substrate, n_cores_per_process)) for substrate in subst_objs]
-            [res.get(timeout=None) for res in results]
-
-        if sp_substrate:
-            results = [pool.apply_async(mol_sp, (substrate, n_cores_per_process)) for substrate in subst_objs]
-            [res.get(timeout=None) for res in results]
 
     # Generate cage substrate structures
     n_cores_per_process = calc_n_cores_pp(linker_dict, substrate_dict)
@@ -211,16 +215,16 @@ def gen_cage_subst_complexes_parallel(linker_dict, substrate_dict, opt_linker=Fa
                                      )
                     for substrate in subst_objs] for cage in cages]
 
-        cage_objs_subst_objs = [[res.get(timeout=None) for res in res1] for res1 in results]
+        cage_subst_objs = [[res.get(timeout=None) for res in res1] for res1 in results]
 
-    return cage_objs_subst_objs
+    return cage_subst_objs
 
 
 def calc_binding_affinity(linker_name=None, linker_smiles=None, substrate_name=None, substrate_smiles=None,
                           opt_linker=True, opt_cage=True, opt_substrate=True, opt_cage_subst=True,
                           fix_cage_geom=False, metal_label='Pd', metal_charge=2, n_cores_pp=None, sp_cage=True,
                           sp_substrate=True, sp_cage_subst=True, units_kcal_mol=True, units_kj_mol=False,
-                          cage_obj=None, subst_obj=None, arch=M2L4):
+                          cage_obj=None, subst_obj=None, cage_subst_obj=None, arch=M2L4):
     """
     Calculate the binding affinity (in kcal mol-1 by default)
             ∆E = E_cage.substrate - (E_cage + E_substrate)
@@ -231,14 +235,14 @@ def calc_binding_affinity(linker_name=None, linker_smiles=None, substrate_name=N
     if not n_cores_pp:
         n_cores_pp = Config.n_cores
 
-    if not cage_obj and not subst_obj:
-        cage_obj, subst_obj = gen_cage_subst_complex(linker_name, linker_smiles, substrate_name, substrate_smiles,
-                                                     opt_linker, opt_cage, opt_substrate, opt_cage_subst, fix_cage_geom,
-                                                     metal_label, metal_charge, n_cores_pp, sp_cage, sp_substrate,
-                                                     sp_cage_subst, cage_obj, subst_obj, arch)
+    if cage_subst_obj is None:
+        cage_subst_obj = gen_cage_subst_complex(linker_name, linker_smiles, substrate_name, substrate_smiles,
+                                                opt_linker, opt_cage, opt_substrate, opt_cage_subst, fix_cage_geom,
+                                                metal_label, metal_charge, n_cores_pp, sp_cage, sp_substrate,
+                                                sp_cage_subst, cage_obj, subst_obj, arch)
 
     try:
-        binding_affinity_ha = cage_obj.cage_substrate_energy - (cage_obj.energy + subst_obj.energy)
+        binding_affinity_ha = cage_subst_obj.energy - (cage_subst_obj.cage.energy + cage_subst_obj.substrate.energy)
     except ValueError or TypeError or AttributeError:
         binding_affinity_ha = 999.9
 
@@ -270,17 +274,14 @@ def calc_binding_affinities_parallel(linker_dict, substrate_dict, opt_linker=Tru
                                                              opt_substrate, opt_cage_subst, fix_cage_geom, metal_label,
                                                              metal_charge, sp_cage, sp_substrate, sp_cage_subst, arch)
 
-    if not Config.suppress_print:
-        print("{:<30s}{:<50s}{:<10s}".format('Calculation of binding affinities', ' ', 'Running'))
+    print_output('Calculation of binding affinities', ' ', 'Running')
     binding_affinities = np.zeros((len(linker_dict.keys()), len(substrate_dict.keys())))
 
     for i in range(len(linker_dict.keys())):
         for j in range(len(substrate_dict.keys())):
-            binding_affinities[i, j] = calc_binding_affinity(cage_obj=cage_objs_subst_objs[i][j][0],
-                                                             subst_obj=cage_objs_subst_objs[i][j][1],
+            binding_affinities[i, j] = calc_binding_affinity(cage_subst_obj=cage_objs_subst_objs[i][j],
                                                              units_kcal_mol=units_kcal_mol, units_kj_mol=units_kj_mol)
-    if not Config.suppress_print:
-        print("{:<30s}{:<50s}{:>10s}".format('', '', 'Done'))
+    print_output('', '', 'Done')
 
     if heatplot:
         plot_heatmap(linker_dict.keys(), substrate_dict.keys(), binding_affinities, units_kcal_mol, units_kj_mol)

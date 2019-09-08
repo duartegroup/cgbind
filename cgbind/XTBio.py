@@ -5,7 +5,7 @@ from .constants import Constants
 from subprocess import Popen
 
 
-def run_xtb(xyz_filename, opt=True, charge=0):
+def run_xtb(xyz_filename, opt=True, charge=0, n_cores=1):
     logger.info('Running XTB')
 
     xtb_out_filename = xyz_filename.replace('.xyz', '.out')
@@ -20,11 +20,11 @@ def run_xtb(xyz_filename, opt=True, charge=0):
 
     with open(xtb_out_filename, 'w') as xtb_out:
         if opt:
-            params = [Config.path_to_xtb, xyz_filename, '--opt', '--chrg ' + str(charge)]
+            params = [Config.path_to_xtb, xyz_filename, '--opt', '-c', str(charge)]
         else:
-            params = [Config.path_to_xtb, xyz_filename, '--chrg ' + str(charge)]
+            params = [Config.path_to_xtb, xyz_filename, '-c ', str(charge)]
 
-        os.environ['OMP_NUM_THREADS'] = '1'
+        os.environ['OMP_NUM_THREADS'] = str(n_cores)
         xtb_run = Popen(params, stdout=xtb_out, stderr=open(os.devnull, 'w'))
     xtb_run.wait()
 
