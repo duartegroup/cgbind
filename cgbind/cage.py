@@ -1,18 +1,18 @@
 import os
 import numpy as np
-from . import m2l4
-from . import m4l6
-from .log import logger
-from .config import Config
-from .input_output import xyzfile2xyzs
-from .input_output import print_output
-from .optimisation import opt_geom
-from .single_point import singlepoint
-from .geom import is_geom_reasonable
-from .geom import calc_midpoint
-from .geom import xyz2coord
-from .architectures import M2L4
-from .architectures import M4L6
+from cgbind import m2l4
+from cgbind import m4l6
+from cgbind.log import logger
+from cgbind.config import Config
+from cgbind.input_output import xyzfile2xyzs
+from cgbind.input_output import print_output
+from cgbind.optimisation import opt_geom
+from cgbind.single_point import singlepoint
+from cgbind.geom import is_geom_reasonable
+from cgbind.geom import calc_midpoint
+from cgbind.geom import xyz2coord
+from cgbind.architectures import M2L4
+from cgbind.architectures import M4L6
 
 
 class Cage(object):
@@ -31,9 +31,7 @@ class Cage(object):
         that may be constructed while r < r(midpoint--closest atom)
         :return: Cavity volume in Å^3
         """
-        logger.info('Calculating cage cavity vol (will be OVERESTIMATED)')
-
-        cavity_vol = 0.0
+        logger.info('Calculating maximum enclosed sphere (will be OVERESTIMATED)')
 
         try:
 
@@ -46,39 +44,40 @@ class Cage(object):
                     if dist < min_r_midpoint_atom:
                         min_r_midpoint_atom = dist
 
-                cavity_vol = (4.0 / 3.0) * np.pi * min_r_midpoint_atom**3
+                return (4.0 / 3.0) * np.pi * min_r_midpoint_atom**3
 
             if self.arch == M4L6:
                 logger.critical('Calculating the cavity volume in a M4L6 cage. NOT IMPLEMENTED')
-                exit()
 
         except TypeError or ValueError or AttributeError:
             logger.error('Could not calculate the cavity volume')
             pass
 
-        return cavity_vol
+        return 0.0
 
     def get_m_m_dist(self):
         """
         For a cage calculate the M-M distance
         :return: Distance in Å
         """
-        m_m_dist = 0.0
-
         try:
-            if self.arch == M2L4:
-                logger.info('Calculating the M–M distance in a M2L4 cage')
-                m_m_dist = np.linalg.norm(xyz2coord(self.xyzs[self.m_ids[0]]) - xyz2coord(self.xyzs[self.m_ids[1]]))
+            m_m_dists = []
+            for m_id_i in range(len(self.m_ids)):
+                for m_id_j in range(len(self.m_ids)):
+                    if m_id_i > m_id_j:
+                        dist = np.linalg.norm(xyz2coord(self.xyzs[self.m_ids[m_id_i]]) -
+                                              xyz2coord(self.xyzs[self.m_ids[m_id_j]]))
+                        m_m_dists.append(dist)
 
-            if self.arch == M4L6:
-                logger.critical('Calculating the average M–M distance in a M4L6 cage. NOT IMPLEMENTED')
-                exit()
+            if len(m_m_dists) > 0:
+                return np.average(np.array(m_m_dists))
+            else:
+                logger.error('Could not find any metal atoms')
 
         except TypeError or ValueError or AttributeError:
             logger.error('Could not calculate the M-M distance')
-            pass
 
-        return m_m_dist
+        return 0.0
 
     def optimise(self, n_cores=1):
         """
@@ -130,10 +129,10 @@ class Cage(object):
             return
 
         if self.arch == M2L4:
-            self.xyzs = m2l4.build(self, linker)
+            m2l4.build(self, linker)
 
         elif self.arch == M4L6:
-            self.xyzs = m4l6.build(self, linker)
+            m4l6.build(self, linker)
 
         else:
             logger.critical("Couldn't build a cage with architecture {}. NOT IMPLEMENTED YET".format(self.arch))

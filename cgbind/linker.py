@@ -1,10 +1,10 @@
-from .log import logger
-from . import m2l4
-from . import m4l6
-from .architectures import M2L4
-from .architectures import M4L6
-from .architectures import archs
-from .molecule import Molecule
+from cgbind.log import logger
+from cgbind import m2l4
+from cgbind import m4l6
+from cgbind.architectures import M2L4
+from cgbind.architectures import M4L6
+from cgbind.architectures import archs
+from cgbind.molecule import Molecule
 
 
 class Linker(Molecule):

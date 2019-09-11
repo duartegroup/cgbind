@@ -1,7 +1,7 @@
 import os
-from .log import logger
-from .input_output import print_output
-from .config import Config
+from cgbind.log import logger
+from cgbind.input_output import print_output
+from cgbind.config import Config
 from subprocess import Popen
 
 

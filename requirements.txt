@@ -2,3 +2,4 @@ rdkit
 numpy
 matplotlib
 pytest
+scipy

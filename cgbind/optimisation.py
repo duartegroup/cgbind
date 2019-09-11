@@ -1,7 +1,7 @@
-from .input_output import xyzs2xyzfile
-from .ORCAio import *
-from .XTBio import *
-from .MOPACio import *
+from cgbind.input_output import xyzs2xyzfile
+from cgbind.ORCAio import *
+from cgbind.XTBio import *
+from cgbind.MOPACio import *
 
 
 def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):

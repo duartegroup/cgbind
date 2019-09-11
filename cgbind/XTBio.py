@@ -1,7 +1,7 @@
 import os
-from .log import logger
-from .config import Config
-from .constants import Constants
+from cgbind.log import logger
+from cgbind.config import Config
+from cgbind.constants import Constants
 from subprocess import Popen
 
 

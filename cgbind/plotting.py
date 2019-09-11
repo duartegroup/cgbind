@@ -1,7 +1,7 @@
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from .log import logger
+from cgbind.log import logger
 
 
 mpl.rcParams['axes.labelsize'] = 12
@@ -59,9 +59,9 @@ def plot_heatmap(ligand_names, substrate_names, ba_array, units_kcal_mol=True, u
         label.set_visible(False)
 
     if units_kcal_mol:
-        cb.set_label('$\Delta E$ / kcal mol$^{-1}$')
+        cb.set_label('∆$E$ / kcal mol$^{-1}$')
     if units_kj_mol:
-        cb.set_label('$\Delta E$ / kJ mol$^{-1}$')
+        cb.set_label('∆$E$ / kJ mol$^{-1}$')
 
     plt.tight_layout()
     plt.savefig('binding_affinities.png')

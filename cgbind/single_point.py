@@ -1,7 +1,7 @@
-from .log import logger
-from .input_output import print_output
-from .config import Config
-from .ORCAio import get_single_point_energy
+from cgbind.log import logger
+from cgbind.input_output import print_output
+from cgbind.config import Config
+from cgbind.ORCAio import get_single_point_energy
 
 
 def singlepoint(mol, n_cores):

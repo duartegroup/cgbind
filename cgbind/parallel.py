@@ -1,19 +1,19 @@
 import os
 import numpy as np
-from .config import Config
 from multiprocessing import Pool
-from .cage import Cage
-from .linker import Linker
-from .cage_subt import CageSubstrateComplex
-from .substrate import Substrate
-from .input_output import xyzs2xyzfile
-from .input_output import xyzfile2xyzs
-from .input_output import print_output
-from .constants import Constants
-from .plotting import plot_heatmap
-from .input_output import print_binding_affinities
-from .architectures import M2L4
-from .architectures import M4L6
+from cgbind.config import Config
+from cgbind.cage import Cage
+from cgbind.linker import Linker
+from cgbind.cage_subt import CageSubstrateComplex
+from cgbind.substrate import Substrate
+from cgbind.input_output import xyzs2xyzfile
+from cgbind.input_output import xyzfile2xyzs
+from cgbind.input_output import print_output
+from cgbind.constants import Constants
+from cgbind.plotting import plot_heatmap
+from cgbind.input_output import print_binding_affinities
+from cgbind.architectures import M2L4
+from cgbind.architectures import M4L6
 
 
 def calc_n_cores_pp(dict1, dict2=None):

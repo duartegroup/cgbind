@@ -1,7 +1,7 @@
 import os
-from .log import logger
 from datetime import date
-from .config import Config
+from cgbind.log import logger
+from cgbind.config import Config
 
 
 def print_binding_affinities(ligand_names, substrate_names, binding_affinities, units_kj_mol=False):

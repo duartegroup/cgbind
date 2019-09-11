@@ -1,7 +1,7 @@
-from .log import logger
 import numpy as np
-from .atoms import avg_bond_lengths
-from .atoms import atomic_masses
+from cgbind.log import logger
+from cgbind.atoms import avg_bond_lengths
+from cgbind.atoms import atomic_masses
 
 
 def calc_com(xyzs):

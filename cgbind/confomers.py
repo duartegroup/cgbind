@@ -1,5 +1,5 @@
 from rdkit import Chem
-from .log import logger
+from cgbind.log import logger
 import os
 
 

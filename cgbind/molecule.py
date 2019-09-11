@@ -1,13 +1,13 @@
-from .log import logger
 from rdkit.Chem import AllChem
 from rdkit import Chem
-from .optimisation import opt_geom
-from .single_point import singlepoint
-from .input_output import print_output
-from .input_output import xyzs2xyzfile
-from .confomers import gen_conformer_mol_files
-from .confomers import confomer_mol_files_to_xyzs
-from .geom import calc_com
+from cgbind.log import logger
+from cgbind.optimisation import opt_geom
+from cgbind.single_point import singlepoint
+from cgbind.input_output import print_output
+from cgbind.input_output import xyzs2xyzfile
+from cgbind.confomers import gen_conformer_mol_files
+from cgbind.confomers import confomer_mol_files_to_xyzs
+from cgbind.geom import calc_com
 
 
 class Molecule(object):

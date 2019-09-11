@@ -1,11 +1,11 @@
-from .log import logger
-from . import m2l4
-from .optimisation import opt_geom
-from .single_point import singlepoint
-from .input_output import print_output
-from .geom import is_geom_reasonable
-from .architectures import M2L4
-from .architectures import M4L6
+from cgbind.log import logger
+from cgbind import m2l4
+from cgbind.optimisation import opt_geom
+from cgbind.single_point import singlepoint
+from cgbind.input_output import print_output
+from cgbind.geom import is_geom_reasonable
+from cgbind.architectures import M2L4
+from cgbind.architectures import M4L6
 
 
 class CageSubstrateComplex(object):

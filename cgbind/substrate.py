@@ -1,8 +1,8 @@
 import numpy as np
-from .log import logger
-from .config import Config
-from .atoms import heteroatoms
-from .molecule import Molecule
+from cgbind.log import logger
+from cgbind.config import Config
+from cgbind.atoms import heteroatoms
+from cgbind.molecule import Molecule
 
 
 def get_bond_vector_angles_and_x_ids(xyzs):

@@ -1,15 +1,15 @@
 import numpy as np
 from copy import deepcopy
-from .log import logger
-from .input_output import print_output
-from .geom import rotation_matrix
-from .geom import xyz2coord
-from .geom import calc_midpoint
-from .geom import get_closest_bonded_atom_id
-from .geom import calc_normalised_vector
-from .geom import calc_com
-from .geom import calc_dist
-from .geom import cat_cage_subst_coords
+from cgbind.log import logger
+from cgbind.input_output import print_output
+from cgbind.geom import rotation_matrix
+from cgbind.geom import xyz2coord
+from cgbind.geom import calc_midpoint
+from cgbind.geom import get_closest_bonded_atom_id
+from cgbind.geom import calc_normalised_vector
+from cgbind.geom import calc_com
+from cgbind.geom import calc_dist
+from cgbind.geom import cat_cage_subst_coords
 
 
 def get_best_linker_conformer(linker, cavity_size=2.2):
@@ -210,7 +210,8 @@ def build(cage, linker):
         # Add the metal atom to the xyz list. Located at the midpoint between 2 N atoms on opposite sides
         xyzs.append([cage.metal] + x_x_midpoint_oposite_linkers.tolist())
 
-    return xyzs
+    cage.xyzs = xyzs
+    return None
 
 
 def get_cage_centre(linker, trns=3.0):
