@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 from cgbind.log import logger
 from cgbind.config import Config
 from cgbind.atoms import heteroatoms
@@ -6,6 +7,7 @@ from cgbind.geom import calc_distance_matrix
 from cgbind.geom import get_neighbour
 from cgbind.geom import xyz2coord
 from cgbind.geom import calc_normalised_vector as calc_norm_vec
+from scipy.optimize import minimize
 
 
 def build(cage, linker):
@@ -17,20 +19,38 @@ def build(cage, linker):
     :return:
     """
 
-    # Add the xyzs of the metals to the list of xyzs, inserting the appropriate metal atom label
-    xyzs = [[cage.metal] + m_template_xyzs[1:] for m_template_xyzs in Template.Metals.xyzs]
-
-    for n, ligand_template in enumerate(Template.Ligands):
-        ligand_coords = get_template_fitted_coords_and_r(linker=linker, linker_template=ligand_template)
-        xyzs += [[linker.xyzs[i][0]] + ligand_coords[i].tolist() for i in range(linker.n_atoms)]
+    opt_res = minimize(get_cost_xyzs, x0=np.array([1.0]), args=(cage, linker, False), method='BFGS')
+    cost, xyzs = get_cost_xyzs(r=opt_res.x[0], cage=cage, linker=linker, retutrn_xyzs=True)
+    logger.info('Final centre-M dist {} with cost value {}'.format(np.round(opt_res.x[0], 1),
+                                                                   np.round(cost, 1)))
 
     if len(xyzs) != cage.arch.n_metals + cage.arch.n_linkers * linker.n_atoms:
         logger.error('Could not generate M4L6 metallocage')
-        cage.xyzs = None
     else:
         cage.xyzs = xyzs
 
     return None
+
+
+def get_cost_xyzs(r, cage, linker, retutrn_xyzs=False):
+
+    # Modify a copy of the template inplace with an r which corresponds to the centroid-M distance
+    mod_template = deepcopy(Template())
+    mod_template.set_geom(r=r)
+
+    # Add the xyzs of the metals to the list of xyzs, inserting the appropriate metal atom label
+    xyzs = [[cage.metal] + m_template_xyzs[1:] for m_template_xyzs in mod_template.Metals.xyzs]
+
+    cost = 0.0
+    for n, ligand_template in enumerate(mod_template.Ligands):
+        ligand_coords, l_cost = get_template_fitted_coords_and_cost(linker=linker, linker_template=ligand_template)
+        xyzs += [[linker.xyzs[i][0]] + ligand_coords[i].tolist() for i in range(linker.n_atoms)]
+        cost += l_cost
+
+    if retutrn_xyzs:
+        return cost, xyzs
+    else:
+        return cost
 
 
 def has_correct_xee_angle(xyzs, x, e1, e2, correct_angle_deg=120, tolerance=0.2):
@@ -117,7 +137,38 @@ def get_confomers_with_flat_xeex_motifs(conf_xyzs, conf_ids, xeex_motifs, tol=0.
     return flat_conf_ids
 
 
-def get_best_linker_conformer(linker, max_x_x_dist=4.0, max_e_e_dist=2.0):
+def get_and_set_xeex_motifs(linker, xyzs, max_x_x_dist=4.0, max_e_e_dist=2.0):
+
+    linker.set_com()
+    n_xeex_motifs = 0
+    xeex_atom_ids = []
+
+    distance_matrix = calc_distance_matrix(xyzs)
+    for i in range(linker.n_atoms):
+        for j in range(linker.n_atoms):
+            if i > j:
+                xi_nn, xi_nnn = get_neighbour(i, distance_matrix, 1), get_neighbour(i, distance_matrix, 2)
+                xj_nn, xj_nnn = get_neighbour(j, distance_matrix, 1), get_neighbour(j, distance_matrix, 2)
+
+                for e1 in [xi_nn, xi_nnn]:
+                    for e2 in [xj_nn, xj_nnn]:
+                        if is_xeex_motif(xyzs, i, e1, e2, j, max_x_x_dist, max_e_e_dist):
+                            n_xeex_motifs += 1
+                            # The XEEX motifs are defined from the linker COM to the furthest atom
+                            if (np.linalg.norm(xyz2coord(xyzs[j]) - linker.com) >
+                                    np.linalg.norm(xyz2coord(xyzs[i]) - linker.com)):
+                                xeex_atom_ids.append([i, e1, e2, j])
+                            else:
+                                xeex_atom_ids.append([j, e2, e1, i])
+
+    if n_xeex_motifs != 2:
+        logger.critical('Cannot handle >2 XEEX motifs in the linker yet')
+
+    linker.xeex_motifs = xeex_atom_ids
+    return xeex_atom_ids
+
+
+def get_best_linker_conformer(linker, ):
     """
 
     For a linker to be suitable for constructing a tetrahedral metallocage of the form M4L6
@@ -156,37 +207,9 @@ def get_best_linker_conformer(linker, max_x_x_dist=4.0, max_e_e_dist=2.0):
     :param max_e_e_dist:
     :return: Best conformer id
     """
-    linker.set_com()
-
-    n_xeex_motifs = 0
-    xeex_atom_ids = []
-
-    first_xyzs = linker.conf_xyzs[0]
-    distance_matrix = calc_distance_matrix(first_xyzs)
-    for i in range(linker.n_atoms):
-        for j in range(linker.n_atoms):
-            if i > j:
-                xi_nn, xi_nnn = get_neighbour(i, distance_matrix, 1), get_neighbour(i, distance_matrix, 2)
-                xj_nn, xj_nnn = get_neighbour(j, distance_matrix, 1), get_neighbour(j, distance_matrix, 2)
-
-                for e1 in [xi_nn, xi_nnn]:
-                    for e2 in [xj_nn, xj_nnn]:
-                        if is_xeex_motif(first_xyzs, i, e1, e2, j, max_x_x_dist, max_e_e_dist):
-                            n_xeex_motifs += 1
-                            # The XEEX motifs are defined from the linker COM to the furthest atom
-                            if (np.linalg.norm(xyz2coord(first_xyzs[j]) - linker.com) >
-                                    np.linalg.norm(xyz2coord(first_xyzs[i]) - linker.com)):
-                                xeex_atom_ids.append([i, e1, e2, j])
-                            else:
-                                xeex_atom_ids.append([j, e2, e1, i])
-
-    # TODO allow for > 2 xeex motifs
-    if n_xeex_motifs != 2:
-        return None
-
     best_conf_id = 0
-    linker.xeex_motifs = xeex_atom_ids
 
+    xeex_atom_ids = get_and_set_xeex_motifs(linker, xyzs=linker.conf_xyzs[0])
     flat_conf_ids = get_confomers_with_flat_xeex_motifs(linker.conf_xyzs, linker.conf_ids, xeex_atom_ids)
 
     curr_cos_theta = 0.0
@@ -256,7 +279,7 @@ def get_centered_matrix(mat):
     return np.array([coord - centroid for coord in mat])
 
 
-def get_template_fitted_coords_and_r(linker, linker_template):
+def get_template_fitted_coords_and_cost(linker, linker_template):
     """
     Get the coordinates of a linkers that are fitted to a template of XEEX motifs
     :param linker: (object)
@@ -279,18 +302,57 @@ def get_template_fitted_coords_and_r(linker, linker_template):
     # Apply to get the new set of coordinates
     new_linker_coords = np.array([np.matmul(rot_mat, coord) + q_centroid for coord in xyz2coord(linker.xyzs)])
 
-    return new_linker_coords
+    # Compute the cost function = (r - r_ideal)^2
+    new_p_mat = np.array([new_linker_coords[i] for motif in linker.xeex_motifs for i in motif])
+    cost = np.sum(np.square(get_centered_matrix(new_p_mat) - q_mat_trans))
+
+    return new_linker_coords, cost
 
 
 class Template:
 
-    class Metals:
-        xyzs = [['M', 0.00000, 0.00000, 12.69480],
-                ['M', 3.83600, 6.33800, 23.13010],
-                ['M', 3.57090, -6.49110, 23.13010],
-                ['M', -7.40690, 0.15310, 23.13010]]
+    def set_geom(self, r, template_atoms_cuttoff=3.0):
+        centroid = np.average(xyz2coord(self.Metals.xyzs), axis=0)
 
-    class Ligand1:
+        for i, metal_coord in enumerate(self.Metals.coords):
+            # Define the current centroid – metal vector a
+            c_m_vec = calc_norm_vec(coord1=metal_coord, coord2=centroid)
+            curr_c_m_dist = np.linalg.norm(centroid - metal_coord)
+
+            # Distance to translate along c_m_vec
+            trns = (r - curr_c_m_dist)
+
+            for j, ligand in enumerate(self.Ligands):
+                for k, l_coord in enumerate(ligand.xeex_coords):
+                    l_atom_m_dist = np.linalg.norm(metal_coord - l_coord)
+                    if l_atom_m_dist < template_atoms_cuttoff:
+                        self.Ligands[j].xeex_coords[k] += trns * c_m_vec
+                        self.Ligands[j].xeex_xyzs[k] = ([self.Ligands[j].xeex_xyzs[k][0]] +
+                                                        self.Ligands[j].xeex_coords[k].tolist())
+
+            self.Metals.coords[i] += trns * c_m_vec
+            self.Metals.xyzs[i] = [self.Metals.xyzs[i][0]] + self.Metals.coords[i].tolist()
+
+    def __init__(self, r=None):
+        self.Metals = Metals()
+        self.Ligands = [Ligand1(), Ligand2(), Ligand3(), Ligand4(), Ligand5(), Ligand6()]
+
+        if r is not None:
+            self.set_geom(r)
+
+
+class Metals:
+    def __init__(self):
+        self.xyzs = [['M', 0.00000, 0.00000, 12.69480],
+                     ['M', 3.83600, 6.33800, 23.13010],
+                     ['M', 3.57090, -6.49110, 23.13010],
+                     ['M', -7.40690, 0.15310, 23.13010]]
+        self.coords = xyz2coord(self.xyzs)
+
+
+class Ligand1:
+
+    def __init__(self):
         xeex1_xyzs = [['X', -0.11360, 1.59760, 11.59410],  # 1,1: X1
                       ['E', -0.97970, 2.52000, 12.04870],  # 1,1: E1
                       ['E', -1.62480, 2.25460, 13.26720],  # 1,1: E2
@@ -300,9 +362,13 @@ class Template:
                       ['E', -7.26930, -2.38460, 21.88140],  # 1,2: E1
                       ['E', -8.14270, -2.49650, 22.96240],  # 1,2: E2
                       ['X', -8.41060, -1.39720, 23.69840]]  # 1,2: X2
-        xeex_xyzs = xeex1_xyzs + xeex2_xyzs
 
-    class Ligand2:
+        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.xeex_coords = xyz2coord(self.xeex_xyzs)
+
+
+class Ligand2:
+    def __init__(self):
         xeex1_xyzs = [['X', -1.32670, -0.89720, 11.59410],  # 2,1: X1
                       ['E', -1.69250, -2.10840, 12.04870],  # 2,1: E1
                       ['E', -1.14020, -2.53440, 13.26720],  # 2,1: E2
@@ -312,9 +378,12 @@ class Template:
                       ['E', 6.23340, -5.80350, 22.96240],  # 2,2: E1
                       ['E', 5.69980, -5.10310, 21.88140],  # 2,2: E2
                       ['X', 4.36470, -5.24210, 21.78490]]  # 2,2: X2
-        xeex_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.xeex_coords = xyz2coord(self.xeex_xyzs)
 
-    class Ligand3:
+
+class Ligand3:
+    def __init__(self):
         xeex1_xyzs = [['X', 1.44030, -0.70040, 11.59410],  # 3,1: X1
                       ['E', 2.67220, -0.41160, 12.04870],  # 3,1: E1
                       ['E', 2.76500, 0.27980, 13.26720],  # 3,1: E2
@@ -324,9 +393,12 @@ class Template:
                       ['E', 1.90930, 8.30000, 22.96240],  # 3,2: E1
                       ['E', 1.56960, 7.48770, 21.88140],  # 3,2: E2
                       ['X', 2.35750, 6.40100, 21.78490]]  # 3,2: X2
-        xeex_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.xeex_coords = xyz2coord(self.xeex_xyzs)
 
-    class Ligand4:
+
+class Ligand4:
+    def __init__(self):
         xeex1_xyzs = [['X', -7.70871, 1.16494, 24.58487],  # 4,1: X1
                       ['E', -6.96610, 1.01090, 25.71820],  # 4,1: E1
                       ['E', -5.83940, 0.19320, 25.47620],  # 4,1: E2
@@ -336,9 +408,12 @@ class Template:
                       ['E', 2.63570, -8.50760, 21.48390],  # 4,2: E1
                       ['E', 1.51740, -7.66100, 21.56240],  # 4,2: E2
                       ['X', 1.80090, -6.53460, 22.25590]]  # 4,2: X2
-        xeex_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.xeex_coords = xyz2coord(self.xeex_xyzs)
 
-    class Ligand5:
+
+class Ligand5:
+    def __init__(self):
         xeex1_xyzs = [['X', 2.99220, -7.34870, 24.79090],  # 5,1: X1
                       ['E', 2.60760, -6.53820, 25.71820],  # 5,1: E1
                       ['E', 2.75250, -5.15370, 25.47620],  # 5,1: E2
@@ -348,9 +423,12 @@ class Template:
                       ['E', 6.05000, 6.53640, 21.48390],  # 5,2: E1
                       ['E', 5.87590, 5.14470, 21.56240],  # 5,2: E2
                       ['X', 4.75870, 4.82700, 22.25590]]  # 5,2: X2
-        xeex_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.xeex_coords = xyz2coord(self.xeex_xyzs)
 
-    class Ligand6:
+
+class Ligand6:
+    def __init__(self):
         xeex1_xyzs = [['X', 4.86810, 6.26570, 24.79090],  # 6,1: X1
                       ['E', 4.35850, 5.52730, 25.71820],  # 6,1: E1
                       ['E', 3.08700, 4.96050, 25.47620],  # 6,1: E2
@@ -360,6 +438,5 @@ class Template:
                       ['E', -8.68570, 1.97120, 21.48390],  # 6,2: E1
                       ['E', -7.39340, 2.51640, 21.56240],  # 6,2: E2
                       ['X', -6.55960, 1.70770, 22.25590]]  # 6,2: X2
-        xeex_xyzs = xeex1_xyzs + xeex2_xyzs
-
-    Ligands = [Ligand1, Ligand2, Ligand3, Ligand4, Ligand5, Ligand6]
+        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.xeex_coords = xyz2coord(self.xeex_xyzs)
