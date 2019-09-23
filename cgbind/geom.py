@@ -1,7 +1,7 @@
 import numpy as np
 from cgbind.log import logger
 from cgbind.atoms import avg_bond_lengths
-from cgbind.atoms import atomic_masses
+from cgbind.atoms import get_atomic_mass
 
 
 def calc_com(xyzs):
@@ -16,14 +16,10 @@ def calc_com(xyzs):
     total_mass = 0.0
 
     for n in range(len(xyzs)):
-        atom_label = xyzs[n][0]
-        if atom_label in atomic_masses.keys():
-            atom_mass = atomic_masses[atom_label]
-        else:
-            logger.error("Couldn't find the atomic mass for {}. Guessing at 10".format(atom_label))
-            atom_mass = 10
-        com += atom_mass * xyz2coord(xyzs[n])
+        atom_mass = get_atomic_mass(atom_label=xyzs[n][0])
         total_mass += atom_mass
+
+        com += atom_mass * xyz2coord(xyzs[n])
 
     return com / total_mass
 

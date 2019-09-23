@@ -8,6 +8,7 @@ from cgbind.input_output import xyzfile2xyzs
 from cgbind.input_output import print_output
 from cgbind.optimisation import opt_geom
 from cgbind.single_point import singlepoint
+from cgbind.atoms import get_vdw_radii
 from cgbind.geom import is_geom_reasonable
 from cgbind.geom import calc_midpoint
 from cgbind.geom import xyz2coord
@@ -22,8 +23,8 @@ class Cage(object):
         try:
             return [i for i in range(len(self.xyzs)) if self.xyzs[i][0] == self.metal]
         except TypeError or IndexError or AttributeError:
-            logger.error('Could not get metal atom ids')
-            return
+            logger.error('Could not get metal atom ids. Returning None')
+            return None
 
     def get_cavity_vol(self):
         """
@@ -31,29 +32,42 @@ class Cage(object):
         that may be constructed while r < r(midpoint--closest atom)
         :return: Cavity volume in Å^3
         """
-        logger.info('Calculating maximum enclosed sphere (will be OVERESTIMATED)')
+        logger.info('Calculating maximum enclosed sphere')
+
+        min_centriod_atom_dist = 999.9
+        centroid, min_atom_dist_id = None, None
 
         try:
 
             if self.arch == M2L4:
-                min_r_midpoint_atom = 999.9
-                m_m_midpoint = calc_midpoint(xyz2coord(self.xyzs[self.m_ids[0]]), xyz2coord(self.xyzs[self.m_ids[1]]))
-                for i in range(len(self.xyzs)):
-                    dist = np.linalg.norm(xyz2coord(self.xyzs[i]) - m_m_midpoint)
-
-                    if dist < min_r_midpoint_atom:
-                        min_r_midpoint_atom = dist
-
-                return (4.0 / 3.0) * np.pi * min_r_midpoint_atom**3
+                centroid = calc_midpoint(xyz2coord(self.xyzs[self.m_ids[0]]), xyz2coord(self.xyzs[self.m_ids[1]]))
 
             if self.arch == M4L6:
-                logger.critical('Calculating the cavity volume in a M4L6 cage. NOT IMPLEMENTED')
+                metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
+                centroid = np.average(metal_coords, axis=0)
+
+            if centroid is None:
+                logger.error('Could not find the cage centroid. Returning 0.0')
+                return 0.0
+
+            # Compute the smallest distance to the centroid
+            for i in range(len(self.xyzs)):
+                dist = np.linalg.norm(xyz2coord(self.xyzs[i]) - centroid)
+                if dist < min_centriod_atom_dist:
+                    min_centriod_atom_dist = dist
+                    min_atom_dist_id = i
 
         except TypeError or ValueError or AttributeError:
-            logger.error('Could not calculate the cavity volume')
             pass
 
-        return 0.0
+        if min_atom_dist_id is not None:
+            vdv_radii = get_vdw_radii(atom_label=self.xyzs[min_atom_dist_id][0])
+            # V = 4/3 π r^3, where r is ithe centroid -> closest atom distance, minus it's VdW volume
+            return (4.0 / 3.0) * np.pi * (min_centriod_atom_dist - vdv_radii)**3
+
+        else:
+            logger.error('Could not calculate the cavity volume. Returning 0.0')
+            return 0.0
 
     def get_m_m_dist(self):
         """
@@ -75,7 +89,7 @@ class Cage(object):
                 logger.error('Could not find any metal atoms')
 
         except TypeError or ValueError or AttributeError:
-            logger.error('Could not calculate the M-M distance')
+            logger.error('Could not calculate the M-M distance. Returning 0.0')
 
         return 0.0
 

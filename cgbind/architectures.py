@@ -10,4 +10,5 @@ class M4L6:
     pass
 
 
+# List of all the available architectures currently implemented
 archs = [M2L4, M4L6]
