@@ -28,17 +28,21 @@ class Linker(Molecule):
         super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, xyzs=xyzs)
 
         self.arch = None
+        self.x_atom_ids = None   # The EXE for M2L4 and the XEEX atoms for M4L6
         self.set_arch(arch)
 
         if self.arch == M2L4:
-            self.x_atom_ids = None    # Set in get_best_linker_conformer
-            self.x_x_midpoint = None  # Set in get_mid_atom
+            self.exe_motifs = None   # Set in get_best_conformer
+            self.conf_id = m2l4.get_best_conformer(self)
 
-            self.conf_id = m2l4.get_best_linker_conformer(self)
-            self.set_xyzs_best_linker_conformer(conf_id=self.conf_id)
-            self.mid_atom_id = m2l4.get_mid_atom_id(self)
+            if self.exe_motifs is not None:
+                self.x_atom_ids = [i for motif in self.exe_motifs for i in motif]
+                self.set_xyzs_best_linker_conformer(conf_id=self.conf_id)
 
         if self.arch == M4L6:
             self.xeex_motifs = None   # Set in get_best_conformer
             self.conf_id = m4l6.get_best_linker_conformer(self)
-            self.set_xyzs_best_linker_conformer(conf_id=self.conf_id)
+
+            if self.xeex_motifs is not None:
+                self.x_atom_ids = [i for motif in self.xeex_motifs for i in motif]
+                self.set_xyzs_best_linker_conformer(conf_id=self.conf_id)

@@ -1,5 +1,4 @@
 import numpy as np
-from copy import deepcopy
 from cgbind.log import logger
 from cgbind.config import Config
 from cgbind.atoms import heteroatoms
@@ -7,6 +6,7 @@ from cgbind.geom import calc_distance_matrix
 from cgbind.geom import get_neighbour
 from cgbind.geom import xyz2coord
 from cgbind.geom import calc_normalised_vector as calc_norm_vec
+from cgbind.build import get_cost_xyzs
 from scipy.optimize import minimize
 
 
@@ -14,13 +14,32 @@ def build(cage, linker):
     """
     Build a M4L6 metallocage
 
+
+             M
+           `-.`
+          `-.``.`
+         .--``````
+        .--.``````.`
+      `----```````````
+     `-----````````````
+    .-----.```o..`r````
+   M------````-..----...``
+    .----.``````````...----M
+     .---``````````.```````
+      .-.``.``````
+       ``M
+
     :param cage: A cage object
     :param linker: A linker object
-    :return:
     """
+    logger.info('Building a M4L6 metallocage {}'.format(cage.name))
 
-    opt_res = minimize(get_cost_xyzs, x0=np.array([1.0]), args=(cage, linker, False), method='BFGS')
-    cost, xyzs = get_cost_xyzs(r=opt_res.x[0], cage=cage, linker=linker, retutrn_xyzs=True)
+    opt_res = minimize(get_cost_xyzs, x0=np.array([1.0]), method='BFGS',
+                       args=(cage, linker, Template(), get_xeex_coords(linker), False))
+
+    cost, xyzs = get_cost_xyzs(r=opt_res.x[0], cage=cage, linker=linker, template=Template(),
+                               coords_to_fit=get_xeex_coords(linker), return_xyzs=True)
+
     logger.info('Final centre-M dist {} with cost value {}'.format(np.round(opt_res.x[0], 1),
                                                                    np.round(cost, 1)))
 
@@ -30,27 +49,6 @@ def build(cage, linker):
         cage.xyzs = xyzs
 
     return None
-
-
-def get_cost_xyzs(r, cage, linker, retutrn_xyzs=False):
-
-    # Modify a copy of the template inplace with an r which corresponds to the centroid-M distance
-    mod_template = deepcopy(Template())
-    mod_template.set_geom(r=r)
-
-    # Add the xyzs of the metals to the list of xyzs, inserting the appropriate metal atom label
-    xyzs = [[cage.metal] + m_template_xyzs[1:] for m_template_xyzs in mod_template.Metals.xyzs]
-
-    cost = 0.0
-    for n, ligand_template in enumerate(mod_template.Ligands):
-        ligand_coords, l_cost = get_template_fitted_coords_and_cost(linker=linker, linker_template=ligand_template)
-        xyzs += [[linker.xyzs[i][0]] + ligand_coords[i].tolist() for i in range(linker.n_atoms)]
-        cost += l_cost
-
-    if retutrn_xyzs:
-        return cost, xyzs
-    else:
-        return cost
 
 
 def has_correct_xee_angle(xyzs, x, e1, e2, correct_angle_deg=120, tolerance=0.2):
@@ -109,9 +107,10 @@ def is_xeex_motif(xyzs, x1, e1, e2, x2, max_xx_dist, max_ee_dist):
 def get_confomers_with_flat_xeex_motifs(conf_xyzs, conf_ids, xeex_motifs, tol=0.1):
     """
 
-    :param conf_xyzs:
-    :param conf_ids:
-    :param xeex_motifs:
+    :param conf_xyzs: (list(list)) list of xyzs
+    :param conf_ids: (list) list of conformers ids
+    :param xeex_motifs: (list(list))
+    :param tol: (float) relative tolerance on the ideal angle between normal vectors = 0º
     :return:
     """
     ideal_abs_cos_angle_norm_vec = 1.0
@@ -168,7 +167,7 @@ def get_and_set_xeex_motifs(linker, xyzs, max_x_x_dist=4.0, max_e_e_dist=2.0):
     return xeex_atom_ids
 
 
-def get_best_linker_conformer(linker, ):
+def get_best_linker_conformer(linker):
     """
 
     For a linker to be suitable for constructing a tetrahedral metallocage of the form M4L6
@@ -207,7 +206,7 @@ def get_best_linker_conformer(linker, ):
     :param max_e_e_dist:
     :return: Best conformer id
     """
-    best_conf_id = 0
+    best_conf_id = None
 
     xeex_atom_ids = get_and_set_xeex_motifs(linker, xyzs=linker.conf_xyzs[0])
     flat_conf_ids = get_confomers_with_flat_xeex_motifs(linker.conf_xyzs, linker.conf_ids, xeex_atom_ids)
@@ -250,65 +249,6 @@ def get_xeex_coords(linker):
     return np.array([xyz2coord(linker.xyzs[i]) for motif in linker.xeex_motifs for i in motif])
 
 
-def get_rot_mat_kabsch(p_matrix, q_matrix):
-    """
-    Get the optimal rotation matrix with the Kabsch algorithm. Notation is from
-    https://en.wikipedia.org/wiki/Kabsch_algorithm
-    :param p_matrix: (np.ndarray)
-    :param q_matrix: (np.ndarray)
-    :return: (np.ndarray) rotation matrix
-    """
-
-    h = np.matmul(p_matrix.transpose(), q_matrix)
-    u, s, vh = np.linalg.svd(h)
-    d = np.linalg.det(np.matmul(vh.transpose(), u.transpose()))
-    int_mat = np.identity(3)
-    int_mat[2, 2] = d
-    rot_matrix = np.matmul(np.matmul(vh.transpose(), int_mat), u.transpose())
-
-    return rot_matrix
-
-
-def get_centered_matrix(mat):
-    """
-    For a list of coordinates n.e. a n_atoms x 3 matrix as a np array translate to the center of the coordinates
-    :param mat: (np.ndarray)
-    :return: (np.ndarray) translated coordinates
-    """
-    centroid = np.average(mat, axis=0)
-    return np.array([coord - centroid for coord in mat])
-
-
-def get_template_fitted_coords_and_cost(linker, linker_template):
-    """
-    Get the coordinates of a linkers that are fitted to a template of XEEX motifs
-    :param linker: (object)
-    :param linker_template: (object)
-    :return: (np.ndarray) n_atoms x 3
-    """
-
-    # Construct the P matrix in the Kabsch algorithm
-    p_mat = get_xeex_coords(linker=linker)
-    p_mat_trans = get_centered_matrix(p_mat)
-
-    # Construct the P matrix in the Kabsch algorithm
-    q_mat = np.array([xyz2coord(xyz_line) for xyz_line in linker_template.xeex_xyzs])
-    q_centroid = np.average(q_mat, axis=0)
-    q_mat_trans = get_centered_matrix(q_mat)
-
-    # Get the optimum rotation matrix
-    rot_mat = get_rot_mat_kabsch(p_mat_trans, q_mat_trans)
-
-    # Apply to get the new set of coordinates
-    new_linker_coords = np.array([np.matmul(rot_mat, coord) + q_centroid for coord in xyz2coord(linker.xyzs)])
-
-    # Compute the cost function = (r - r_ideal)^2
-    new_p_mat = np.array([new_linker_coords[i] for motif in linker.xeex_motifs for i in motif])
-    cost = np.sum(np.square(get_centered_matrix(new_p_mat) - q_mat_trans))
-
-    return new_linker_coords, cost
-
-
 class Template:
 
     def set_geom(self, r, template_atoms_cuttoff=3.0):
@@ -323,12 +263,12 @@ class Template:
             trns = (r - curr_c_m_dist)
 
             for j, ligand in enumerate(self.Ligands):
-                for k, l_coord in enumerate(ligand.xeex_coords):
+                for k, l_coord in enumerate(ligand.x_coords):
                     l_atom_m_dist = np.linalg.norm(metal_coord - l_coord)
                     if l_atom_m_dist < template_atoms_cuttoff:
-                        self.Ligands[j].xeex_coords[k] += trns * c_m_vec
-                        self.Ligands[j].xeex_xyzs[k] = ([self.Ligands[j].xeex_xyzs[k][0]] +
-                                                        self.Ligands[j].xeex_coords[k].tolist())
+                        self.Ligands[j].x_coords[k] += trns * c_m_vec
+                        self.Ligands[j].x_xyzs[k] = ([self.Ligands[j].x_xyzs[k][0]] +
+                                                     self.Ligands[j].x_coords[k].tolist())
 
             self.Metals.coords[i] += trns * c_m_vec
             self.Metals.xyzs[i] = [self.Metals.xyzs[i][0]] + self.Metals.coords[i].tolist()
@@ -363,8 +303,8 @@ class Ligand1:
                       ['E', -8.14270, -2.49650, 22.96240],  # 1,2: E2
                       ['X', -8.41060, -1.39720, 23.69840]]  # 1,2: X2
 
-        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
-        self.xeex_coords = xyz2coord(self.xeex_xyzs)
+        self.x_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.x_coords = xyz2coord(self.x_xyzs)
 
 
 class Ligand2:
@@ -378,8 +318,8 @@ class Ligand2:
                       ['E', 6.23340, -5.80350, 22.96240],  # 2,2: E1
                       ['E', 5.69980, -5.10310, 21.88140],  # 2,2: E2
                       ['X', 4.36470, -5.24210, 21.78490]]  # 2,2: X2
-        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
-        self.xeex_coords = xyz2coord(self.xeex_xyzs)
+        self.x_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.x_coords = xyz2coord(self.x_xyzs)
 
 
 class Ligand3:
@@ -393,8 +333,8 @@ class Ligand3:
                       ['E', 1.90930, 8.30000, 22.96240],  # 3,2: E1
                       ['E', 1.56960, 7.48770, 21.88140],  # 3,2: E2
                       ['X', 2.35750, 6.40100, 21.78490]]  # 3,2: X2
-        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
-        self.xeex_coords = xyz2coord(self.xeex_xyzs)
+        self.x_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.x_coords = xyz2coord(self.x_xyzs)
 
 
 class Ligand4:
@@ -408,8 +348,8 @@ class Ligand4:
                       ['E', 2.63570, -8.50760, 21.48390],  # 4,2: E1
                       ['E', 1.51740, -7.66100, 21.56240],  # 4,2: E2
                       ['X', 1.80090, -6.53460, 22.25590]]  # 4,2: X2
-        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
-        self.xeex_coords = xyz2coord(self.xeex_xyzs)
+        self.x_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.x_coords = xyz2coord(self.x_xyzs)
 
 
 class Ligand5:
@@ -423,8 +363,8 @@ class Ligand5:
                       ['E', 6.05000, 6.53640, 21.48390],  # 5,2: E1
                       ['E', 5.87590, 5.14470, 21.56240],  # 5,2: E2
                       ['X', 4.75870, 4.82700, 22.25590]]  # 5,2: X2
-        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
-        self.xeex_coords = xyz2coord(self.xeex_xyzs)
+        self.x_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.x_coords = xyz2coord(self.x_xyzs)
 
 
 class Ligand6:
@@ -438,5 +378,5 @@ class Ligand6:
                       ['E', -8.68570, 1.97120, 21.48390],  # 6,2: E1
                       ['E', -7.39340, 2.51640, 21.56240],  # 6,2: E2
                       ['X', -6.55960, 1.70770, 22.25590]]  # 6,2: X2
-        self.xeex_xyzs = xeex1_xyzs + xeex2_xyzs
-        self.xeex_coords = xyz2coord(self.xeex_xyzs)
+        self.x_xyzs = xeex1_xyzs + xeex2_xyzs
+        self.x_coords = xyz2coord(self.x_xyzs)

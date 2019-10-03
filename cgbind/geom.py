@@ -24,6 +24,10 @@ def calc_com(xyzs):
     return com / total_mass
 
 
+def calc_cdist(coord1, coord2):
+    return np.linalg.norm(coord1 - coord2)
+
+
 def calc_normalised_vector(coord1, coord2):
 
     vec = coord2 - coord1
@@ -168,8 +172,11 @@ def calc_distance_matrix(xyzs):
     return distance_matrix
 
 
-def calc_dist(xyzs, atom_i, atom_j):
-    return np.linalg.norm(xyz2coord(xyzs[atom_i]) - xyz2coord(xyzs[atom_j]))
+def calc_dist(atom_i, atom_j, xyzs=None, coords=None):
+    if xyzs:
+        return np.linalg.norm(xyz2coord(xyzs[atom_i]) - xyz2coord(xyzs[atom_j]))
+    if coords:
+        return np.linalg.norm(coords[atom_i] - coords[atom_j])
 
 
 def calc_midpoint(coord1, coord2):
@@ -182,12 +189,11 @@ def calc_midpoint(coord1, coord2):
     return (coord1 + coord2) / 2.0
 
 
-def is_geom_reasonable(xyzs, supress_print=False):
+def is_geom_reasonable(xyzs):
     """
     For an xyz list check to ensure the geometry is sensible, before an optimisation is carried out. There should be
     no distances smaller than 0.7 Å
     :param xyzs: List of xyzs
-    :param supress_print:
     :return:
     """
     logger.info('Checking to see whether the geometry is reasonable')
@@ -221,6 +227,35 @@ def rotation_matrix(axis, theta):
     return np.array([[aa+bb-cc-dd, 2*(bc+ad), 2*(bd-ac)],
                      [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab)],
                      [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc]])
+
+
+def get_rot_mat_kabsch(p_matrix, q_matrix):
+    """
+    Get the optimal rotation matrix with the Kabsch algorithm. Notation is from
+    https://en.wikipedia.org/wiki/Kabsch_algorithm
+    :param p_matrix: (np.ndarray)
+    :param q_matrix: (np.ndarray)
+    :return: (np.ndarray) rotation matrix
+    """
+
+    h = np.matmul(p_matrix.transpose(), q_matrix)
+    u, s, vh = np.linalg.svd(h)
+    d = np.linalg.det(np.matmul(vh.transpose(), u.transpose()))
+    int_mat = np.identity(3)
+    int_mat[2, 2] = d
+    rot_matrix = np.matmul(np.matmul(vh.transpose(), int_mat), u.transpose())
+
+    return rot_matrix
+
+
+def get_centered_matrix(mat):
+    """
+    For a list of coordinates n.e. a n_atoms x 3 matrix as a np array translate to the center of the coordinates
+    :param mat: (np.ndarray)
+    :return: (np.ndarray) translated coordinates
+    """
+    centroid = np.average(mat, axis=0)
+    return np.array([coord - centroid for coord in mat])
 
 
 i = np.array([1.0, 0.0, 0.0])

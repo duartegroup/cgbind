@@ -1,20 +1,25 @@
 import numpy as np
+import itertools
 from copy import deepcopy
 from cgbind.log import logger
-from cgbind.input_output import print_output
 from cgbind.geom import rotation_matrix
 from cgbind.geom import xyz2coord
-from cgbind.geom import calc_midpoint
 from cgbind.geom import get_closest_bonded_atom_id
 from cgbind.geom import calc_normalised_vector
 from cgbind.geom import calc_com
-from cgbind.geom import calc_dist
+from cgbind.geom import calc_cdist
+from cgbind.geom import calc_midpoint
 from cgbind.geom import cat_cage_subst_coords
+from cgbind.build import get_cost_xyzs
+from scipy.optimize import minimize
 
 
-def get_best_linker_conformer(linker, cavity_size=2.2):
+def build(cage, linker):
     """
-    For a linker to be suitable for use in a Pd2l4 cage of the sort
+    From a linker object construct a M2L4 metallocage by fitting to the template as a function of the M-M distance
+    to minimise the cost function
+
+
             N
            /|
     --N - M- N--
@@ -27,214 +32,179 @@ def get_best_linker_conformer(linker, cavity_size=2.2):
        |/
        N
 
-    the confomer of the linker MUST have a cavity between the midpoint of the two atoms. This function will process
-    the conformers and return the ids of those which meet the criteria. The N atoms coordinated to the Pd are found
-    by searching for the longest N-N distance. The most suitable (best) confomer will be that whose N–N distance
-    is minimised, which will occur if they lie in the same plane.
 
-    :param linker: A linker object
-    :param cavity_size: Radius of the sphere surrounding the midpoint of the N-N vector. If any atoms are within
-    this distance the confomer is not suitable.
-    :return: Best confomer id
-    """
-    logger.info('Getting the best linker conformer for {}'.format(linker.name))
-    logger.warning('Will only consider N atoms as donor atoms')  # TODO extend to other possible donor atoms
-
-    if linker.conf_ids is None or linker.conf_xyzs is None:
-        return None
-
-    best_conf_id = None
-    best_conf_n_n_dist = 9999.9
-
-    for conf_id in linker.conf_ids:
-
-        xyzs = linker.conf_xyzs[conf_id]
-        n1_atom_id, n2_atom_id = get_furthest_away_nitrogen_atoms(xyzs)
-        if n1_atom_id is None or n2_atom_id is None:
-            logger.error('Linker did not have two nitrogen atoms')
-            return None
-
-        n1_n2_dist = calc_dist(xyzs, atom_i=n1_atom_id, atom_j=n2_atom_id)
-
-        x_x_midpoint = (xyz2coord(xyzs[n1_atom_id]) + xyz2coord(xyzs[n2_atom_id])) / 2.0
-        suitable_confomer = True
-
-        for line_i in xyzs:
-            dist_atom_midpoint = np.linalg.norm(xyz2coord(line_i) - x_x_midpoint)
-            if dist_atom_midpoint < cavity_size:
-                suitable_confomer = False
-
-        if suitable_confomer:
-            if n1_n2_dist < best_conf_n_n_dist:
-                best_conf_id = conf_id
-                best_conf_n_n_dist = n1_n2_dist
-                linker.x_atom_ids = [n1_atom_id, n2_atom_id]
-
-    if best_conf_id is None:
-        logger.warning('Could not find a best conformer for {}'.format(linker.name))
-        return None
-
-    print_output('Best conformer of', linker.name, 'Found')
-    logger.info('Found a suitable conformer with id {}'.format(best_conf_id))
-    return best_conf_id
-
-
-def get_furthest_away_nitrogen_atoms(xyzs):
-    """
-    Get the pair of nitrogen atoms that are the furthest away in space. This is perhaps not the best way to find the
-    donor nitrogen atoms...
-
-    :param xyzs: (list(list))
-    :return: (tuple) atom indexes
-    """
-
-    max_n_n_dist = 0.0
-    n1_atom_id, n2_atom_id = None, None
-
-    for i, line_i in enumerate(xyzs):
-        for j, line_j in enumerate(xyzs):
-            if i > j and line_i[0] == 'N' and line_j[0] == 'N':
-                dist = np.linalg.norm(xyz2coord(line_i) - xyz2coord(line_j))
-                if dist > max_n_n_dist:
-                    max_n_n_dist = dist
-                    n1_atom_id, n2_atom_id = i, j
-
-    return n1_atom_id, n2_atom_id
-
-
-def get_mid_atom_id(linker):
-    """
-    For a linker then the 'mid_atom' is needed to define a plane from which the M2L4 cage may be built. This is
-    found by calculating the abs difference in the A-X1, A-X2 distances for all atoms A, the minimum of which will
-    be the atom closest to the midpoint of the linker as possible.
-    :return: The ID of the atom in the xyz list
-    """
-    logger.info('Calculating mid atom id for linker {}'.format(linker.name))
-
-    if linker.xyzs is None:
-        logger.error('Linker xyzs were None. Cannot find the mid atom id')
-    if linker.x_atom_ids is None:
-        logger.error('Could not find the mid atom. Have no x_atom_ids')
-        return None
-
-    mid_atom_id = 0
-    x1_atom_id, x2_atom_id = linker.x_atom_ids
-    x1_coords, x2_coords = xyz2coord(linker.xyzs[x1_atom_id]), xyz2coord(linker.xyzs[x2_atom_id])
-    linker.x_x_midpoint = calc_midpoint(x1_coords, x2_coords)
-
-    min_dist_diff = 999.9
-
-    for i in range(len(linker.xyzs)):
-        atom_i_coords = xyz2coord(linker.xyzs[i])
-        dist_diff = np.abs(np.linalg.norm(atom_i_coords - x1_coords) - np.linalg.norm(atom_i_coords - x2_coords))
-        if dist_diff < min_dist_diff:
-            min_dist_diff = dist_diff
-            mid_atom_id = i
-
-    return mid_atom_id
-
-
-def build(cage, linker):
-    """
-    From a linker object rotate the linker around a defined center to create a L4 scaffold, then add the M atoms
-    to the midpoints between the N-atoms from 'opposite' linkers
     :param cage: A Cage object
     :param linker: A linker object
-    :return: The xyzs of the full cage
     """
     logger.info('Building M2L4 metallocage'.format(cage.name))
 
-    if any(k is None for k in (linker.mid_atom_id, linker.xyzs, linker.x_x_midpoint, linker.x_atom_ids)):
+    if any(attr is None for attr in (linker.xyzs, linker.x_atom_ids)):
+        logger.error('A required linker property was None')
         return None
 
-    x_x_dist = 4.1  # X - X distance in a N-M-N unit
-    delta_x_x_dist = 999.9
-    xyzs = []
-    trns_dist = -20.0
+    opt_res = minimize(get_cost_xyzs, x0=np.array([5.0]),  method='BFGS',
+                       args=(cage, linker, Template(), get_xx_coords(linker), False))
 
-    while delta_x_x_dist > 0.05:
+    cost, xyzs = get_cost_xyzs(r=opt_res.x[0], cage=cage, linker=linker, template=Template(),
+                               coords_to_fit=get_xx_coords(linker), return_xyzs=True)
 
-        xyzs = []
+    if len(xyzs) != cage.arch.n_metals + cage.arch.n_linkers * linker.n_atoms:
+        logger.error('Could not generate M2L4 metallocage')
+    else:
+        logger.info('Built M2L4 metallocage')
+        cage.xyzs = xyzs
 
-        # ------ Add the 4 linkers in the correct orientation ----------
-
-        trns_dist += 0.05
-        cage.centre = get_cage_centre(linker, trns_dist)
-
-        first_linker_coords = xyz2coord(linker.xyzs) - cage.centre
-
-        midpoint_n1_vector = linker.x_x_midpoint - xyz2coord(linker.xyzs[linker.x_atom_ids[0]])
-        norm_midpoint_n1_vector = midpoint_n1_vector / np.linalg.norm(midpoint_n1_vector)
-
-        rotation_axis = norm_midpoint_n1_vector
-
-        for angle in [0.0, np.pi / 2.0, np.pi, 3.0 * np.pi / 2.0]:
-            linker_rot_xyzs = []
-            for i in range(len(linker.xyzs)):
-                linker_coord = np.matmul(rotation_matrix(rotation_axis, angle), first_linker_coords[i])
-                linker_xyz = [linker.xyzs[i][0]] + linker_coord.tolist()
-                linker_rot_xyzs.append(linker_xyz)
-
-            xyzs += linker_rot_xyzs
-
-        actual_n_n_dist = np.linalg.norm(xyz2coord(xyzs[linker.x_atom_ids[0]]) -
-                                         xyz2coord(xyzs[linker.x_atom_ids[0] + 2 * linker.n_atoms]))
-
-        def check_linker_geom(tolerance=0.8):
-            """
-            All atoms in opposite linkers need to be further away than the X - X distance
-            :return: A large val which will be added to delta_x_x_dist, ensuring the while loop isn't exited
-            """
-
-            for i in range(len(linker.xyzs)):
-                for j in range(len(linker.xyzs)):
-                    if i > j:
-                        dist = np.linalg.norm(xyz2coord(xyzs[i]) - xyz2coord(xyzs[j + 2 * linker.n_atoms]))
-                        if dist + tolerance < actual_n_n_dist:
-                            return 99.9
-
-            return 0.0
-
-        delta_x_x_dist = np.abs(actual_n_n_dist - x_x_dist) + check_linker_geom()
-
-        if trns_dist > 100:
-            cage.reasonable_geometry = False
-            logger.warning("No sensible geometry can be found for {}".format(linker.name))
-            return None
-
-    # ------ Add the M atoms ----------
-
-    for i in range(2):
-        x_x_midpoint_oposite_linkers = calc_midpoint(xyz2coord(xyzs[linker.x_atom_ids[i]]),
-                                                     xyz2coord(xyzs[linker.x_atom_ids[i] + 2 * linker.n_atoms]))
-        # Add the metal atom to the xyz list. Located at the midpoint between 2 N atoms on opposite sides
-        xyzs.append([cage.metal] + x_x_midpoint_oposite_linkers.tolist())
-
-    cage.xyzs = xyzs
     return None
 
 
-def get_cage_centre(linker, trns=3.0):
+def get_xx_coords(linker):
+    return [xyz2coord(xyzs=linker.xyzs[i]) for i in range(linker.n_atoms) if i in linker.x_atom_ids]
+
+
+def get_best_conformer(linker, enclosed_cavity_rad=2.0):
     """
-    Get the centre defined as the following
+    For a linker to be suitable for use in a M2L4 cage we need co-linear N-M vectors, which are approx the N-'lone pair'
+    vectors
 
-           -------X
-           |
-           |
-    midatom|             centre
-           |
-           |
-           -------X
-    :param linker: A Linker object
-    :param trns: Distance from the mid atom to the centre
-    :return: Coordinates of the centre
+    ------N -->
+    |
+    |
+    |     empty
+    |
+    |
+    ------N -->
+
+
+    Also, there needs to be a vacant cavity between the two nitrogen atoms, as above.
+
+    :param linker: A linker object
+    :param enclosed_cavity_rad:
+    :return: Best conformer id
+    """
+    logger.info('Getting the best linker conformer for {}'.format(linker.name))
+    logger.warning('Will only consider N atoms as donors')
+
+    n_atom_ids = get_donor_nitrogen_atom_ids(linker=linker)
+
+    if linker.conf_ids is None or linker.conf_xyzs is None or n_atom_ids is None:
+        logger.error('A required linker property was None')
+        return None
+
+    # For each pair of N atoms find the conformer with the most co-linear N-lp vector and has no atoms within
+    # a sphere defined by enclosed_cavity_rad
+    ideal_cos_theta = 1.0                                       # For co-linear vectors theta=0 and cos(0) = 1
+    curr_cos_theta = 9999.9
+    best_conf_id = None
+
+    for (n1, n2) in itertools.combinations(n_atom_ids, 2):
+        for conf_id in linker.conf_ids:
+
+            lp_vectors = get_nitrogen_lone_pair_vectors(linker=linker, nitrogen_atom_ids=n_atom_ids, conf_id=conf_id)
+            cos_theta = np.dot(lp_vectors[0], lp_vectors[1])
+
+            # If the angle is smaller then we have a better conformer
+            if np.abs(cos_theta - ideal_cos_theta) < np.abs(curr_cos_theta - ideal_cos_theta) or best_conf_id is None:
+                curr_cos_theta = cos_theta
+                best_conf_id = conf_id
+
+        # Check that there is a vacant cavity suitable to construct a M2L4 cage
+        linker_coords = xyz2coord(linker.conf_xyzs[best_conf_id])
+        n_n_midpoint = calc_midpoint(coord1=linker_coords[n1], coord2=linker_coords[n2])
+        atom_midpoint_dists = [np.linalg.norm(n_n_midpoint - linker_coords[i]) for i in range(linker.n_atoms)]
+
+        linker_has_enclosed_cavity = all([dist > enclosed_cavity_rad for dist in atom_midpoint_dists])
+
+        if linker_has_enclosed_cavity:
+            logger.info('Found conformer with vacant cavity suitable to construct a M2L4 cage')
+            populate_exe_motifs(linker=linker, n_id1=n1, n_id2=n2)
+
+            logger.warning('If there are multiple possibilities for reasonable donor atoms they will be excluded')
+            return best_conf_id
+
+    return None
+
+
+def populate_exe_motifs(linker, n_id1, n_id2):
+    logger.info('Populating EXE motifs of the linker with the corresponding atom ids')
+    linker.exe_motifs = []
+
+    n_n_midpoint = calc_midpoint(coord1=xyz2coord(linker.xyzs[n_id1]), coord2=xyz2coord(linker.xyzs[n_id2]))
+    for n_atom_id in [n_id1, n_id2]:
+        atoms_bonded_to_n = [[atom_id for atom_id in bond if atom_id != n_atom_id][0]
+                             for bond in linker.bonds if n_atom_id in bond]
+
+        assert len(atoms_bonded_to_n) == 2
+        e1, e2 = atoms_bonded_to_n
+
+        # Ensure the ordering is correct to fit the two EXE motifs of each linker
+        if calc_cdist(xyz2coord(linker.xyzs[e1]), n_n_midpoint) > calc_cdist(xyz2coord(linker.xyzs[e2]), n_n_midpoint):
+            exe_motif = [e1, n_atom_id, e2]
+        else:
+            exe_motif = [e2, n_atom_id, e1]
+
+        linker.exe_motifs.append(exe_motif)
+
+    if len(linker.exe_motifs) == 0:
+        logger.error('Could not find and EXE motifs')
+        linker.exe_motifs = None
+
+    return None
+
+
+def get_nitrogen_lone_pair_vectors(linker, nitrogen_atom_ids, conf_id=None):
     """
 
-    mid_atom_coords = xyz2coord(linker.xyzs[linker.mid_atom_id])
-    midpoint_mid_atom_vector = linker.x_x_midpoint - mid_atom_coords
-    norm_midpoint_mid_atom_vector = mid_atom_coords / np.linalg.norm(midpoint_mid_atom_vector)
+    :param linker: linker object
+    :param nitrogen_atom_ids: (list(int)) list of donor nitrogen ids
+    :param conf_id: (int) id of the conformer to use in getting the xyzs
+    :return: (dict) keyed with the nitrogen atom id and valued with the normalised N-lp vector (np.ndarray)
+    """
 
-    return linker.x_x_midpoint - trns * norm_midpoint_mid_atom_vector
+    lp_vectors = []
+    linker.exe_motifs = []
+    assert len(nitrogen_atom_ids) == 2
+
+    for nitrogen_atom_id in nitrogen_atom_ids:
+        bonded_atom_ids = [[atom_id for atom_id in bond if atom_id != nitrogen_atom_id][0]
+                           for bond in linker.bonds if nitrogen_atom_id in bond]
+
+        if conf_id is not None:
+            xyzs = linker.conf_xyzs[conf_id]
+        else:
+            xyzs = linker.xyzs
+
+        # Get the vector that corresponds to the 'lone pair' of the N, which will be negative of the average bond vec
+        lp_vec = np.sum(np.array([(xyz2coord(xyzs[nitrogen_atom_id]) - xyz2coord(xyzs[atom_id]))
+                                  for atom_id in bonded_atom_ids]), axis=0) / float(len(bonded_atom_ids))
+
+        lp_vectors.append(lp_vec / np.linalg.norm(lp_vec))
+
+    return lp_vectors
+
+
+def get_donor_nitrogen_atom_ids(linker):
+    """
+    :param linker: linker object
+    :return: (list) nitrogen atom ids
+    """
+
+    if linker.n_atoms is None or linker.xyzs is None:
+        logger.error('A required linker property was None')
+        return None
+
+    nitrogen_atom_ids = [i for i in range(linker.n_atoms) if linker.xyzs[i][0] == 'N']
+    if len(nitrogen_atom_ids) < 2:
+        logger.error('There are fewer than 2 nitrogen atoms in the linker. Cannot build a cage')
+        return None
+
+    for n_atom_id in nitrogen_atom_ids.copy():
+        n_bonds_to_n = len([bond for bond in linker.bonds if n_atom_id in bond])
+
+        # If the number of bonds to the nitrogen atom is 2 we have a 'lone-pair' and can form a cage
+        if n_bonds_to_n != 2:
+            nitrogen_atom_ids.remove(n_atom_id)
+
+    return nitrogen_atom_ids
 
 
 def rot_minimise_repulsion(subst_coords, cage_coords, rot_axes, n_rot_steps=100):
@@ -397,3 +367,94 @@ def add_substrate_com(cage, substrate):
     xyzs = cat_cage_subst_coords(cage, substrate, cage_coords, subst_coords)
 
     return xyzs
+
+
+class Template:
+
+    def set_geom(self, r):
+        m_m_vec = self.Metals.coords[0] - self.Metals.coords[1]
+        m_m_dist = np.linalg.norm(m_m_vec)
+        m_m_normal_vec = m_m_vec / m_m_dist
+
+        # Shift the second metal to a distance 2*r from the first
+        self.Metals.coords[1] += (2.0 * r - m_m_dist) * m_m_normal_vec
+        for i, ligand in enumerate(self.Ligands):
+            for j in range(3, 6):
+                self.Ligands[i].x_coords[j] += (2.0 * r - m_m_dist) * m_m_normal_vec
+                self.Ligands[i].x_xyzs[j] = [self.Ligands[i].x_xyzs[j][0]] + self.Ligands[i].x_coords[j].tolist()
+
+        self.Metals.xyzs = [[self.Metals.xyzs[i][0]] + self.Metals.coords[i].tolist() for i in range(2)]
+
+    def __init__(self, r=None):
+        self.Metals = Metals()
+        self.Ligands = [Ligand1(), Ligand2(), Ligand3(), Ligand4()]
+
+        if r is not None:
+            self.set_geom(r)
+
+
+class Metals:
+    def __init__(self):
+        self.xyzs = [['M', -6.05381, 0.00096, -0.00072],
+                     ['M', 6.05381, -0.00054, 0.00066]]
+        self.coords = xyz2coord(self.xyzs)
+
+
+class Ligand1:
+
+    def __init__(self):
+        exe1_xyzs = [['E',  -7.18579, 1.92330, -1.92897],
+                     ['X',  -6.03691, 1.43490, -1.43693],
+                     ['E',  -4.86407, 1.88909, -1.88902]]
+
+        exe2_xyzs = [['E',  7.18575, 1.92345, -1.92582],
+                     ['X',  6.03680, 1.43433, -1.43465],
+                     ['E',  4.86402, 1.88844, -1.88696]]
+
+        self.x_xyzs = exe1_xyzs + exe2_xyzs
+        self.x_coords = xyz2coord(self.x_xyzs)
+
+
+class Ligand2:
+
+    def __init__(self):
+        exe1_xyzs = [['E', -7.18452, -1.92409, -1.92674],
+                     ['X', -6.03583, -1.43469, -1.43525],
+                     ['E', -4.86281, -1.88906, -1.88667]]
+
+        exe2_xyzs = [['E', 7.18706, -1.92346, -1.92640],
+                     ['X', 6.03792, -1.43522, -1.43481],
+                     ['E', 4.86532, -1.89002, -1.88691]]
+
+        self.x_xyzs = exe1_xyzs + exe2_xyzs
+        self.x_coords = xyz2coord(self.x_xyzs)
+
+
+class Ligand3:
+
+    def __init__(self):
+        exe1_xyzs = [['E', -7.18570, -1.92117, 1.92765],
+                     ['X', -6.03676, -1.43298, 1.43551],
+                     ['E', -4.86397, -1.88744, 1.88745]]
+
+        exe2_xyzs = [['E', 7.18588, -1.92427, 1.92748],
+                     ['X', 6.03698, -1.43539, 1.43596],
+                     ['E', 4.86416, -1.88966, 1.88800]]
+
+        self.x_xyzs = exe1_xyzs + exe2_xyzs
+        self.x_coords = xyz2coord(self.x_xyzs)
+
+
+class Ligand4:
+
+    def __init__(self):
+        exe1_xyzs = [['E', -7.18713, 1.92581, 1.92437],
+                     ['X', -6.03797, 1.43657, 1.43382],
+                     ['E', -4.86539, 1.89096, 1.88637]]
+
+        exe2_xyzs = [['E',  7.18444, 1.92318, 1.92804],
+                     ['X',  6.03577, 1.43419, 1.43609],
+                     ['E',  4.86273, 1.88841, 1.88764]]
+
+        self.x_xyzs = exe1_xyzs + exe2_xyzs
+        self.x_coords = xyz2coord(self.x_xyzs)

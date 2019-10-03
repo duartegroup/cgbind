@@ -8,6 +8,8 @@ from cgbind.input_output import xyzs2xyzfile
 from cgbind.confomers import gen_conformer_mol_files
 from cgbind.confomers import confomer_mol_files_to_xyzs
 from cgbind.geom import calc_com
+from cgbind.bonds import get_bond_list_from_rdkit_bonds
+from cgbind.bonds import get_xyz_bond_list
 
 
 class Molecule(object):
@@ -47,6 +49,7 @@ class Molecule(object):
         print_output('Confomer generation for', self.name, 'Running')
         self.conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=AllChem.ETKDG()))
         self.conf_filenames = [self.name + '_conf' + str(i) + '.mol' for i in self.conf_ids]
+        self.bonds = get_bond_list_from_rdkit_bonds(rdkit_bonds_obj=self.mol_obj.GetBonds())
         gen_conformer_mol_files(self)
         print_output('', '', 'Done')
 
@@ -70,6 +73,8 @@ class Molecule(object):
         self.n_atoms = None
         self.com = None
 
+        self.bonds = None
+
         self.conf_ids = None
         self.conf_filenames = None
         self.conf_xyzs = None
@@ -79,3 +84,4 @@ class Molecule(object):
 
         if xyzs:
             self.n_atoms = len(xyzs)
+            self.bonds = get_xyz_bond_list(xyzs=self.xyzs)
