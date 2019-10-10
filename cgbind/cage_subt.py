@@ -1,5 +1,6 @@
 from cgbind.log import logger
 from cgbind import m2l4
+from cgbind import add_substrate
 from cgbind.optimisation import opt_geom
 from cgbind.single_point import singlepoint
 from cgbind.input_output import print_output
@@ -50,12 +51,11 @@ class CageSubstrateComplex(object):
             elif self.substrate.x_atom_ids:
                 xyzs = m2l4.add_substrate_x(self.cage, self.substrate)
             else:
-                xyzs = m2l4.add_substrate_com(self.cage, self.substrate)
+                xyzs = add_substrate.add_substrate_com(self.cage, self.substrate)
 
         if self.cage.arch == M4L6:
-            # TODO add substrate with M4L6 cage
-            logger.critical('Adding a substrate to an M4L6 cage. NOT IMPLEMENTED YET')
-            exit()
+            logger.info('Adding the substrate to the center of the cage defined by the COM')
+            xyzs = add_substrate.add_substrate_com(self.cage, self.substrate)
 
         return xyzs
 
