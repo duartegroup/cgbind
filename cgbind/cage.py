@@ -106,7 +106,7 @@ class Cage(object):
             path_to_opt_geom = os.path.join(Config.path_to_opt_struct, self.name + '.xyz')
             if os.path.exists(path_to_opt_geom):
                 logger.info('Found an optimised geometry in path_to_opt_struct')
-                self.xyzs = xyzfile2xyzs(xyz_filename=path_to_opt_geom)
+                self.xyzs = xyzfile2xyzs(filename=path_to_opt_geom)
         else:
             self.xyzs, self.energy = opt_geom(self.xyzs, self.name, charge=self.charge, n_cores=n_cores)
 
@@ -149,7 +149,7 @@ class Cage(object):
             m4l6.build(self, linker)
 
         else:
-            logger.critical("Couldn't build a cage with architecture {}. NOT IMPLEMENTED YET".format(self.arch))
+            logger.critical(f"Couldn't build a cage with architecture {self.arch}. NOT IMPLEMENTED YET")
             exit()
 
         if self.xyzs is None:
