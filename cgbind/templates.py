@@ -41,11 +41,6 @@ def find_mols_in_xyzs(xyzs):
     return unique_mol_xyzs
 
 
-
-
-
-
-
 class Template:
 
     def _find_metallocage_mol(self):
@@ -139,9 +134,36 @@ class Template:
             x_motif.append(donor_atom)
             x_motifs.append(x_motif)
 
-        # Order the x_motifs according to the centroid – coord distance: smallest -> largest
+        # Combine x_motifs that are bonded, thus should be considered a single motif
+        bonded_x_motif_sets = []
+        for n, x_motif_i in enumerate(x_motifs):
+            bonded_x_motif = x_motif_i.copy()
 
-        return [sorted(x_motif, key=centroid_atom_distance) for x_motif in x_motifs]
+            # Loop over all other motifs that are not the same
+            for m, x_motifs_j in enumerate(x_motifs):
+                if n != m:
+
+                    for (i, j) in self.bond_list:
+                        # Check that there is a bond between x_motif i and x_motif j
+                        if (i in bonded_x_motif and j in x_motifs_j) or (j in bonded_x_motif and i in x_motifs_j):
+
+                            bonded_x_motif += x_motifs_j
+                            break
+
+            bonded_x_motif_sets.append(set(bonded_x_motif))
+
+        # Add the largest set to the bonded_x_motifs as a list. Some motifs will be missed due to the oder in which
+        # they're added
+
+        [print(x_motif) for x_motif in bonded_x_motif_sets]
+
+        # TODO strip non=unique sets
+
+
+        bonded_x_motifs = [list(x_motif_set) for x_motif_set in bonded_x_motif_sets]
+
+        # Order the x_motifs according to the centroid – coord distance: smallest -> largest
+        return [sorted(x_motif, key=centroid_atom_distance) for x_motif in bonded_x_motifs]
 
     def _find_centroid(self):
 
@@ -168,10 +190,6 @@ class Template:
         self.x_motifs = self._find_x_motifs()
 
 
-
-
-
-
 if __name__ == '__main__':
 
     # template = Template(arch=M2L4, mol2_filename='/Users/tom/repos/cgbind/cgbind/lib/EZEVAI.mol2')
@@ -179,7 +197,9 @@ if __name__ == '__main__':
     # xyzs2xyzfile(xyzs=template.xyzs, basename='template')
     # print(template.x_motifs)
 
-    template2 = Template(arch=M4L6, mol2_filename='/Users/tom/repos/cgbind/cgbind/lib/SALDIV.mol2')
-    from cgbind.input_output import xyzs2xyzfile
-    xyzs2xyzfile(xyzs=template2.xyzs, basename='template')
-    print(template2.x_motifs)
+    template2 = Template(arch=M4L6, mol2_filename='lib/SALDIV.mol2')
+    # from cgbind.input_output import xyzs2xyzfile
+    # xyzs2xyzfile(xyzs=template2.xyzs, basename='template')
+    print()
+    #[print(motif) for motif in template2.x_motifs]
+    #print(len(template2.x_motifs))
