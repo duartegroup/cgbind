@@ -7,7 +7,6 @@ from cgbind.input_output import mol2file_to_xyzs
 from cgbind.bonds import get_xyz_bond_list
 from cgbind.atoms import metals
 from cgbind.geom import xyz2coord
-from cgbind.geom import calc_distance_matrix
 from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import check_x_motifs
 
@@ -39,7 +38,7 @@ def find_mols_in_xyzs(xyzs, allow_same=False):
             unique_mol_ids.append(molecule)
 
     unique_mol_xyzs = [[xyzs[n] for n in mol_ids] for mol_ids in unique_mol_ids]
-    logger.info('Found {} molecule(s)'.format(len(unique_mol_xyzs)))
+    logger.info(f'Found {len(unique_mol_xyzs)} molecule(s)')
 
     return unique_mol_xyzs
 
@@ -69,6 +68,13 @@ def get_template(arch_name='m2l4', folder_path=None):
 class Linker:
 
     def __init__(self, xyzs, x_atoms):
+        """
+        Make a template linker object from the corresponding xyzs and the donor atoms which were bonded to the metals
+        which form the basis of the cage
+
+        :param xyzs: (list(list))
+        :param x_atoms: (list(int)) Donor atom ids in the xyzs
+        """
         self.xyzs = xyzs
         self.x_atoms = x_atoms
         self.coords = xyz2coord(xyzs)
@@ -77,7 +83,6 @@ class Linker:
 
         self.x_motifs = find_x_motifs(self)
         check_x_motifs(self)                                        # check that the x_motifs are the same length -
-        self.len_x_motif = len(self.x_motifs[0])                    # only applicable to symmetric structures
 
 
 class Template:
@@ -87,12 +92,11 @@ class Template:
         From a list of distinct molecules find the metallocage. This is assumed to be the molecule with the highest
         frequency of metal atoms
 
-        :return: None
+        :return: xyzs, metal label
         """
         mol_metals_and_freqs, metal = [], None
 
-        mols_xyzs = find_mols_in_xyzs(self.all_xyzs)
-        for xyzs in mols_xyzs:
+        for xyzs in self.mols_xyzs:
             metals_and_freq = dict.fromkeys(metals, 0)
 
             for atom_label, _, _, _ in xyzs:
@@ -113,37 +117,36 @@ class Template:
                 mol_id_with_max_metals = i
                 max_metal = metal
 
-        self.xyzs = self.mols_xyzs[mol_id_with_max_metals]
-        self.metal = max_metal
-        logger.info(f'Set metal as {self.metal}')
-        return None
+        logger.info(f'Found metal {metal}')
+        return self.mols_xyzs[mol_id_with_max_metals], max_metal
 
-    def _find_linker_mols_and_x_atoms(self):
+    def _find_linkers(self):
         logger.info('Stripping the metals from the structure')
         xyzs_no_metals = [xyz for xyz in self.xyzs if self.metal not in xyz]
 
         logger.info('Finding the distinct linker molecules ')
         linkers_xyzs = find_mols_in_xyzs(xyzs=xyzs_no_metals, allow_same=True)
 
-        linkers_x_atoms = []
+        linkers = []
         # Add the x_atoms which are contained within each linker, that were found bonded to each metal
         for xyzs in linkers_xyzs:
             coords = xyz2coord(xyzs)
             linker_x_atoms = []
 
+            # Iterate through the coordinates until one matches that of the full template
             for i, coord in enumerate(coords):
                 for donor_atom_id in self.x_atoms:
                     if list(coord) == list(self.coords[donor_atom_id]):
                         linker_x_atoms.append(i)
                         break
 
-            linkers_x_atoms.append(linker_x_atoms)
+            linkers.append(Linker(xyzs=xyzs, x_atoms=linker_x_atoms))
 
         logger.info(f'Found {len(linkers_xyzs)} linkers each with {len(linker_x_atoms)} donor atoms')
-        return linkers_xyzs, linkers_x_atoms
+        return linkers
 
     def _find_metal_atom_ids(self):
-        logger.info('Getting metal atom ids with label {}'.format(self.metal))
+        logger.info(f'Getting metal atom ids with label {self.metal}')
         try:
             return [i for i in range(len(self.xyzs)) if self.xyzs[i][0] == self.metal]
         except TypeError or IndexError or AttributeError:
@@ -176,6 +179,28 @@ class Template:
         metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
         return np.average(metal_coords, axis=0)
 
+    def _set_shift_vectors(self):
+        """
+        For the linkers set the shift vectors for the x motifs. These are the centroid -> closest metal atom
+        vector
+
+        :return: None
+        """
+
+        for linker in self.linkers:
+            for x_motif in linker.x_motifs:
+                motif_atom_id = x_motif.atom_ids[0]
+
+                metal_dists = [np.linalg.norm(linker.coords[motif_atom_id] - self.coords[metal_id])
+                               for metal_id in self.metal_atoms]
+
+                closest_metal_id = metal_dists.index(min(metal_dists))
+                x_motif.shift_vec = self.coords[closest_metal_id] - self.centroid
+                x_motif.r = np.linalg.norm(x_motif.shift_vec)
+                x_motif.norm_shift_vec = x_motif.shift_vec / x_motif.r
+
+        return None
+
     def save_template(self, folder_path=None):
         logger.info('Saving metallocage template')
 
@@ -190,12 +215,10 @@ class Template:
     def __init__(self, arch_name, mol2_filename):
 
         self.arch_name = arch_name
-        self.all_xyzs = mol2file_to_xyzs(filename=mol2_filename)
-        self.mols_xyzs = find_mols_in_xyzs(xyzs=self.all_xyzs)
-        self.xyzs = None                                            # Set in find_metallocage_mol()
-        self.metal = None                                           # Set in find_metallocage_mol(). Limited to 1 metal
+        all_xyzs = mol2file_to_xyzs(filename=mol2_filename)
+        self.mols_xyzs = find_mols_in_xyzs(xyzs=all_xyzs)
+        self.xyzs, self.metal = self._find_metallocage_mol()
 
-        self._find_metallocage_mol()
         self.metal_atoms = self._find_metal_atom_ids()              # metal atom ids
         self.bonds = get_xyz_bond_list(xyzs=self.xyzs)
         self.x_atoms = self._find_donor_atoms()                     # donor atom ids
@@ -203,7 +226,8 @@ class Template:
         self.coords = xyz2coord(xyzs=self.xyzs)
         self.centroid = self._find_centroid()                       # centroid of the cage ~ average metal coordinate
 
-        self.distance_matrix = calc_distance_matrix(xyzs=self.xyzs)
+        self.linkers = self._find_linkers()
+        self.n_linkers = len(self.linkers)
+        logger.info(f'Found {self.n_linkers} linkers')
 
-        linkers_xyzs, linkers_x_atoms = self._find_linker_mols_and_x_atoms()
-        self.linkers = [Linker(linkers_xyzs[i], linkers_x_atoms[i]) for i in range(len(linkers_xyzs))]
+        self._set_shift_vectors()

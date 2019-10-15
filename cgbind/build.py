@@ -32,7 +32,7 @@ def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit
                                   for coord in xyz2coord(linker.xyzs)])
 
     # Compute the cost function = (r - r_ideal)^2
-    x_atom_ids = [x for x_motif in linker.x_motifs for x in x_motif]
+    x_atom_ids = [x for x_motif in linker.x_motifs for x in x_motif.atom_ids]
     new_p_mat = np.array([new_linker_coords[i] for i in x_atom_ids])
     cost = np.sum(np.square(new_p_mat - q_mat))
 

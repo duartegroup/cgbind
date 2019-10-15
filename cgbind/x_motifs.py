@@ -3,11 +3,11 @@ from cgbind.log import logger
 
 
 def check_x_motifs(linker):
-    if not all([len(motif) == len(linker.x_motifs[0]) for motif in linker.x_motifs]):
+    if not all([motif.n_atoms == linker.x_motifs[0].n_atoms for motif in linker.x_motifs]):
         logger.critical('Found x motifs in the structure that have different number of atoms')
         exit()
 
-    logger.info(f'Number of atoms in the x motifs is {len(linker.x_motifs[0])}')
+    logger.info(f'Number of atoms in the x motifs is {linker.x_motifs[0].n_atoms}')
     return None
 
 
@@ -73,7 +73,22 @@ def find_x_motifs(linker):
         if unique:
             largest_unique_bonded_x_motif_sets.append(x_motif)
 
-    logger.info(f'Found {len(largest_unique_bonded_x_motif_sets)} X motifs in the template')
+    logger.info(f'Found {len(largest_unique_bonded_x_motif_sets)} X motifs in the linker')
 
     # Order the x_motifs according to the centroid – coord distance: smallest -> largest
-    return [sorted(list(x_motif), key=centroid_atom_distance) for x_motif in largest_unique_bonded_x_motif_sets]
+    sorted_x_motifs_ids = [sorted(list(x_motif), key=centroid_atom_distance)
+                           for x_motif in largest_unique_bonded_x_motif_sets]
+
+    return [Xmotif(atom_ids=motif, coords=[linker.coords[i] for i in motif]) for motif in sorted_x_motifs_ids]
+
+
+class Xmotif:
+
+    def __init__(self, atom_ids, coords):
+
+        self.atom_ids = atom_ids
+        self.coords = coords
+        self.n_atoms = len(coords)
+        self.shift_vec = None
+        self.r = None
+        self.norm_shift_vec = None

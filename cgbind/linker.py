@@ -1,6 +1,7 @@
 from cgbind.log import logger
 import numpy as np
 import itertools
+from copy import deepcopy
 from cgbind.molecule import Molecule
 from cgbind.atoms import heteroatoms
 from cgbind.geom import xyz2coord
@@ -8,6 +9,35 @@ from cgbind.templates import get_template
 from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import check_x_motifs
 from cgbind.build import get_template_fitted_coords_and_cost
+
+
+def get_shifted_template_x_motif_coords(linker_template, dr):
+    """
+    For a linker template modify the x motif coordinates by a particular distance (dr) along the shift vector
+
+    e.g. for M2L4
+
+               ^
+    M -- X--   | shift vec
+           |
+           |
+           |
+    M -- X--   | shift vec
+
+
+    :param linker_template:
+    :param dr: (float) Distance in Å to shift the x motifs by
+    :return:
+    """
+
+    shifted_coords = []
+
+    for motif in linker_template.x_motifs:
+        for coord in deepcopy(motif.coords):
+            coord += dr * motif.norm_shift_vec
+            shifted_coords.append(coord)
+
+    return shifted_coords
 
 
 class Linker(Molecule):
@@ -26,7 +56,8 @@ class Linker(Molecule):
         For a list of x motifs remove those which don't have the same number of atoms as the template linkers
         :return: (list) new list of x motifs
         """
-        return [x_motif for x_motif in self.x_motifs if len(x_motif) == self.cage_template.linkers[0].len_x_motif]
+        return [x_motif for x_motif in self.x_motifs
+                if x_motif.n_atoms == self.cage_template.linkers[0].x_motifs[0].n_atoms]
 
     def __init__(self, smiles=None, name='linker', charge=0, n_confs=200, xyzs=None, arch='m2l4'):
 
@@ -35,6 +66,7 @@ class Linker(Molecule):
 
         self.arch = arch
         self.cage_template = get_template(arch_name=arch)
+
         self.coords = xyz2coord(self.xyzs)
         self.centroid = np.average(self.coords, axis=0)
 
@@ -48,37 +80,18 @@ class Linker(Molecule):
 
         template_linker = self.cage_template.linkers[0]
         n_x_motifs_in_linker = len(template_linker.x_motifs)
-        min_cost, best_x_motifs = None, None
-
-        def get_x_motifs_coords_new_dist(motifs_coords, motifs_vecs, r, curr_rs):
-
-            for i, coords in enumerate(motifs_coords):
-                coords += (r - curr_rs[i]) * motifs_vecs[i] / curr_rs[i]
-
-            return [coord for coords in motifs_coords for coord in coords]
 
         for x_motifs in itertools.combinations(self.x_motifs, n_x_motifs_in_linker):
 
-            template_x_motifs_coords = [np.array([template_linker.coords[i] for i in motif])
-                                        for motif in template_linker.x_motifs]
-
-            shift_vecs = [np.average(coords, axis=0) - template_linker.centroid for coords in template_x_motifs_coords]
-            curr_rs = [np.linalg.norm(vec) for vec in shift_vecs]
-
-            template_coords = get_x_motifs_coords_new_dist(motifs_coords=template_x_motifs_coords,
-                                                           motifs_vecs=shift_vecs, r=7.0, curr_rs=curr_rs)
-            coords = [self.coords[i] for motif in x_motifs for i in motif]
-
-            _, cost = get_template_fitted_coords_and_cost(self, template_coords, coords_to_fit=coords)
+            x_coords = [self.coords[atom_id] for motif in x_motifs for atom_id in motif.atom_ids]
+            shifted_coords = get_shifted_template_x_motif_coords(linker_template=template_linker, dr=0.1)
+            _, cost = get_template_fitted_coords_and_cost(self, template_x_coords=shifted_coords,
+                                                          coords_to_fit=x_coords)
 
             print(cost)
-            exit()
-
 
 
 
             pass
 
-        self.x_motifs = best_x_motifs
-
-
+        self.x_motifs = None
