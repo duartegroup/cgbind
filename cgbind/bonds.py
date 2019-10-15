@@ -122,5 +122,6 @@ avg_bond_lengths = {
     'RhP': 2.20,
     'PdN': 2.01,
     'EuN': 2.55,
-    'EuO': 2.40
+    'EuO': 2.40,
+    'FeO': 2.03
 }

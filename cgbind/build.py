@@ -5,11 +5,11 @@ from cgbind.geom import get_rot_mat_kabsch
 from cgbind.geom import xyz2coord
 
 
-def get_template_fitted_coords_and_cost(linker, linker_template, coords_to_fit):
+def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit):
     """
     Get the coordinates of a linkers that are fitted to a template of XEEX motifs
     :param linker: (object)
-    :param linker_template: (object)
+    :param template_x_coords: (list(np.ndarray))
     :param coords_to_fit: (list(np.ndarray)) must have len() = len(linker_template.x_xyzs)
     :return: (np.ndarray) n_atoms x 3
     """
@@ -20,7 +20,7 @@ def get_template_fitted_coords_and_cost(linker, linker_template, coords_to_fit):
     p_mat_trans = get_centered_matrix(p_mat)
 
     # Construct the P matrix in the Kabsch algorithm
-    q_mat = np.array([xyz2coord(xyz_line) for xyz_line in linker_template.x_xyzs])
+    q_mat = deepcopy(template_x_coords)
     q_centroid = np.average(q_mat, axis=0)
     q_mat_trans = get_centered_matrix(q_mat)
 
@@ -32,7 +32,8 @@ def get_template_fitted_coords_and_cost(linker, linker_template, coords_to_fit):
                                   for coord in xyz2coord(linker.xyzs)])
 
     # Compute the cost function = (r - r_ideal)^2
-    new_p_mat = np.array([new_linker_coords[i] for i in linker.x_atom_ids])
+    x_atom_ids = [x for x_motif in linker.x_motifs for x in x_motif]
+    new_p_mat = np.array([new_linker_coords[i] for i in x_atom_ids])
     cost = np.sum(np.square(new_p_mat - q_mat))
 
     return new_linker_coords, cost
