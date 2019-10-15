@@ -5,8 +5,6 @@ from cgbind.optimisation import opt_geom
 from cgbind.single_point import singlepoint
 from cgbind.input_output import print_output
 from cgbind.geom import is_geom_reasonable
-from cgbind.architectures import M2L4
-from cgbind.architectures import M4L6
 
 
 class CageSubstrateComplex(object):
@@ -45,17 +43,17 @@ class CageSubstrateComplex(object):
 
         xyzs = None
 
-        if self.cage.arch == M2L4:
-            if self.substrate.x_x_atom_ids is not None:
-                xyzs = m2l4.add_substrate_x_x(self.cage, self.substrate)
-            elif self.substrate.x_atom_ids:
-                xyzs = m2l4.add_substrate_x(self.cage, self.substrate)
-            else:
-                xyzs = add_substrate.add_substrate_com(self.cage, self.substrate)
+        # if self.cage.arch == M2L4:
+        #     if self.substrate.x_x_atom_ids is not None:
+        #         xyzs = m2l4.add_substrate_x_x(self.cage, self.substrate)
+        #     elif self.substrate.x_atom_ids:
+        #         xyzs = m2l4.add_substrate_x(self.cage, self.substrate)
+        #     else:
+        #         xyzs = add_substrate.add_substrate_com(self.cage, self.substrate)
 
-        if self.cage.arch == M4L6:
-            logger.info('Adding the substrate to the center of the cage defined by the COM')
-            xyzs = add_substrate.add_substrate_com(self.cage, self.substrate)
+        # if self.cage.arch == M4L6:
+        #     logger.info('Adding the substrate to the center of the cage defined by the COM')
+        #     xyzs = add_substrate.add_substrate_com(self.cage, self.substrate)
 
         return xyzs
 

@@ -10,10 +10,8 @@ from cgbind.optimisation import opt_geom
 from cgbind.single_point import singlepoint
 from cgbind.atoms import get_vdw_radii
 from cgbind.geom import is_geom_reasonable
-from cgbind.geom import calc_midpoint
 from cgbind.geom import xyz2coord
-from cgbind.architectures import M2L4
-from cgbind.architectures import M4L6
+
 
 
 class Cage(object):
@@ -38,13 +36,8 @@ class Cage(object):
         centroid, min_atom_dist_id = None, None
 
         try:
-
-            if self.arch == M2L4:
-                centroid = calc_midpoint(xyz2coord(self.xyzs[self.m_ids[0]]), xyz2coord(self.xyzs[self.m_ids[1]]))
-
-            if self.arch == M4L6:
-                metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
-                centroid = np.average(metal_coords, axis=0)
+            metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
+            centroid = np.average(metal_coords, axis=0)
 
             if centroid is None:
                 logger.error('Could not find the cage centroid. Returning 0.0')
@@ -116,7 +109,7 @@ class Cage(object):
     def calc_charge(self, metal_charge):
         return self.arch.n_metals * metal_charge + self.arch.n_linkers * self.linker.charge
 
-    def __init__(self, linker, metal='Pd', metal_charge=0, name='cage', arch=M2L4):
+    def __init__(self, linker, metal='Pd', metal_charge=0, name='cage'):
         """
         Initialise a cage object
         :param linker: Linker object
@@ -129,7 +122,6 @@ class Cage(object):
 
         self.name = name
         self.metal = metal
-        self.arch = arch
         self.linker = linker
         self.metal_charge = metal_charge
         self.charge = self.calc_charge(metal_charge)
@@ -142,15 +134,11 @@ class Cage(object):
             logger.error('Linker has no xyzs. Can\'t build a cage')
             return
 
-        if self.arch == M2L4:
-            m2l4.build(self, linker)
+        # m2l4.build(self, linker)
 
-        elif self.arch == M4L6:
-            m4l6.build(self, linker)
 
-        else:
-            logger.critical(f"Couldn't build a cage with architecture {self.arch}. NOT IMPLEMENTED YET")
-            exit()
+
+
 
         if self.xyzs is None:
             self.reasonable_geometry = False

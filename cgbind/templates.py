@@ -1,8 +1,8 @@
 from cgbind.log import logger
 import networkx as nx
 import numpy as np
-from cgbind.architectures import M2L4
-from cgbind.architectures import M4L6
+import pickle
+import os
 from cgbind.input_output import mol2file_to_xyzs
 from cgbind.bonds import get_xyz_bond_list
 from cgbind.atoms import metals
@@ -155,24 +155,54 @@ class Template:
         # Add the largest set to the bonded_x_motifs as a list. Some motifs will be missed due to the oder in which
         # they're added
 
-        [print(x_motif) for x_motif in bonded_x_motif_sets]
+        largest_unique_bonded_x_motif_sets = []
+        # Sort the sets according to size, then don't add identical sets or subsets
+        for x_motif in reversed(sorted(bonded_x_motif_sets, key=len)):
 
-        # TODO strip non=unique sets
+            unique = True
+            for unique_x_motif in largest_unique_bonded_x_motif_sets:
 
+                # If the motif is already in the unique list then don't append, nor if the motif is a subset
+                if x_motif == unique_x_motif or x_motif.issubset(unique_x_motif):
+                    unique = False
+                    break
 
-        bonded_x_motifs = [list(x_motif_set) for x_motif_set in bonded_x_motif_sets]
+            if unique:
+                largest_unique_bonded_x_motif_sets.append(x_motif)
+
+        logger.info(f'Found {len(largest_unique_bonded_x_motif_sets)} X motifs in the template')
 
         # Order the x_motifs according to the centroid – coord distance: smallest -> largest
-        return [sorted(x_motif, key=centroid_atom_distance) for x_motif in bonded_x_motifs]
+        return [sorted(list(x_motif), key=centroid_atom_distance) for x_motif in largest_unique_bonded_x_motif_sets]
 
     def _find_centroid(self):
 
         metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
         return np.average(metal_coords, axis=0)
 
-    def __init__(self, arch, mol2_filename):
+    def _check_x_motifs(self):
 
-        self.arch = arch
+        if not all([len(motif) == len(self.x_motifs[0]) for motif in self.x_motifs]):
+            logger.critical('Found x motifs in the structure that have different number of atoms')
+            exit()
+
+        logger.info(f'Number of atoms in the x motifs is {len(self.x_motifs[0])}')
+        return None
+
+    def save_template(self, folder_path=None):
+        logger.info('Saving metallocage template')
+
+        if folder_path is None:
+            folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib')
+
+        with open(os.path.join(folder_path, self.name + '.obj'), 'wb') as pickled_file:
+            pickle.dump(self, file=pickled_file)
+
+        return None
+
+    def __init__(self, name, mol2_filename):
+
+        self.name = name
         self.all_xyzs = mol2file_to_xyzs(filename=mol2_filename)
         self.mols_xyzs = find_mols_in_xyzs(xyzs=self.all_xyzs)
         self.xyzs = None                                            # Set in find_metallocage_mol()
@@ -188,18 +218,17 @@ class Template:
 
         self.distance_matrix = calc_distance_matrix(xyzs=self.xyzs)
         self.x_motifs = self._find_x_motifs()
+        self._check_x_motifs()
+        self.len_x_motif = len(self.x_motifs[0])
 
 
 if __name__ == '__main__':
 
-    # template = Template(arch=M2L4, mol2_filename='/Users/tom/repos/cgbind/cgbind/lib/EZEVAI.mol2')
-    # from cgbind.input_output import xyzs2xyzfile
-    # xyzs2xyzfile(xyzs=template.xyzs, basename='template')
-    # print(template.x_motifs)
+    template = Template(name='m2l4', mol2_filename='lib/EZEVAI.mol2')
+    template.save_template()
 
-    template2 = Template(arch=M4L6, mol2_filename='lib/SALDIV.mol2')
-    # from cgbind.input_output import xyzs2xyzfile
-    # xyzs2xyzfile(xyzs=template2.xyzs, basename='template')
-    print()
-    #[print(motif) for motif in template2.x_motifs]
-    #print(len(template2.x_motifs))
+    template2 = Template(name='m4l6', mol2_filename='lib/GARWUR.mol2')
+    template2.save_template()
+
+    template3 = Template(name='m4l6_2', mol2_filename='lib/SALDIV.mol2')
+    template3.save_template()
