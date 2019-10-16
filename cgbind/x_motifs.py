@@ -1,13 +1,47 @@
 import numpy as np
+from copy import deepcopy
 from cgbind.log import logger
 
 
-def check_x_motifs(linker):
-    if not all([motif.n_atoms == linker.x_motifs[0].n_atoms for motif in linker.x_motifs]):
-        logger.critical('Found x motifs in the structure that have different number of atoms')
-        exit()
+def get_shifted_template_x_motif_coords(linker_template, dr):
+    """
+    For a linker template modify the x motif coordinates by a particular distance (dr) along the shift vector
 
-    logger.info(f'Number of atoms in the x motifs is {linker.x_motifs[0].n_atoms}')
+    e.g. for M2L4
+
+               ^
+    M -- X--   | shift vec
+           |
+           |
+           |
+    M -- X--   | shift vec
+
+
+    :param linker_template:
+    :param dr: (float) Distance in Å to shift the x motifs by
+    :return:
+    """
+
+    shifted_coords = []
+
+    for motif in linker_template.x_motifs:
+        for coord in deepcopy(motif.coords):
+            coord += dr * motif.norm_shift_vec
+            shifted_coords.append(coord)
+
+    return shifted_coords
+
+
+def check_x_motifs(linker, linker_template):
+    if not all([motif.n_atoms == linker_template.x_motifs[0].n_atoms for motif in linker.x_motifs]):
+        logger.warning('Found x motifs in the structure that have different number of atoms')
+        logger.info('Stripping the motifs with the wrong number of atoms')
+
+        linker.x_motifs = [motif for motif in linker.x_motifs if motif.n_atoms == linker_template.x_motifs[0].n_atoms]
+        logger.info(f'Now have {len(linker.x_motifs)} motifs in the linker')
+
+    if len(linker.x_motifs) > 0:
+        logger.info(f'Number of atoms in the x motifs is {linker.x_motifs[0].n_atoms}')
     return None
 
 

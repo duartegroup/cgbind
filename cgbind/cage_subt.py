@@ -1,5 +1,4 @@
 from cgbind.log import logger
-from cgbind import m2l4
 from cgbind import add_substrate
 from cgbind.optimisation import opt_geom
 from cgbind.single_point import singlepoint

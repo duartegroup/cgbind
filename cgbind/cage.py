@@ -1,7 +1,8 @@
 import os
+from copy import deepcopy
 import numpy as np
-from cgbind import m2l4
-from cgbind import m4l6
+from cgbind.x_motifs import get_shifted_template_x_motif_coords
+from cgbind.build import get_template_fitted_coords_and_cost
 from cgbind.log import logger
 from cgbind.config import Config
 from cgbind.input_output import xyzfile2xyzs
@@ -13,15 +14,14 @@ from cgbind.geom import is_geom_reasonable
 from cgbind.geom import xyz2coord
 
 
-
 class Cage(object):
 
     def get_metal_atom_ids(self):
-        logger.info('Getting metal atom ids with label {}'.format(self.metal))
+        logger.info('Getting metal_label atom ids with label {}'.format(self.metal))
         try:
             return [i for i in range(len(self.xyzs)) if self.xyzs[i][0] == self.metal]
         except TypeError or IndexError or AttributeError:
-            logger.error('Could not get metal atom ids. Returning None')
+            logger.error('Could not get metal_label atom ids. Returning None')
             return None
 
     def get_cavity_vol(self):
@@ -79,7 +79,7 @@ class Cage(object):
             if len(m_m_dists) > 0:
                 return np.average(np.array(m_m_dists))
             else:
-                logger.error('Could not find any metal atoms')
+                logger.error('Could not find any metal_label atoms')
 
         except TypeError or ValueError or AttributeError:
             logger.error('Could not calculate the M-M distance. Returning 0.0')
@@ -106,39 +106,68 @@ class Cage(object):
     def singlepoint(self, n_cores=1):
         self.energy = singlepoint(self, n_cores)
 
-    def calc_charge(self, metal_charge):
-        return self.arch.n_metals * metal_charge + self.arch.n_linkers * self.linker.charge
+    def calc_charge(self):
+        return self.arch.n_metals * self.metal_charge + self.arch.n_linkers * self.linker.charge
+
+    def build(self):
+        logger.info('Building a cage geometry')
+
+        if self.dr is None:
+            logger.error('Cannot build a cage dr was None')
+            return None
+
+        xyzs = []
+        # Add the metals from the template shifted by dr
+        for metal in self.cage_template.metals:
+            metal_coord = self.dr * metal.shift_vec / np.linalg.norm(metal.shift_vec) + metal.coord
+            xyzs.append([metal.label] + metal_coord.tolist())
+
+        # Add the linkers by shifting the x_motifs in each linker templates by dr and finding the best rot matrix
+        for template_linker in self.cage_template.linkers:
+
+            new_linker = deepcopy(self.linker)
+            shifted_coords = get_shifted_template_x_motif_coords(linker_template=template_linker, dr=self.dr)
+            x_coords = [new_linker.coords[atom_id] for motif in new_linker.x_motifs for atom_id in motif.atom_ids]
+
+            linker_coords, _ = get_template_fitted_coords_and_cost(linker=self.linker, template_x_coords=shifted_coords,
+                                                                   coords_to_fit=x_coords)
+
+            xyzs += [[new_linker.xyzs[i][0]] + linker_coords[i].tolist() for i in range(new_linker.n_atoms)]
+
+        if len(xyzs) != self.arch.n_metals + self.arch.n_linkers * self.linker.n_atoms:
+            logger.error('Failed to build a cage')
+            return None
+
+        return xyzs
 
     def __init__(self, linker, metal='Pd', metal_charge=0, name='cage'):
         """
         Initialise a cage object
         :param linker: Linker object
-        :param metal: Metal atom label (str)
-        :param metal_charge: Total charge on the cage i.e. metals + linkers (int)
-        :param name: Name of the metallocage (str)
-        :param arch: Cage architecture. Currently only 'm2l4' or 'm4l4' are supported
+        :param metal: (str)
+        :param metal_charge: (int)
+        :param name: (str)
         """
-        logger.info('Initialising a Cage object for {}'.format(linker.name))
+        logger.info(f'Initialising a Cage object for {linker.name}')
 
         self.name = name
         self.metal = metal
         self.linker = linker
+        self.arch = linker.arch
+        self.cage_template = linker.cage_template
+        self.dr = linker.dr
         self.metal_charge = metal_charge
-        self.charge = self.calc_charge(metal_charge)
+        self.charge = self.calc_charge()
 
         self.reasonable_geometry = True
         self.energy, self.xyzs, self.m_ids = None, None, None
 
-        if not linker.xyzs:
+        if linker.xyzs is None:
             self.reasonable_geometry = False
             logger.error('Linker has no xyzs. Can\'t build a cage')
             return
 
-        # m2l4.build(self, linker)
-
-
-
-
+        self.xyzs = self.build()
 
         if self.xyzs is None:
             self.reasonable_geometry = False

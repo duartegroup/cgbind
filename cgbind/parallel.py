@@ -175,7 +175,7 @@ def gen_cage_subst_complexes_parallel(linker_dict, substrate_dict, opt_linker=Fa
     """
     Parallel generation of cages-substrate complexes.
 
-    This function assumes all the cages have the same metal, the linkers the same charge and the substrates the same
+    This function assumes all the cages have the same metal_label, the linkers the same charge and the substrates the same
     charge. This is so the dictionaries can be of the form name : smiles.
 
     :param linker_dict: Dictionary of linker names and smiles strings. Examples are given in library/
