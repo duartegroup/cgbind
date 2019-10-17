@@ -21,40 +21,16 @@ class CageSubstrateComplex(object):
             return
 
         print_output('Addition of', self.substrate.name, 'Running')
-        self.xyzs = self.add_substrate_xyzs()
+        logger.info('Adding the substrate to the center of the cage defined by the COM')
+        self.xyzs = add_substrate.add_substrate_com(self.cage, self.substrate)
 
         if self.xyzs is not None:
             self.reasonable_geometry = is_geom_reasonable(self.xyzs)
         else:
-            logger.warning('Cage-substrate xyzs are None')
+            logger.error('Cage-substrate xyzs are None')
             self.reasonable_geometry = False
 
         print_output('', self.substrate.name, 'Done')
-
-    def add_substrate_xyzs(self):
-        """
-        Add the substrate to the cavity in a mode defined by the number of heteroatoms.
-
-        :param substrate:
-        :return:
-        """
-        logger.info('Adding substrate xyzs to cage')
-
-        xyzs = None
-
-        # if self.cage.arch == M2L4:
-        #     if self.substrate.x_x_atom_ids is not None:
-        #         xyzs = m2l4.add_substrate_x_x(self.cage, self.substrate)
-        #     elif self.substrate.x_atom_ids:
-        #         xyzs = m2l4.add_substrate_x(self.cage, self.substrate)
-        #     else:
-        #         xyzs = add_substrate.add_substrate_com(self.cage, self.substrate)
-
-        # if self.cage.arch == M4L6:
-        #     logger.info('Adding the substrate to the center of the cage defined by the COM')
-        #     xyzs = add_substrate.add_substrate_com(self.cage, self.substrate)
-
-        return xyzs
 
     def optimise(self, opt_atom_ids=None, n_cores=1):
         """

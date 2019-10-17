@@ -1,10 +1,13 @@
 from cgbind.log import logger
 from copy import deepcopy
 import numpy as np
+from scipy.optimize import minimize, Bounds
+from scipy.spatial import distance_matrix
+from cgbind import geom
+from cgbind.atoms import heteroatoms
 from cgbind.geom import rotation_matrix
 from cgbind.geom import xyz2coord
 from cgbind.geom import calc_com
-from cgbind.geom import calc_normalised_vector
 from cgbind.geom import cat_cage_subst_coords
 
 
@@ -29,54 +32,57 @@ def add_substrate_com(cage, substrate):
     # Shift both the cage and the substrate to the origin
     cage_coords = [coord - centroid for coord in cage_coords]
     subst_coords = [coord - subst_com for coord in subst_coords]
+    subst_x_ids = [i for i in range(substrate.n_atoms) if substrate.xyzs[i][0] in heteroatoms]
 
-    # Construct a set of orthogonal vectors with the first
-    rot1 = calc_normalised_vector(np.zeros(3), cage_coords[cage.m_ids[0]])
-    rot2 = calc_normalised_vector(rot1[0] * rot1, np.array([1.0, 0.0, 0.0]))
-    rot3 = calc_normalised_vector(rot1[1] * rot1 + rot2[1] * rot2, np.array([0.0, 1.0, 0.0]))
+    logger.info('Minimising steric repulsion between substrate and cage & metal-X stom dists  by rotation')
+    min_result = minimize(cost_repulsion_and_x_metal_dist, x0=np.array([1.0, 1.0, 1.0]),
+                          args=(subst_coords, cage_coords, cage.m_ids, subst_x_ids), method='L-BFGS-B',
+                          bounds=Bounds(lb=0.0, ub=2*np.pi))
 
-    subst_coords = rot_minimise_repulsion(subst_coords, cage_coords, rot_axes=[rot1, rot2, rot3], n_rot_steps=100)
+    logger.info(f'Optimum rotation is {min_result.x} rad in x, y, z')
+    subst_coords = cost_repulsion_and_x_metal_dist(min_result.x, subst_coords, cage_coords,
+                                                   cage.m_ids, subst_x_ids, return_cost=False)
 
     xyzs = cat_cage_subst_coords(cage, substrate, cage_coords, subst_coords)
 
     return xyzs
 
 
-def rot_minimise_repulsion(subst_coords, cage_coords, rot_axes, n_rot_steps=100):
+def cost_repulsion_and_x_metal_dist(x, subst_coords, cage_coords, metal_ids, subst_x_ids, return_cost=True):
     """
-    Rotate a substrate around the M-M (z) axis as to reduce the steric repulsion between it and the cage
-    :param subst_coords:
-    :param cage_coords:
-    :param rot_axes: List of orthogonal normalised vectors
-    :param n_rot_steps: Number of rotation steps to perform in each axis
-    :return:
+    Calculate the cost function for a particular x, which contains the rotations in x, y, z cartesian directions
+    by rotating the subst_coords with sequencial rotations. The cost function is 1/r^6 between the cage and substrate
+    and tanh(r - 5.0) + 1.0 for the substrate heteroatoms – metal atoms.
+
+    :param x: (np.ndarray)
+    :param subst_coords: (list(np.ndarray))
+    :param cage_coords: (list(np.ndarray))
+    :param metal_ids: (list(int))
+    :param subst_x_ids: (list(int))
+    :param return_cost: (bool)
     """
-    logger.info('Minimising steric repulsion between substrate and cage by rotation')
 
-    best_theta = 0.0
-    best_sum_cage_substrate_inverse_dists = 9999999.9
-    best_axis = rot_axes[0]                         # TODO allow for a combination of axes
+    x_rot, y_rot, z_rot = x
 
-    for rot_axis in rot_axes:
-        for theta in np.linspace(0, np.pi / 2.0, n_rot_steps):
-            tmp_substrate_coords = deepcopy(subst_coords)
-            rot_matrix = rotation_matrix(rot_axis, theta)
-            tmp_rot_substrate_coords = [np.matmul(rot_matrix, coord) for coord in tmp_substrate_coords]
+    rot_matrix = np.identity(3)
+    rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=geom.i, theta=x_rot))
+    rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=geom.j, theta=y_rot))
+    rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=geom.k, theta=z_rot))
 
-            sum_cage_substrate_inverse_dists = 0.0
-            for cage_coord in cage_coords:
-                for substrate_coord in tmp_rot_substrate_coords:
-                    dist = np.linalg.norm(cage_coord - substrate_coord)
-                    if dist < 2.0:
-                        sum_cage_substrate_inverse_dists += 100.0 / dist  # Penalise very short distances
+    rot_substrate_coords = [np.matmul(rot_matrix, coord) for coord in deepcopy(subst_coords)]
 
-            if sum_cage_substrate_inverse_dists < best_sum_cage_substrate_inverse_dists:
-                best_theta = theta
-                best_sum_cage_substrate_inverse_dists = sum_cage_substrate_inverse_dists
-                best_axis = rot_axis
+    inv_distance_mat = np.power(distance_matrix(rot_substrate_coords, cage_coords), -6)
 
-    rot_matrix = rotation_matrix(best_axis, best_theta)
-    rot_substrate_coords = [np.matmul(rot_matrix, coord) for coord in subst_coords]
+    # Compute the distances from the metals to the substrate heteroatoms
+    metal_subt_x_dists = np.array([np.linalg.norm(rot_substrate_coords[i] - cage_coords[j])
+                                   for i in subst_x_ids for j in metal_ids])
+
+    # Weight the distances so short distances count  little to the cost function
+    weighted_subt_x_dists = np.tanh(metal_subt_x_dists - 5.0) + 1.0
+
+    cost = np.sum(inv_distance_mat) + np.sum(weighted_subt_x_dists)
+    if return_cost:
+        return cost
 
     return rot_substrate_coords
 

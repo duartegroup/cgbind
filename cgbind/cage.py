@@ -120,7 +120,7 @@ class Cage(object):
         # Add the metals from the template shifted by dr
         for metal in self.cage_template.metals:
             metal_coord = self.dr * metal.shift_vec / np.linalg.norm(metal.shift_vec) + metal.coord
-            xyzs.append([metal.label] + metal_coord.tolist())
+            xyzs.append([self.metal] + metal_coord.tolist())
 
         # Add the linkers by shifting the x_motifs in each linker templates by dr and finding the best rot matrix
         for template_linker in self.cage_template.linkers:

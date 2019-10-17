@@ -12,6 +12,8 @@ from cgbind.input_output import print_output
 from cgbind.constants import Constants
 from cgbind.plotting import plot_heatmap
 from cgbind.input_output import print_binding_affinities
+from cgbind.architectures import M2L4
+from cgbind.architectures import M4L6
 
 
 def calc_n_cores_pp(dict1, dict2=None):
@@ -50,7 +52,7 @@ def gen_substrate(smiles=None, name='substrate', n_confs=10, opt=False, sp=False
 
 
 def gen_cage(linker_name, linker_smiles, opt_linker=False, opt_cage=False, metal_label='Pd', metal_charge=2,
-             n_cores_pp=Config.n_cores, sp_cage=False):
+             n_cores_pp=Config.n_cores, sp_cage=False, arch=M2L4):
     """
     Generate a cage for a specific linker (L) and print the .xyz file
 
@@ -70,7 +72,7 @@ def gen_cage(linker_name, linker_smiles, opt_linker=False, opt_cage=False, metal
     :return: Cage object
     """
 
-    linkerx = Linker(linker_smiles, name=linker_name)
+    linkerx = Linker(linker_smiles, name=linker_name, arch=arch)
     if opt_linker:
         linkerx.optimise(n_cores=n_cores_pp)
 
@@ -91,7 +93,7 @@ def gen_cage(linker_name, linker_smiles, opt_linker=False, opt_cage=False, metal
         cage_obj.singlepoint()
 
     if cage_obj.reasonable_geometry:
-        param_string = ('Pd-Pd dist. = ' + str(np.round(cage_obj.get_m_m_dist(), 3)) + ' Å, ' +
+        param_string = ('avg. M-M dist. = ' + str(np.round(cage_obj.get_m_m_dist(), 3)) + ' Å, ' +
                         'Cavity vol. = ' + str(np.round(cage_obj.get_cavity_vol(), 3)) + ' Å^3'
                         )
         xyzs2xyzfile(cage_obj.xyzs, basename=cage_obj.name, title_line=param_string)
@@ -100,7 +102,7 @@ def gen_cage(linker_name, linker_smiles, opt_linker=False, opt_cage=False, metal
 
 
 def gen_cages_parallel(linker_dict, opt_linker=False, opt_cage=False, metal_label='Pd', metal_charge=2,
-                       sp_cage=False):
+                       sp_cage=False, arch=M2L4):
     """
     Parallel generation of cages to optimise efficiency cf. serial execution on a large number of cores, which is less
     efficient as ORCA does not scale linearly. Will use all the cores set in Config.n_cores
@@ -111,6 +113,7 @@ def gen_cages_parallel(linker_dict, opt_linker=False, opt_cage=False, metal_labe
     :param metal_charge:
     :param metal_label:
     :param sp_cage:
+    :param arch: Architecture of the cage
     :return: List of cage objects
     """
 
@@ -119,7 +122,7 @@ def gen_cages_parallel(linker_dict, opt_linker=False, opt_cage=False, metal_labe
     with Pool(processes=int(Config.n_cores / n_cores_per_process)) as pool:
 
         results = [pool.apply_async(gen_cage, (linker_name, linker_smiles, opt_linker, opt_cage, metal_label,
-                                               metal_charge, n_cores_per_process, sp_cage))
+                                               metal_charge, n_cores_per_process, sp_cage, arch))
                    for linker_name, linker_smiles in linker_dict.items()]
 
         cages = [res.get(timeout=None) for res in results]
@@ -130,7 +133,7 @@ def gen_cages_parallel(linker_dict, opt_linker=False, opt_cage=False, metal_labe
 def gen_cage_subst_complex(linker_name=None, linker_smiles=None, substrate_name=None, substrate_smiles=None,
                            opt_linker=False, opt_cage=False, opt_substrate=False, opt_cage_subst=False,
                            fix_cage_geom=False, metal_label='Pd', metal_charge=2, n_cores_pp=None, sp_cage=False,
-                           sp_substrate=False, sp_cage_subst=False, cage_obj=None, subst_obj=None):
+                           sp_substrate=False, sp_cage_subst=False, cage_obj=None, subst_obj=None, arch=M2L4):
     """
     Generate a cage-substrate complex for a specific linker. Can be called with  cage and substrate objects defined
     or initialised in this function in which cage all(linker_name, linker_smiles, substrate_name, substrate_smiles)
@@ -143,7 +146,7 @@ def gen_cage_subst_complex(linker_name=None, linker_smiles=None, substrate_name=
 
     if not cage_obj:
         cage_obj = gen_cage(linker_name, linker_smiles, opt_linker, opt_cage, metal_label,
-                            metal_charge, n_cores_pp, sp_cage)
+                            metal_charge, n_cores_pp, sp_cage, arch)
 
     if not subst_obj:
         subst_obj = Substrate(substrate_smiles, substrate_name)
@@ -171,7 +174,7 @@ def gen_cage_subst_complex(linker_name=None, linker_smiles=None, substrate_name=
 def gen_cage_subst_complexes_parallel(linker_dict, substrate_dict, opt_linker=False, opt_cage=False,
                                       opt_substrate=False, opt_cage_subst=False, fix_cage_geom=False,
                                       metal_label='Pd', metal_charge=2, sp_cage=False, sp_substrate=False,
-                                      sp_cage_subst=False):
+                                      sp_cage_subst=False, arch=M2L4):
     """
     Parallel generation of cages-substrate complexes.
 
@@ -189,7 +192,7 @@ def gen_cage_subst_complexes_parallel(linker_dict, substrate_dict, opt_linker=Fa
     """
 
     # Generate Cage objects
-    cages = gen_cages_parallel(linker_dict, opt_linker, opt_cage, metal_label, metal_charge, sp_cage)
+    cages = gen_cages_parallel(linker_dict, opt_linker, opt_cage, metal_label, metal_charge, sp_cage, arch)
 
     # Generate Substrate objects
     n_cores_per_process = calc_n_cores_pp(substrate_dict)
@@ -208,7 +211,7 @@ def gen_cage_subst_complexes_parallel(linker_dict, substrate_dict, opt_linker=Fa
         results = [[pool.apply_async(gen_cage_subst_complex,
                                      (None, None, None, None, opt_linker, opt_cage, opt_substrate,
                                       opt_cage_subst, fix_cage_geom, metal_label, metal_charge, n_cores_per_process,
-                                      sp_cage, sp_substrate, sp_cage_subst, cage, substrate)
+                                      sp_cage, sp_substrate, sp_cage_subst, cage, substrate, arch)
                                      )
                     for substrate in subst_objs] for cage in cages]
 
@@ -221,7 +224,7 @@ def calc_binding_affinity(linker_name=None, linker_smiles=None, substrate_name=N
                           opt_linker=True, opt_cage=True, opt_substrate=True, opt_cage_subst=True,
                           fix_cage_geom=False, metal_label='Pd', metal_charge=2, n_cores_pp=None, sp_cage=True,
                           sp_substrate=True, sp_cage_subst=True, units_kcal_mol=True, units_kj_mol=False,
-                          cage_obj=None, subst_obj=None, cage_subst_obj=None):
+                          cage_obj=None, subst_obj=None, cage_subst_obj=None, arch=M2L4):
     """
     Calculate the binding affinity (in kcal mol-1 by default)
             ∆E = E_cage.substrate - (E_cage + E_substrate)
@@ -236,7 +239,7 @@ def calc_binding_affinity(linker_name=None, linker_smiles=None, substrate_name=N
         cage_subst_obj = gen_cage_subst_complex(linker_name, linker_smiles, substrate_name, substrate_smiles,
                                                 opt_linker, opt_cage, opt_substrate, opt_cage_subst, fix_cage_geom,
                                                 metal_label, metal_charge, n_cores_pp, sp_cage, sp_substrate,
-                                                sp_cage_subst, cage_obj, subst_obj)
+                                                sp_cage_subst, cage_obj, subst_obj, arch)
 
     try:
         binding_affinity_ha = cage_subst_obj.energy - (cage_subst_obj.cage.energy + cage_subst_obj.substrate.energy)
@@ -252,7 +255,7 @@ def calc_binding_affinity(linker_name=None, linker_smiles=None, substrate_name=N
 def calc_binding_affinities_parallel(linker_dict, substrate_dict, opt_linker=True, opt_cage=True,
                                      opt_substrate=True, opt_cage_subst=True, metal_label='Pd', metal_charge=2,
                                      fix_cage_geom=False, sp_cage=True, sp_substrate=True, sp_cage_subst=True,
-                                     units_kcal_mol=True, units_kj_mol=False, heatplot=True):
+                                     units_kcal_mol=True, units_kj_mol=False, heatplot=True, arch=M2L4):
     """
         Parallel calculation of binding affinities.
 
@@ -269,7 +272,7 @@ def calc_binding_affinities_parallel(linker_dict, substrate_dict, opt_linker=Tru
 
     cage_objs_subst_objs = gen_cage_subst_complexes_parallel(linker_dict, substrate_dict, opt_linker, opt_cage,
                                                              opt_substrate, opt_cage_subst, fix_cage_geom, metal_label,
-                                                             metal_charge, sp_cage, sp_substrate, sp_cage_subst)
+                                                             metal_charge, sp_cage, sp_substrate, sp_cage_subst, arch)
 
     print_output('Calculation of binding affinities', ' ', 'Running')
     binding_affinities = np.zeros((len(linker_dict.keys()), len(substrate_dict.keys())))
