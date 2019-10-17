@@ -24,10 +24,6 @@ def calc_com(xyzs):
     return com / total_mass
 
 
-def calc_cdist(coord1, coord2):
-    return np.linalg.norm(coord1 - coord2)
-
-
 def calc_normalised_vector(coord1, coord2):
 
     vec = coord2 - coord1
@@ -50,77 +46,6 @@ def cat_cage_subst_coords(cage, substrate, cage_coords, substrate_coords):
     xyzs += [[substrate.xyzs[n][0]] + substrate_coords[n].tolist() for n in range(len(substrate.xyzs))]
 
     return xyzs
-
-
-def get_closest_bonded_atom_id(xyzs, atom_id, tolerance=0.1, default_bond_length=1.5):
-    """
-    Get the closest atom to a particular id
-    :param xyzs:
-    :param atom_id:
-    :param tolerance: Tolerance on deviation from avg bond length. Default 10%
-    :param default_bond_length:
-    :return:
-    """
-    logger.info('Getting closest bonded atom id to {}'.format(atom_id))
-
-    min_dist = 999.9
-    closest_bonded_atom_id = 0
-
-    for n in range(len(xyzs)):
-        if n != atom_id:
-            dist = np.linalg.norm(xyz2coord(xyzs[n]) - xyz2coord(xyzs[atom_id]))
-            if dist < min_dist:
-                atoms_key1, atoms_key2 = (xyzs[n][0] + xyzs[atom_id][0]), (xyzs[atom_id][0] + xyzs[n][0])
-                if atoms_key1 in avg_bond_lengths.keys():
-                    max_bond_length = (1.0 + tolerance) * avg_bond_lengths[atoms_key1]
-                elif atoms_key2 in avg_bond_lengths.keys():
-                    max_bond_length = (1.0 + tolerance) * avg_bond_lengths[atoms_key2]
-                else:
-                    logger.warning('Couldn\'t find {}–{} avg. bond distance in dict'.format(atoms_key1, atoms_key2))
-                    max_bond_length = default_bond_length
-
-                if dist < max_bond_length:
-                    min_dist = dist
-                    closest_bonded_atom_id = n
-
-    return closest_bonded_atom_id
-
-
-def get_ids_max_dist(distance_matrix):
-    """
-    Poor mans np.argmax
-    :param distance_matrix:
-    :return:
-    """
-
-    max_dist = 0.0
-    atom_ids = [0, 0]
-    for atom_i in range(len(distance_matrix)):
-        for atom_j in range(len(distance_matrix)):
-            if distance_matrix[atom_i, atom_j] > max_dist:
-                atom_ids = [atom_i, atom_j]
-                max_dist = distance_matrix[atom_i, atom_j]
-
-    return atom_ids
-
-
-def get_neighbour(atom_id, distance_matrix, proximity):
-    """
-    Get the  neighbour to a specific atom given a distance matrix
-    :param atom_id:
-    :param distance_matrix:
-    :param proximity: Proximity to the atom_id i.e. 1 = nearest neighbour, 2 = next-nearest neighbour
-    :return: Id of the nearest neighbour to an atom
-    """
-    # logger.info('Getting {}th nearest neighbour to atom id {}'.format(proximity, atom_id))
-    neighbour = 0
-    dists_low_to_high = sorted(distance_matrix[atom_id])
-
-    for atom_j in range(len(distance_matrix[atom_id])):
-        if distance_matrix[atom_id, atom_j] == dists_low_to_high[proximity]:
-            neighbour = atom_j
-
-    return neighbour
 
 
 def xyz2coord(xyzs):
@@ -151,42 +76,6 @@ def molblock2xyzs(mol_block):
             xyzs.append([atom_label, float(x), float(y), float(z)])
 
     return xyzs
-
-
-def calc_distance_matrix(xyzs):
-    """
-    Calculate a distance matrix
-    :param xyzs: List of xyzs
-    :return:
-    """
-
-    n_atoms = len(xyzs)
-    coords = xyz2coord(xyzs)
-    distance_matrix = np.zeros([n_atoms, n_atoms])
-
-    for atom_i in range(n_atoms):
-        for atom_j in range(n_atoms):
-            dist = np.linalg.norm(coords[atom_i] - coords[atom_j])
-            distance_matrix[atom_i, atom_j] = dist
-
-    return distance_matrix
-
-
-def calc_dist(atom_i, atom_j, xyzs=None, coords=None):
-    if xyzs:
-        return np.linalg.norm(xyz2coord(xyzs[atom_i]) - xyz2coord(xyzs[atom_j]))
-    if coords:
-        return np.linalg.norm(coords[atom_i] - coords[atom_j])
-
-
-def calc_midpoint(coord1, coord2):
-    """
-    Calculate the midpoint between two atoms
-    :param coord1: Coordinate of of an atom as numpy array
-    :param coord2: Coordinate of of an atom as numpy array
-    :return: Coordinate of midpoint
-    """
-    return (coord1 + coord2) / 2.0
 
 
 def is_geom_reasonable(xyzs):
