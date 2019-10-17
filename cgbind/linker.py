@@ -78,7 +78,7 @@ class Linker(Molecule):
 
                 # Minimise the cost function as a function of dr in Å
                 min_result = minimize(cost_fitted_x_motifs, x0=np.array([1.0]), args=(self, template_linker, x_coords),
-                                      method='L-BFGS-B', tol=1e-3, bounds=Bounds(lb=0.0, ub=50))
+                                      method='L-BFGS-B', tol=1e-3, bounds=Bounds(-100.0, 10.0))
 
                 if min_result.fun < min_cost:
                     min_cost = min_result.fun

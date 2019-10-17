@@ -1,5 +1,6 @@
 from copy import deepcopy
 import numpy as np
+from scipy.spatial import distance_matrix
 from cgbind.geom import get_centered_matrix
 from cgbind.geom import get_rot_mat_kabsch
 from cgbind.geom import xyz2coord
@@ -14,7 +15,6 @@ def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit
     :param return_cost: (bool) return just the cost function, which is the sum of squares of ∆dists
     :return: (np.ndarray) n_atoms x 3
     """
-
     # Construct the P matrix in the Kabsch algorithm
     p_mat = deepcopy(coords_to_fit)
     p_centroid = np.average(p_mat, axis=0)
@@ -30,7 +30,9 @@ def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit
 
     if return_cost:
         new_p_mat = np.array([np.matmul(rot_mat, coord) for coord in p_mat_trans])
-        return np.sum(np.square(new_p_mat - q_mat_trans))
+        # [print(np.linalg.norm(new_p_mat[i] - q_mat_trans[i])) for i in range(len(coords_to_fit))]
+        cost = np.sum(np.square(np.array([np.linalg.norm(new_p_mat[i] - q_mat_trans[i]) for i in range(len(coords_to_fit))])))
+        return cost
 
     # Apply to get the new set of coordinates
     new_linker_coords = np.array([np.matmul(rot_mat, coord - p_centroid) + q_centroid
@@ -39,6 +41,6 @@ def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit
     # Compute the cost function = (r - r_ideal)^2
     x_atom_ids = [x for x_motif in linker.x_motifs for x in x_motif.atom_ids]
     new_p_mat = np.array([new_linker_coords[i] for i in x_atom_ids])
-    cost = np.sum(np.square(new_p_mat - q_mat))
+    cost = np.sum(np.square(np.array([np.linalg.norm(new_p_mat[i] - q_mat[i]) for i in range(len(coords_to_fit))])))
 
     return new_linker_coords, cost

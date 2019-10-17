@@ -92,7 +92,7 @@ class Linker:
         self.centroid = np.average(self.coords, axis=0)
 
         self.x_motifs = find_x_motifs(self)
-        check_x_motifs(self)                                        # check that the x_motifs are the same length -
+        check_x_motifs(linker_template=self)                             # check that the x_motifs are the same length -
 
 
 class Template:
@@ -208,17 +208,20 @@ class Template:
             for x_motif in linker.x_motifs:
                 motif_atom_id = x_motif.atom_ids[0]
 
-                metal_dists = [np.linalg.norm(linker.coords[motif_atom_id] - self.coords[metal_id])
-                               for metal_id in metal_atom_ids]
+                closest_metal_id = None
+                closest_dist = 99999.9
+                for metal_id in metal_atom_ids:
+                    dist = np.linalg.norm(linker.coords[motif_atom_id] - self.coords[metal_id])
+                    if dist < closest_dist:
+                        closest_dist = dist
+                        closest_metal_id = metal_id
 
-                closest_metal_id = metal_dists.index(min(metal_dists))
                 shift_vec = self.coords[closest_metal_id] - self.centroid
 
                 # Set the shift vector for the metal closest to this x_motif
-                for m, metal in enumerate(self.metals):
-                    if m == closest_metal_id:
+                for metal in self.metals:
+                    if metal.atom_id == closest_metal_id:
                         metal.shift_vec = shift_vec
-                        break
 
                 # Set the shift vector for the x motif
                 x_motif.shift_vec = shift_vec

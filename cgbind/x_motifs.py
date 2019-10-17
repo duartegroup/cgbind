@@ -32,7 +32,14 @@ def get_shifted_template_x_motif_coords(linker_template, dr):
     return shifted_coords
 
 
-def check_x_motifs(linker, linker_template):
+def check_x_motifs(linker=None, linker_template=None):
+    if linker is None and linker_template is not None:
+        if not all([motif.n_atoms == linker_template.x_motifs[0].n_atoms for motif in linker_template.x_motifs]):
+            logger.critical('Found x motifs in the structure that have different number of atoms')
+            exit()
+        else:
+            return None
+
     if not all([motif.n_atoms == linker_template.x_motifs[0].n_atoms for motif in linker.x_motifs]):
         logger.warning('Found x motifs in the structure that have different number of atoms')
         logger.info('Stripping the motifs with the wrong number of atoms')
