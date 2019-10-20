@@ -1,4 +1,5 @@
 import os
+from shutil import which
 from cgbind.log import logger
 from cgbind.input_output import print_output
 from cgbind.config import Config
@@ -97,6 +98,10 @@ def gen_orca_inp(inp_filename, xyzs, charge, mult, opt=True, opt_atom_ids=None, 
 def run_orca(inp_filename, out_filename):
     logger.info('Running ORCA calculation from {}'.format(inp_filename))
 
+    if Config.path_to_orca is None:
+        logger.info('Setting orca from $PATH')
+        Config.path_to_orca = which('orca')
+
     orca_done, orca_terminated_normally = False, False
 
     if os.path.exists(out_filename):
@@ -112,6 +117,10 @@ def run_orca(inp_filename, out_filename):
                 break
 
     if not orca_terminated_normally:
+        if Config.path_to_orca is None:
+            logger.critical('Cannot run the calculation. No ORCA executable available')
+            exit()
+
         with open(out_filename, 'w') as orca_out:
             orca_run = Popen([Config.path_to_orca, inp_filename], stdout=orca_out)
         orca_run.wait()

@@ -11,17 +11,14 @@ Config.sp_keywords = ['SP', 'PBE', 'RI', 'def2-SVP']
 
 # To accelerate this example the two calculations are performed in parallel
 Config.n_cores = 2
-# and the optimised geometries taken from the library of structures
-Config.path_to_opt_struct = '/Users/tom/repos/cgbind/library/orca_opt_min_dft'
 
 # Calculate binding affinities for cages generated from L-1 and L-2
 calc_binding_affinities({'L-1': 'C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1',
                          'L-2': 'C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=N2)=CC=CN=C1'},
                         {'quinone': 'O=C1C=CC(C=C1)=O'},
                         opt_linker=False,
-                        opt_cage=True,                             # Even though opt_cage = True the calculation will
-                        sp_cage=True,                              # be skipped as path_to_opt_struct contains the
-                                                                   # .xyz files for cage_L-1 and cage_L-2
+                        opt_cage=True,
+                        sp_cage=True,
                         opt_substrate=True,
                         sp_substrate=True,
                         opt_cage_subst=True,

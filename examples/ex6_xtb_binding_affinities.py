@@ -1,9 +1,6 @@
 from cgbind import *
 
-Config.suppres_print = False
 Config.code = 'xtb'
-Config.opt_method = 'xtb'
-Config.path_to_xtb = '/u/fd/ball4935/opt/xtb_exe/xtb'
 
 Config.n_cores = 4
 
@@ -11,7 +8,6 @@ calc_binding_affinities({'L-1': 'C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1',
                          'L-2': 'C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=N2)=CC=CN=C1'},
                         {'quinone': 'O=C1C=CC(C=C1)=O',
                          'dimethylquinone': 'O=C(C=C1C)C(C)=CC1=O'},
-                        substrate_charge=0,
                         opt_linker=True,
                         opt_cage=True,
                         opt_substrate=True,

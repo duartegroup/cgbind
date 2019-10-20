@@ -7,7 +7,7 @@ class Config(object):
     #
     n_cores = 1
     #
-    # Supported codes: orca, xtb, mopac
+    # Supported codes: orca, xtb
     #
     code = None
     #
@@ -23,9 +23,6 @@ class Config(object):
     #                     code = xtb
     #        DEFAULT            1. xtb      : Tight-binding method v 6.0 tested
     #
-    #                     code = mopac
-    #                           1. pm6      : Semi-empirical PM6 method
-    #        DEFAULT            2. pm7      : Semi-empirical PM7 method
     #
     opt_method = None
     #
@@ -37,13 +34,5 @@ class Config(object):
     # Paths:
     # The full path to an executable needs to be provided for any electronic structure method invoked
     #
-    path_to_orca          = None
-    path_to_xtb           = None
-    path_to_mopac         = None
-    path_to_mopac_licence = None
-    #
-    #
-    # Path to optimised cages:
-    # Required if calling geom.get_library_xyzs
-    #
-    path_to_opt_struct    = None
+    path_to_orca = None
+    path_to_xtb = None

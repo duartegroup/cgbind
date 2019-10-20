@@ -78,16 +78,8 @@ def gen_cage(linker_name, linker_smiles, opt_linker=False, opt_cage=False, metal
 
     cage_obj = Cage(linkerx, name=('cage_' + linker_name), metal_charge=metal_charge, metal=metal_label)
 
-    if Config.path_to_opt_struct:
-        path_to_opt_geom = os.path.join(Config.path_to_opt_struct, cage_obj.name + '.xyz')
-        if os.path.exists(path_to_opt_geom):
-            if not Config.suppress_print:
-                print('Found an optimised geometry in path_to_opt_struct')
-            cage_obj.xyzs = xyzfile2xyzs(filename=path_to_opt_geom)
-    else:
-        if opt_cage:
-            cage_obj.optimise(n_cores=n_cores_pp)
-        pass
+    if opt_cage:
+        cage_obj.optimise(n_cores=n_cores_pp)
 
     if sp_cage:
         cage_obj.singlepoint()

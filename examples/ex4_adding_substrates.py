@@ -10,10 +10,10 @@ Config.opt_method = 'min_dft'
 gen_cage_subst_complex('L-1', 'C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1',
                        'q1', 'O=C1C=CC(C=C1)=O',
                        opt_cage=False,
-                       opt_linker=True,
-                       opt_substrate=True,
-                       opt_cage_subst=True,
-                       fix_cage_geom=True)
+                       opt_linker=False,
+                       opt_substrate=False,
+                       opt_cage_subst=False,
+                       fix_cage_geom=False)
 
 """
 To calculate binding affinities see ex5

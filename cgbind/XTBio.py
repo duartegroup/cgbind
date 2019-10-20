@@ -1,4 +1,5 @@
 import os
+from shutil import which
 from cgbind.log import logger
 from cgbind.config import Config
 from cgbind.constants import Constants
@@ -7,6 +8,10 @@ from subprocess import Popen
 
 def run_xtb(xyz_filename, opt=True, charge=0, n_cores=1):
     logger.info('Running XTB')
+
+    if Config.path_to_xtb is None:
+        logger.info('Setting xtb from $PATH')
+        Config.path_to_xtb = which('xtb')
 
     xtb_out_filename = xyz_filename.replace('.xyz', '.out')
 
@@ -25,6 +30,10 @@ def run_xtb(xyz_filename, opt=True, charge=0, n_cores=1):
             params = [Config.path_to_xtb, xyz_filename, '-c ', str(charge)]
 
         os.environ['OMP_NUM_THREADS'] = str(n_cores)
+        if Config.path_to_xtb is None:
+            logger.critical('Cannot run the calculation. No XTB executable available')
+            exit()
+
         xtb_run = Popen(params, stdout=xtb_out, stderr=open(os.devnull, 'w'))
     xtb_run.wait()
 
@@ -53,8 +62,8 @@ def get_XTB_xyzs_energy(out_lines):
             opt_xyzs.append([atom_label,
                              float(x) * Constants.a02ang, float(y) * Constants.a02ang, float(z) * Constants.a02ang])
 
-        if 'total E' in line:
-            energy = float(line.split()[-1])
+        if 'TOTAL ENERGY ' in line:
+            energy = float(line.split()[-3])
 
     if len(opt_xyzs) == 0:
         logger.warning('Could not find any xyzs in XTB output')

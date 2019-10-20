@@ -7,5 +7,5 @@ gen_cage(linker_name='L-1',
 
 """
 To optimise either the linker before a cage is generated, or the full cage an electronic structure method needs to be
-available and the path set in Config. See ex1
+available. See ex1
 """

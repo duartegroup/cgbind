@@ -95,13 +95,7 @@ class Cage(object):
         """
         logger.info('Optimising {}'.format(self.name))
 
-        if Config.path_to_opt_struct:
-            path_to_opt_geom = os.path.join(Config.path_to_opt_struct, self.name + '.xyz')
-            if os.path.exists(path_to_opt_geom):
-                logger.info('Found an optimised geometry in path_to_opt_struct')
-                self.xyzs = xyzfile2xyzs(filename=path_to_opt_geom)
-        else:
-            self.xyzs, self.energy = opt_geom(self.xyzs, self.name, charge=self.charge, n_cores=n_cores)
+        self.xyzs, self.energy = opt_geom(self.xyzs, self.name, charge=self.charge, n_cores=n_cores)
 
     def singlepoint(self, n_cores=1):
         self.energy = singlepoint(self, n_cores)

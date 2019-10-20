@@ -1,7 +1,6 @@
 from cgbind.input_output import xyzs2xyzfile
 from cgbind.ORCAio import *
 from cgbind.XTBio import *
-from cgbind.MOPACio import *
 
 
 def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):
@@ -25,10 +24,6 @@ def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):
     print_output('Optimisation of', name, 'Running')
 
     if Config.code == 'orca':
-        if Config.path_to_orca is None:
-            logger.error('path_to_orca needs to be set for an ORCA optimisation. Skipping the optimisation')
-            print_output('', name, 'Failed')
-            return xyzs, energy
 
         inp_filename = name + '_orca_opt.inp'
         out_filename = inp_filename.replace('.inp', '.out')
@@ -47,28 +42,11 @@ def opt_geom(xyzs, name='tmp', charge=0, mult=1, opt_atom_ids=None, n_cores=1):
         opt_xyzs, energy = get_orca_xyzs_energy(out_lines=orca_output_file_lines)
 
     elif Config.code == 'xtb':
-        if Config.path_to_xtb is None:
-            logger.error('path_to_xtb needs to be set for a XTB optimisation. Skipping the optimisation')
-            print_output('', name, 'Failed')
-            return xyzs, energy
 
         xtb_filename = name + '_xtb_opt'
         xtb_input_file = xyzs2xyzfile(xyzs, xtb_filename + '.xyz')
         xtb_output_lines = run_xtb(xtb_input_file, opt=True, charge=charge, n_cores=n_cores)
         opt_xyzs, energy = get_XTB_xyzs_energy(out_lines=xtb_output_lines)
-
-    elif Config.code == 'mopac':
-        if Config.path_to_mopac is None or Config.path_to_mopac_licence is None:
-            logger.error('path_to_mopac and path_to_mopac_licence need to be set. Skipping the optimisation')
-            print_output('', name, 'Failed')
-            return xyzs, energy
-
-        mop_filename = name + '_mopac_opt.mop'
-        mop_out_filename = mop_filename.replace('.mop', '.out')
-
-        gen_mopac_mop(mop_filename, xyzs, charge, mult, opt=True, opt_atom_ids=opt_atom_ids)
-        mopac_output_lines = run_mopac(mop_filename, mop_out_filename)
-        opt_xyzs, energy = get_mopac_xyzs_energy(out_lines=mopac_output_lines)
 
     elif Config.code is None:
         logger.error('An optimisation was called but no code was set. Skipping the optimisation')
