@@ -230,11 +230,11 @@ class Template:
 
         return None
 
-    def save_template(self, folder_path=None):
+    def save_template(self):
         logger.info('Saving metallocage template')
 
-        if folder_path is None:
-            folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib')
+        # Templates will be saved to here/lib/
+        folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib')
 
         with open(os.path.join(folder_path, self.arch_name + '.obj'), 'wb') as pickled_file:
             pickle.dump(self, file=pickled_file)
@@ -244,11 +244,15 @@ class Template:
     def __init__(self, arch_name, mol2_filename):
 
         self.arch_name = arch_name
+
         all_xyzs = mol2file_to_xyzs(filename=mol2_filename)
         self.mols_xyzs = find_mols_in_xyzs(xyzs=all_xyzs)
         self.xyzs, self.metal_label = self._find_metallocage_mol()
 
         self.metals = self._find_metals()
+        self.n_metals = len(self.metals)
+        logger.info(f'Found {self.n_metals} metals')
+
         self.bonds = get_xyz_bond_list(xyzs=self.xyzs)
         self.x_atoms = self._find_donor_atoms()                # donor atom ids
 

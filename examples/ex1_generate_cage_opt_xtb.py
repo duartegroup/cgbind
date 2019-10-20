@@ -12,7 +12,8 @@ Config.code = 'xtb'
 gen_cage(linker_name='L-1',
          linker_smiles='C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1',
          opt_linker=True,
-         opt_cage=False)
+         opt_cage=False,
+         arch_name='m2l4')
 
 """
 To optimise either the linker or the full cage at the DFT level see ex2

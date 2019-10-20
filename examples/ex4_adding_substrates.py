@@ -13,7 +13,8 @@ gen_cage_subst_complex('L-1', 'C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1',
                        opt_linker=False,
                        opt_substrate=False,
                        opt_cage_subst=False,
-                       fix_cage_geom=False)
+                       fix_cage_geom=False,
+                       arch_name='m2l4')
 
 """
 To calculate binding affinities see ex5

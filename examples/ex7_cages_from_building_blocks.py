@@ -72,4 +72,5 @@ for top_name, top_smiles in top_end_names_smiles.items():
 gen_cages(linker_dict=all_linkers,
           opt_linker=False,
           opt_cage=False,
-          sp_cage=False)
+          sp_cage=False,
+          arch_name='m2l4')

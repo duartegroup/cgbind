@@ -51,6 +51,13 @@ class Linker(Molecule):
         return [x_motif for x_motif in self.x_motifs
                 if x_motif.n_atoms == self.cage_template.linkers[0].x_motifs[0].n_atoms]
 
+    def _set_arch(self, arch_name):
+
+        for arch in archs:
+            if arch_name == arch.name:
+                self.arch = arch
+        return None
+
     def set_best_conformer(self):
         """
         For a set of conformer xyzs (self.conf_xyzs) find the one that minimises the cost function for fitting the
@@ -92,17 +99,20 @@ class Linker(Molecule):
 
         return None
 
-    def __init__(self, smiles=None, name='linker', charge=0, n_confs=200, xyzs=None, arch=archs[0]):
+    def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=200, xyzs=None):
 
         logger.info('Initialising a Linker object for {}'.format(name))
         super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, xyzs=xyzs)
 
-        if arch not in archs:
-            logger.error(f'Not a valid architecture. Valid are {[arch.__name__ for arch in archs]}')
+        self.arch = None
+        self._set_arch(arch_name)
+        print(self.arch)
+
+        if self.arch is None:
+            logger.error(f'Not a valid architecture. Valid are {[arch.name for arch in archs]}')
             return
 
-        self.arch = arch
-        self.cage_template = get_template(arch_name=arch.name)
+        self.cage_template = get_template(arch_name=arch_name)
 
         self.coords = xyz2coord(self.xyzs)
         self.centroid = np.average(self.coords, axis=0)

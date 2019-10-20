@@ -24,6 +24,7 @@ calc_binding_affinities({'L-1': 'C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1',
                         opt_cage_subst=True,
                         fix_cage_geom=True,
                         sp_cage_subst=True,
-                        heatplot=True)
+                        heatplot=True,
+                        arch_name='m2l4')
 
 

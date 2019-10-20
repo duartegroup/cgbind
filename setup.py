@@ -5,7 +5,7 @@ setup(
     version='1.0.0',
     packages=['cgbind'],
     include_package_data=True,
-    package_data={'': ['lib/*.obj']},
+    package_data={'': ['lib/*']},
     url='',
     license='MIT',
     author='Tom Young',

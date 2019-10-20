@@ -20,4 +20,5 @@ calc_binding_affinities({'L-1': 'C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1',
                         sp_cage_subst=False,
                         units_kcal_mol=False,
                         units_kj_mol=True,
-                        heatplot=True)
+                        heatplot=True,
+                        arch_name='m2l4')

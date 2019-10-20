@@ -9,7 +9,8 @@ gen_cages(linker_dict={
          'L-1'	: 'C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1',
          'L-2'	: 'C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=N2)=CC=CN=C1'},
           opt_linker=False,
-          opt_cage=False)
+          opt_cage=False,
+          arch_name='m2l4')
 
 """
 To add substrates to the cavity see ex4

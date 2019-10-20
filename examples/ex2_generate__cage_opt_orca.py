@@ -16,7 +16,8 @@ Config.n_cores = 4
 gen_cage(linker_name='L-1',
          linker_smiles='C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1',
          opt_linker=True,
-         opt_cage=False)
+         opt_cage=False,
+         arch_name='m2l4')
 
 """
 To generate multiple cages in parallel see ex3

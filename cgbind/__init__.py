@@ -6,7 +6,6 @@ from cgbind.parallel import calc_binding_affinity
 from cgbind.parallel import calc_binding_affinities_parallel as calc_binding_affinities
 from cgbind.config import Config
 from cgbind import geom
-from cgbind.architectures import M2L4, M4L6, M4L6t
 from cgbind.linker import Linker
 from cgbind.cage import Cage
 from cgbind.substrate import Substrate
@@ -23,9 +22,6 @@ __all__ = [
     'calc_binding_affinities',
     'Config',
     'geom',
-    'M2L4',
-    'M4L6',
-    'M4L6t',
     'Linker',
     'Cage',
     'Substrate',

@@ -147,6 +147,12 @@ class Cage(object):
         self.name = name
         self.metal = metal
         self.linker = linker
+
+        if linker.xyzs is None or linker.arch is None:
+            self.reasonable_geometry = False
+            logger.error('Linker has no xyzs. Can\'t build a cage')
+            return
+
         self.arch = linker.arch
         self.cage_template = linker.cage_template
         self.dr = linker.dr
@@ -155,12 +161,6 @@ class Cage(object):
 
         self.reasonable_geometry = True
         self.energy, self.xyzs, self.m_ids = None, None, None
-
-        if linker.xyzs is None:
-            self.reasonable_geometry = False
-            logger.error('Linker has no xyzs. Can\'t build a cage')
-            return
-
         self.xyzs = self.build()
 
         if self.xyzs is None:
