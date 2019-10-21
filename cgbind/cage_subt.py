@@ -1,18 +1,34 @@
 from cgbind.log import logger
 from cgbind import add_substrate
-from cgbind.optimisation import opt_geom
-from cgbind.single_point import singlepoint
 from cgbind.input_output import print_output
 from cgbind.geom import is_geom_reasonable
+from cgbind import calculations
+from cgbind.input_output import xyzs2xyzfile
 
 
-class CageSubstrateComplex(object):
+class CageSubstrateComplex:
+
+    def _reasonable_cage_substrate(self, cage, substrate):
+
+        if cage is None or substrate is None:
+            logger.error('Cannot build a cage-substrate complex either cage or substrate was None')
+            return False
+
+        attrs = [cage.charge, substrate.charge]
+        if not all([attr is not None for attr in attrs]):
+            logger.error('Cannot build a cage-substrate complex a required attribute was None')
+            return False
+
+        return True
+
+    def print_xyzfile(self, force=False):
+        if self.reasonable_geometry or force:
+            xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
 
     def add_substrate(self):
         """
         Add a substrate to a cage.
         The binding mode will be determined by the number of heteroatoms etc. in the case of an M2L4 cage,
-        :param substrate: Substrate object
         :return:
         """
 
@@ -32,29 +48,26 @@ class CageSubstrateComplex(object):
 
         print_output('', self.substrate.name, 'Done')
 
-    def optimise(self, opt_atom_ids=None, n_cores=1):
-        """
-        Like optimise, but with a cage.substrate species
-        :param opt_atom_ids: Atom ids to optimise, possible to just optimise the substrate within the cage,
-        providing a considerable computational speedup
-        :param n_cores: Number of cores to use for the optimisation
-        :return:
-        """
-        logger.info('Optimising a cage-substrate complex')
-        self.xyzs, self.energy = opt_geom(self.xyzs, self.name, charge=self.charge, opt_atom_ids=opt_atom_ids,
-                                          n_cores=n_cores)
+    def singlepoint(self, method, keywords, n_cores=1, max_core_mb=1000):
+        return calculations.singlepoint(self, method, keywords, n_cores, max_core_mb)
 
-    def singlepoint(self, n_cores=1):
-        self.energy = singlepoint(self, n_cores)
+    def optimise(self, method, keywords, n_cores=1, max_core_mb=1000, cartesian_constraints=None):
+        return calculations.optimise(self, method, keywords, n_cores, max_core_mb, cartesian_constraints)
 
-    def __init__(self, cage, substrate):
+    def __init__(self, cage, substrate, solvent=None, mult=1):
+
+        self.name = cage.name + '_' + substrate.name
+        self.solvent = solvent
+        self.mult = mult
+        self.xyzs = None
+        self.energy = None
+        self.reasonable_geometry = False
+
+        if not self._reasonable_cage_substrate(cage, substrate):
+            return
 
         self.cage = cage
         self.substrate = substrate
-        self.xyzs = None
-        self.reasonable_geometry = False
-        self.name = cage.name + '_' + substrate.name
         self.charge = cage.charge + substrate.charge
 
-        self.energy = None
         self.add_substrate()

@@ -106,7 +106,6 @@ class Linker(Molecule):
 
         self.arch = None
         self._set_arch(arch_name)
-        print(self.arch)
 
         if self.arch is None:
             logger.error(f'Not a valid architecture. Valid are {[arch.name for arch in archs]}')

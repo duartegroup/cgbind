@@ -1,23 +1,36 @@
-import os
 from copy import deepcopy
 import numpy as np
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
 from cgbind.build import get_template_fitted_coords_and_cost
 from cgbind.log import logger
-from cgbind.config import Config
-from cgbind.input_output import xyzfile2xyzs
 from cgbind.input_output import print_output
-from cgbind.optimisation import opt_geom
-from cgbind.single_point import singlepoint
 from cgbind.atoms import get_vdw_radii
 from cgbind.geom import is_geom_reasonable
 from cgbind.geom import xyz2coord
+from cgbind import calculations
+from cgbind.input_output import xyzs2xyzfile
 
 
 class Cage(object):
 
+    def _is_linker_reasonable(self, linker):
+
+        if linker is None:
+            logger.error(f'Linker was None. Cannot build {self.name}')
+            return False
+
+        if linker.xyzs is None or linker.arch is None or linker.name is None:
+            logger.error(f'Linker doesn\'t have all the required attributes. Cannot build {self.name}')
+            return False
+
+        return True
+
+    def print_xyzfile(self, force=False):
+        if self.reasonable_geometry or force:
+            xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
+
     def get_metal_atom_ids(self):
-        logger.info('Getting metal_label atom ids with label {}'.format(self.metal))
+        logger.info(f'Getting metal_label atom ids with label {self.metal}')
         try:
             return [i for i in range(len(self.xyzs)) if self.xyzs[i][0] == self.metal]
         except TypeError or IndexError or AttributeError:
@@ -86,22 +99,52 @@ class Cage(object):
 
         return 0.0
 
-    def optimise(self, n_cores=1):
-        """
-        Optimise a cage geometry.
-        If there exists an optimised geometry in path_to_opt_struct then cage.xyzs will be set with that geometry.
-        :param n_cores: Number of cores to perform the optimisation with (int)
-        :return:
-        """
-        logger.info('Optimising {}'.format(self.name))
+    def singlepoint(self, method, keywords, n_cores=1, max_core_mb=1000):
+        return calculations.singlepoint(self, method, keywords, n_cores, max_core_mb)
 
-        self.xyzs, self.energy = opt_geom(self.xyzs, self.name, charge=self.charge, n_cores=n_cores)
+    def optimise(self, method, keywords, n_cores=1, max_core_mb=1000):
+        return calculations.optimise(self, method, keywords, n_cores, max_core_mb)
 
-    def singlepoint(self, n_cores=1):
-        self.energy = singlepoint(self, n_cores)
+    def _calc_charge(self):
+        logger.info('Calculating the charge on the metallocage')
+        self.charge = self.arch.n_metals * self.metal_charge + np.sum(np.array([linker.charge for linker in self.linkers]))
+        return None
 
-    def calc_charge(self):
-        return self.arch.n_metals * self.metal_charge + self.arch.n_linkers * self.linker.charge
+    def _init_homoleptic_cage(self, linker):
+        logger.info(f'Initialising a homoleptic cage')
+
+        if not self._is_linker_reasonable(linker):
+            logger.error('Linker was not reasonable')
+            return
+
+        self.name = 'cage_' + linker.name
+        self.arch = linker.arch
+        self.dr = linker.dr
+        self.linkers = [linker for _ in range(linker.arch.n_linkers)]
+        self.cage_template = linker.cage_template
+
+        return
+
+    def _init_heteroleptic_cage(self, linkers):
+        logger.info(f'Initialising a heteroleptic cage')
+
+        if not all([self._is_linker_reasonable(linker) for linker in linkers]):
+            logger.error('Not all linkers were reasonable')
+            return
+
+        if not all([linker.arch.name == linkers[0].arch.name for linker in linkers]):
+            logger.error('Linkers had different architectures, not building a cage')
+            return
+
+        self.name = 'cage_' + '_'.join([linker.name for linker in linkers])
+        self.arch = linkers[0].arch
+        self.linkers = linkers
+        self.cage_template = linkers[0].cage_template
+
+        logger.warning('Hetroleptic cages will have the average dr of all linkers')
+        self.dr = np.average(np.array([linker.dr for linker in linkers]))
+
+        return
 
     def build(self):
         logger.info('Building a cage geometry')
@@ -117,50 +160,65 @@ class Cage(object):
             xyzs.append([self.metal] + metal_coord.tolist())
 
         # Add the linkers by shifting the x_motifs in each linker templates by dr and finding the best rot matrix
-        for template_linker in self.cage_template.linkers:
+        for i, template_linker in enumerate(self.cage_template.linkers):
 
-            new_linker = deepcopy(self.linker)
+            new_linker = deepcopy(self.linkers[i])
             shifted_coords = get_shifted_template_x_motif_coords(linker_template=template_linker, dr=self.dr)
             x_coords = [new_linker.coords[atom_id] for motif in new_linker.x_motifs for atom_id in motif.atom_ids]
 
-            linker_coords, _ = get_template_fitted_coords_and_cost(linker=self.linker, template_x_coords=shifted_coords,
+            linker_coords, _ = get_template_fitted_coords_and_cost(linker=self.linkers[i],
+                                                                   template_x_coords=shifted_coords,
                                                                    coords_to_fit=x_coords)
 
             xyzs += [[new_linker.xyzs[i][0]] + linker_coords[i].tolist() for i in range(new_linker.n_atoms)]
 
-        if len(xyzs) != self.arch.n_metals + self.arch.n_linkers * self.linker.n_atoms:
+        if len(xyzs) != self.arch.n_metals + np.sum(np.array([linker.n_atoms for linker in self.linkers])):
             logger.error('Failed to build a cage')
             return None
 
         return xyzs
 
-    def __init__(self, linker, metal='Pd', metal_charge=0, name='cage'):
+    def __init__(self, linker=None, metal=None, metal_charge=0, linkers=None, solvent=None, mult=1):
         """
         Initialise a cage object
         :param linker: Linker object
         :param metal: (str)
         :param metal_charge: (int)
-        :param name: (str)
         """
-        logger.info(f'Initialising a Cage object for {linker.name}')
+        logger.info(f'Initialising a Cage object')
 
-        self.name = name
         self.metal = metal
-        self.linker = linker
+        self.mult = mult
+        self.solvent = solvent
+        self.name = 'cage'                                                           # Will be overwritten in _init_cage
+        self.linkers = None
+        self.dr = None
+        self.arch = None
+        self.cage_template = None
 
-        if linker.xyzs is None or linker.arch is None:
-            self.reasonable_geometry = False
-            logger.error('Linker has no xyzs. Can\'t build a cage')
+        self.metal_charge = int(metal_charge)
+        self.charge = None
+        self.energy, self.xyzs, self.m_ids = None, None, None
+
+        self.reasonable_geometry = False
+
+        if linker is not None:
+            self._init_homoleptic_cage(linker)
+
+        elif linkers is not None:
+            self._init_heteroleptic_cage(linkers)
+
+        else:
+            logger.error('Could not generate a cage object without either a linker or set of linkers')
             return
 
-        self.arch = linker.arch
-        self.cage_template = linker.cage_template
-        self.dr = linker.dr
-        self.metal_charge = metal_charge
-        self.charge = self.calc_charge()
+        if self.linkers is None:
+            logger.error('Cannot build a cage with linkers as None')
+            return
+
+        self._calc_charge()
 
         self.reasonable_geometry = True
-        self.energy, self.xyzs, self.m_ids = None, None, None
         self.xyzs = self.build()
 
         if self.xyzs is None:

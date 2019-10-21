@@ -37,7 +37,7 @@ def get_xyz_bond_list(xyzs, relative_tolerance=0.1):
     length
     :return: (list(tuple)) list of bonds given as tuples of atom ids
     """
-    logger.info('Getting bond list from xyzs. Maximum bond is x(1+.{}) average'.format(relative_tolerance))
+    logger.info(f'Getting bond list from xyzs. Maximum bond is x(1+.{relative_tolerance}) average')
 
     bond_list = []
 
@@ -59,7 +59,7 @@ def get_xyz_bond_list(xyzs, relative_tolerance=0.1):
                 elif key2 in avg_bond_lengths:
                     i_j_bond_length = avg_bond_lengths[key2]
                 else:
-                    logger.warning('Couldn\'t find a default bond for {}–{}'.format(atom_i_label, atom_j_label))
+                    logger.warning(f'Couldn\'t find a default bond for {atom_i_label}–{atom_j_label}')
                     i_j_bond_length = 1.5  # Default bonded distance
 
                 if dist < i_j_bond_length * (1.0 + relative_tolerance):

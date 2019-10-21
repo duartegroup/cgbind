@@ -1,6 +1,5 @@
 from copy import deepcopy
 import numpy as np
-from scipy.spatial import distance_matrix
 from cgbind.geom import get_centered_matrix
 from cgbind.geom import get_rot_mat_kabsch
 from cgbind.geom import xyz2coord
@@ -8,7 +7,8 @@ from cgbind.geom import xyz2coord
 
 def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit, return_cost=False):
     """
-    Get the coordinates of a linkers that are fitted to a template of XEEX motifs
+    Get the coordinates of a linkers that are fitted to a template of X motifs
+
     :param linker: (object)
     :param template_x_coords: (list(np.ndarray))
     :param coords_to_fit: (list(np.ndarray)) must have len() = len(linker_template.x_xyzs)
@@ -30,7 +30,6 @@ def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit
 
     if return_cost:
         new_p_mat = np.array([np.matmul(rot_mat, coord) for coord in p_mat_trans])
-        # [print(np.linalg.norm(new_p_mat[i] - q_mat_trans[i])) for i in range(len(coords_to_fit))]
         cost = np.sum(np.square(np.array([np.linalg.norm(new_p_mat[i] - q_mat_trans[i]) for i in range(len(coords_to_fit))])))
         return cost
 

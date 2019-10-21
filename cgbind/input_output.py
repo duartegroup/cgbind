@@ -1,7 +1,6 @@
 import os
 from datetime import date
 from cgbind.log import logger
-from cgbind.config import Config
 
 
 def print_binding_affinities(ligand_names, substrate_names, binding_affinities, units_kj_mol=False):
@@ -42,7 +41,8 @@ def xyzs2xyzfile(xyzs, filename=None, basename=None, title_line=''):
     :param title_line: String to print on the title line of an xyz file
     :return: The filename
     """
-    if basename:
+
+    if basename is not None:
         filename = basename + '.xyz'
 
     if filename is None:
@@ -56,6 +56,10 @@ def xyzs2xyzfile(xyzs, filename=None, basename=None, title_line=''):
     if not filename.endswith('.xyz'):
         logger.error('Filename does not end with .xyz, adding')
         filename += '.xyz'
+
+    if filename is None:
+        logger.error('Filename was None')
+        return filename
 
     with open(filename, 'w') as xyz_file:
         print(len(xyzs), '\n', title_line, sep='', file=xyz_file)
@@ -150,8 +154,5 @@ def mol2file_to_xyzs(filename):
 
 
 def print_output(process, name, state):
-
-    if not Config.suppress_print:
-        print("{:<30s}{:<50s}{:>10s}".format(process, name, state))
-
+    print("{:<30s}{:<50s}{:>10s}".format(process, name, state))
     return None

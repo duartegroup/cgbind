@@ -102,7 +102,7 @@ def get_atomic_mass(atom_label):
     if atom_label in atomic_masses.keys():
         atom_mass = atomic_masses[atom_label]
     else:
-        logger.error("Couldn't find the atomic mass for {}. Guessing at 10".format(atom_label))
+        logger.error(f"Couldn't find the atomic mass for {atom_label}. Guessing at 10")
         atom_mass = 10
 
     return atom_mass
@@ -113,7 +113,7 @@ def get_vdw_radii(atom_label):
     if atom_label in vdw_radii.keys():
         vdv_radii = vdw_radii[atom_label]
     else:
-        logger.error("Couldn't find the VdV radii for {}. Guessing at 1.5".format(atom_label))
+        logger.error(f"Couldn't find the VdV radii for {atom_label}. Guessing at 1.5")
         vdv_radii = 1.5
 
     return vdv_radii

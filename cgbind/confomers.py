@@ -4,15 +4,16 @@ import os
 
 
 def gen_conformer_mol_files(mol):
-    logger.info('Generating conformer mol files for {}'.format(mol.name))
+    logger.info(f'Generating conformer mol files for {mol.name}')
 
     try:
         for i in range(len(mol.conf_ids)):
             Chem.MolToMolFile(mol.mol_obj, mol.conf_filenames[i], confId=mol.conf_ids[i])
-        return 0
+
     except AttributeError or RuntimeError:
-        logger.error('Couldn\'t convert mol objects to .mol files for {}'.format(mol.name))
-        return 1
+        logger.error(f'Couldn\'t convert mol objects to .mol files for {mol.name}')
+
+    return None
 
 
 def confomer_mol_files_to_xyzs(filenames, n_atoms):
