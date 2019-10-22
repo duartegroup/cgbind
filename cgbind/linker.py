@@ -58,6 +58,42 @@ class Linker(Molecule):
                 self.arch = arch
         return None
 
+    def is_planar(self):
+        logger.info('Determining if the linker is planar')
+
+        if len(self.x_motifs) != 2:
+            logger.error('Could not calculate planarity of the linker. Only implemented for ')
+            return True
+
+        x_coords = [self.coords[atom_id] for motif in self.x_motifs for atom_id in motif.atom_ids]
+        x_motifs_centroid = np.average(x_coords, axis=0)
+
+        # Calculate the plane containing the centroid and two atoms in the x motifs
+        v1 = self.coords[self.x_motifs[0].atom_ids[0]] - x_motifs_centroid        # First atom in the first x motif
+        v2 = self.coords[self.x_motifs[1].atom_ids[-1]] - x_motifs_centroid       # Last atom in the second x motif
+
+        norm = np.cross(v1, v2)
+        a, b, c = norm
+        d = np.dot(norm, x_motifs_centroid)
+
+        logger.info(f'Equation of the plane is {a}x + {b}y + {c}z + d')
+
+        # Calculate the sum of signed distances, which will be 0 if the linker is flat
+        sum_dist = 0
+        for coord in self.coords:
+            dist = (np.dot(coord, norm) + d) / np.linalg.norm(norm)
+            sum_dist += dist
+
+        rel_sum_dist = sum_dist / self.n_atoms
+        logger.info(f'Relative sum of distances was {rel_sum_dist}')
+
+        if np.abs(rel_sum_dist) > 1:
+            logger.info('Sum of signed plane-coord distances was highly != 0. Linker is probably not planar')
+            return False
+
+        else:
+            return True
+
     def set_best_conformer(self):
         """
         For a set of conformer xyzs (self.conf_xyzs) find the one that minimises the cost function for fitting the
@@ -122,3 +158,4 @@ class Linker(Molecule):
         self.x_motifs = self._strip_possible_x_motifs_on_connectivity()
         self.dr = None
         self.set_best_conformer()
+        self.planar = self.is_planar()

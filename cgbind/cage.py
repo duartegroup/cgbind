@@ -1,7 +1,7 @@
 from copy import deepcopy
 import numpy as np
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
-from cgbind.build import get_template_fitted_coords_and_cost
+from cgbind.build import get_fitted_linker_coords
 from cgbind.log import logger
 from cgbind.input_output import print_output
 from cgbind.atoms import get_vdw_radii
@@ -166,9 +166,8 @@ class Cage(object):
             shifted_coords = get_shifted_template_x_motif_coords(linker_template=template_linker, dr=self.dr)
             x_coords = [new_linker.coords[atom_id] for motif in new_linker.x_motifs for atom_id in motif.atom_ids]
 
-            linker_coords, _ = get_template_fitted_coords_and_cost(linker=self.linkers[i],
-                                                                   template_x_coords=shifted_coords,
-                                                                   coords_to_fit=x_coords)
+            linker_coords  = get_fitted_linker_coords(linker=self.linkers[i], template_x_coords=shifted_coords,
+                                                      coords_to_fit=x_coords, current_xyzs=xyzs)
 
             xyzs += [[new_linker.xyzs[i][0]] + linker_coords[i].tolist() for i in range(new_linker.n_atoms)]
 
