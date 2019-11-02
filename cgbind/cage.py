@@ -25,6 +25,10 @@ class Cage(object):
 
         return True
 
+    def get_centroid(self):
+        metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
+        return np.average(metal_coords, axis=0)
+
     def print_xyzfile(self, force=False):
         if self.reasonable_geometry or force:
             xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
@@ -49,9 +53,7 @@ class Cage(object):
         centroid, min_atom_dist_id = None, None
 
         try:
-            metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
-            centroid = np.average(metal_coords, axis=0)
-
+            centroid = self.get_centroid()
             if centroid is None:
                 logger.error('Could not find the cage centroid. Returning 0.0')
                 return 0.0
@@ -98,6 +100,43 @@ class Cage(object):
             logger.error('Could not calculate the M-M distance. Returning 0.0')
 
         return 0.0
+
+    def get_n_rot_bonds(self):
+        try:
+            return sum([linker.n_rot_bonds for linker in self.linkers])
+        except TypeError:
+            return None
+
+    def get_h_bond_donors(self):
+        try:
+            return sum([linker.n_h_donors for linker in self.linkers])
+        except TypeError:
+            return None
+
+    def get_max_escape_sphere(self, max_dist_from_metals=10):
+        """
+        Get the maximum radius of a sphere that can escape from the centroid of the cage – will iterate through all
+        theta/phi
+
+        :param max_dist_from_metals: (float) Distance in Å on top of the average M-M distance that will be used for the
+                                             search for the maximum escape sphere
+        :return:
+        """
+        logger.info('Getting the volume of the largest sphere that can escape from the cavity')
+
+        avg_m_m_dist = self.get_m_m_dist()
+        cage_coords = xyz2coord(self.xyzs) - self.get_centroid()
+        max_escape_radius_can_escape = 0.0
+        atom_id = None
+
+        if atom_id is None:
+            logger.error('Could not calculate the maximum escape sphere')
+            return 0.0
+
+        radius = max_escape_radius_can_escape - get_vdw_radii(atom_label=self.xyzs[min_atom_id][0])
+        logger.info(f'Radius of largest sphere that can escape from the cavity = {radius}')
+
+        return (4.0 / 3.0) * np.pi * radius**3
 
     def singlepoint(self, method, keywords, n_cores=1, max_core_mb=1000):
         return calculations.singlepoint(self, method, keywords, n_cores, max_core_mb)

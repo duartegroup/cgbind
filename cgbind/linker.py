@@ -92,6 +92,7 @@ class Linker(Molecule):
             return False
 
         else:
+            logger.info('Linker is planar')
             return True
 
     def set_best_conformer(self):
@@ -145,6 +146,10 @@ class Linker(Molecule):
 
         if self.arch is None:
             logger.error(f'Not a valid architecture. Valid are {[arch.name for arch in archs]}')
+            return
+
+        if self.xyzs is None:
+            logger.error('Could get xyzs for linker')
             return
 
         self.cage_template = get_template(arch_name=arch_name)

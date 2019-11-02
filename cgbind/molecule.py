@@ -1,5 +1,6 @@
 from rdkit.Chem import AllChem
 from rdkit import Chem
+from rdkit.Chem import rdMolDescriptors
 from cgbind.log import logger
 from cgbind.input_output import print_output
 from cgbind.input_output import xyzs2xyzfile
@@ -30,8 +31,10 @@ class Molecule(object):
             self.mol_obj = Chem.MolFromSmiles(smiles)
             self.mol_obj = Chem.AddHs(self.mol_obj)
             self.charge = Chem.GetFormalCharge(self.mol_obj)
+            self.n_rot_bonds = rdMolDescriptors.CalcNumRotatableBonds(self.mol_obj)
+            self.n_h_donors = rdMolDescriptors.CalcNumHBD(self.mol_obj)
 
-        except RuntimeError:
+        except:
             logger.error('RDKit failed to generate mol objects')
             return
 
@@ -69,6 +72,8 @@ class Molecule(object):
         self.n_atoms = None
         self.com = None
 
+        self.n_rot_bonds = None
+        self.n_h_donors = None
         self.bonds = None
 
         self.conf_ids = None
