@@ -148,6 +148,13 @@ def get_centered_matrix(mat):
     return np.array([coord - centroid for coord in mat])
 
 
+def spherical_to_cart(r, theta, phi):
+
+    return np.array([r * np.cos(theta) * np.sin(phi),
+                     r * np.sin(theta) * np.sin(phi),
+                     r * np.cos(theta)])
+
+
 i = np.array([1.0, 0.0, 0.0])
 j = np.array([0.0, 1.0, 0.0])
 k = np.array([0.0, 0.0, 1.0])

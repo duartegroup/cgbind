@@ -1,5 +1,7 @@
 from copy import deepcopy
 import numpy as np
+from scipy.spatial.distance import cdist
+from scipy.optimize import basinhopping, minimize
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
 from cgbind.build import get_fitted_linker_coords
 from cgbind.log import logger
@@ -7,8 +9,29 @@ from cgbind.input_output import print_output
 from cgbind.atoms import get_vdw_radii
 from cgbind.geom import is_geom_reasonable
 from cgbind.geom import xyz2coord
+from cgbind.geom import spherical_to_cart
 from cgbind import calculations
 from cgbind.input_output import xyzs2xyzfile
+
+
+def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
+    """
+    Get the maximum sphere radius that is possible at a point defined by the spherical polar coordinates theta, phi and
+    r. This amounts to finding the minimum pairwise distance between the point and the rest of the cage. The negative
+    radius is returned as it will be fed into scipy.optmize.minimise
+
+    :param theta_and_phi: (list(float))
+    :param r: (float)
+    :param cage_coords: (np.ndarray) n_atoms x 3
+    :return: (float)
+    """
+
+    theta, phi = theta_and_phi
+    # Convert the point in spherical polars to Cartesian so the distances to the rest of the cage can be calculated
+    # nneds to be a 1 x 3 matrix to use cdist
+    point = np.array([spherical_to_cart(r=r, theta=theta, phi=phi)])
+
+    return -np.min(cdist(point, cage_coords))
 
 
 class Cage(object):
@@ -113,27 +136,45 @@ class Cage(object):
         except TypeError:
             return None
 
-    def get_max_escape_sphere(self, max_dist_from_metals=10):
+    def get_max_escape_sphere(self, basinh=False, max_dist_from_metals=10):
         """
         Get the maximum radius of a sphere that can escape from the centroid of the cage – will iterate through all
         theta/phi
 
+        :param basinh: (bool) Find the true maximum escape sphere by basin hopping on the surface
         :param max_dist_from_metals: (float) Distance in Å on top of the average M-M distance that will be used for the
                                              search for the maximum escape sphere
         :return:
         """
         logger.info('Getting the volume of the largest sphere that can escape from the cavity')
 
+        max_sphere_escape_r = 99999999999999.9
         avg_m_m_dist = self.get_m_m_dist()
         cage_coords = xyz2coord(self.xyzs) - self.get_centroid()
-        max_escape_radius_can_escape = 0.0
-        atom_id = None
 
-        if atom_id is None:
-            logger.error('Could not calculate the maximum escape sphere')
-            return 0.0
+        # For a distance from the origin (the cage centroid) calculate the largest sphere possible without hitting atoms
+        opt_theta_phi, opt_r = np.zeros(2), 0.0
+        for r in np.linspace(0.0, avg_m_m_dist + max_dist_from_metals, 20):
+            if basinh:
+                opt = basinhopping(get_max_sphere_negative_radius, x0=opt_theta_phi, stepsize=1.0, niter=5,
+                                   minimizer_kwargs={'args': (r, cage_coords), 'method': 'BFGS'})
+            else:
+                opt = minimize(get_max_sphere_negative_radius, x0=opt_theta_phi, args= (r, cage_coords), method='BFGS')
 
-        radius = max_escape_radius_can_escape - get_vdw_radii(atom_label=self.xyzs[min_atom_id][0])
+            opt_theta_phi = opt.x
+
+            # This is the correct way round because we want the largest sphere that CAN escape
+            if -opt.fun < max_sphere_escape_r:
+                max_sphere_escape_r = -opt.fun
+                opt_r = r
+
+        print(max_sphere_escape_r)
+
+        # Get the atom id that the max escape sphere hits into
+        sphere_point = spherical_to_cart(r=opt_r, theta=opt_theta_phi[0], phi=opt_theta_phi[1])
+        atom_id = np.argmin([np.linalg.norm(coord - sphere_point) for coord in cage_coords])
+
+        radius = max_sphere_escape_r - get_vdw_radii(atom_label=self.xyzs[atom_id][0])
         logger.info(f'Radius of largest sphere that can escape from the cavity = {radius}')
 
         return (4.0 / 3.0) * np.pi * radius**3
