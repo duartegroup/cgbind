@@ -12,7 +12,7 @@ from cgbind.bonds import get_xyz_bond_list
 from cgbind import calculations
 
 
-class Molecule(object):
+class Molecule:
 
     def print_xyzfile(self):
         xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
@@ -33,6 +33,7 @@ class Molecule(object):
             self.charge = Chem.GetFormalCharge(self.mol_obj)
             self.n_rot_bonds = rdMolDescriptors.CalcNumRotatableBonds(self.mol_obj)
             self.n_h_donors = rdMolDescriptors.CalcNumHBD(self.mol_obj)
+            self.n_h_acceptors = rdMolDescriptors.CalcNumHBA(self.mol_obj)
 
         except:
             logger.error('RDKit failed to generate mol objects')
@@ -74,6 +75,7 @@ class Molecule(object):
 
         self.n_rot_bonds = None
         self.n_h_donors = None
+        self.n_h_acceptors = None
         self.bonds = None
 
         self.conf_ids = None

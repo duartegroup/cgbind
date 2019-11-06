@@ -34,7 +34,7 @@ def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
     return -np.min(cdist(point, cage_coords))
 
 
-class Cage(object):
+class Cage:
 
     def _is_linker_reasonable(self, linker):
 
@@ -124,15 +124,21 @@ class Cage(object):
 
         return 0.0
 
-    def get_n_rot_bonds(self):
+    def get_num_rot_bonds(self):
         try:
             return sum([linker.n_rot_bonds for linker in self.linkers])
         except TypeError:
             return None
 
-    def get_h_bond_donors(self):
+    def get_num_h_bond_donors(self):
         try:
             return sum([linker.n_h_donors for linker in self.linkers])
+        except TypeError:
+            return None
+
+    def get_num_h_bond_acceptors(self):
+        try:
+            return sum([linker.n_h_acceptors for linker in self.linkers])
         except TypeError:
             return None
 
@@ -167,8 +173,6 @@ class Cage(object):
             if -opt.fun < max_sphere_escape_r:
                 max_sphere_escape_r = -opt.fun
                 opt_r = r
-
-        print(max_sphere_escape_r)
 
         # Get the atom id that the max escape sphere hits into
         sphere_point = spherical_to_cart(r=opt_r, theta=opt_theta_phi[0], phi=opt_theta_phi[1])
