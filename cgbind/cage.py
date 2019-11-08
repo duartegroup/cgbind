@@ -1,7 +1,10 @@
 from copy import deepcopy
+import os
 import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.optimize import basinhopping, minimize
+from autode.calculation import Calculation
+from autode.methods import XTB
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
 from cgbind.build import get_fitted_linker_coords
 from cgbind.log import logger
@@ -12,6 +15,7 @@ from cgbind.geom import xyz2coord
 from cgbind.geom import spherical_to_cart
 from cgbind import calculations
 from cgbind.input_output import xyzs2xyzfile
+from cgbind.esp import get_esp_cube_lines
 
 
 def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
@@ -55,6 +59,44 @@ class Cage:
     def print_xyzfile(self, force=False):
         if self.reasonable_geometry or force:
             xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
+
+    def get_esp_cube(self):
+        """
+        Get the electrostatic potential (ESP) in a Gaussian .cube format by calculating partial atomic charges using
+        XTB (tested with v. 6.2)
+
+        :return: (list) .cube file lines
+        """
+
+        if not XTB.available:
+            logger.error('Could not calculate the ESP without an XTB install')
+            return []
+
+        xtb_sp = Calculation(name='xtb_sp', molecule=self, method=XTB, n_cores=1)
+        xtb_sp.run()
+
+        if not os.path.exists('charges'):
+            logger.error('Could not get the charges from the XTB file')
+            return []
+
+        # Charges file from XTB is one value per line
+        charges = [float(line.split()[0]) for line in open('charges', 'r').readlines()]
+
+        esp_lines = get_esp_cube_lines(charges=charges, xyzs=self.xyzs)
+        return esp_lines
+
+    def print_esp_cube_file(self):
+
+        cube_file_lines = self.get_esp_cube()
+
+        if len(cube_file_lines) == 0:
+            logger.error('Could not generate cube')
+            return None
+
+        with open(self.name + '_esp.cube', 'w') as cube_file:
+            [print(line, end='', file=cube_file) for line in cube_file_lines]
+
+        return None
 
     def get_metal_atom_ids(self):
         logger.info(f'Getting metal_label atom ids with label {self.metal}')
