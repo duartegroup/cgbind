@@ -1,77 +1,82 @@
 from copy import deepcopy
 import numpy as np
+from scipy.spatial import distance_matrix
+from cgbind.log import logger
 from cgbind.geom import get_centered_matrix
 from cgbind.geom import get_rot_mat_kabsch
 from cgbind.geom import xyz2coord
 
 
-def get_template_fitted_coords_and_cost(linker, linker_template, coords_to_fit):
+def get_fitted_linker_coords(linker, template_x_coords, coords_to_fit, current_xyzs):
     """
-    Get the coordinates of a linkers that are fitted to a template of XEEX motifs
+    For a linker get the best mapping onto a list of template X coords (e.g. NCN motifs in a pyridyl donor) these will
+    this can be achieved in normal or reverse order of the coordinates as to minimise the distance to the rest of the
+    metallocage structure
+
+    :param linker:
+    :param template_x_coords: (list(np.ndarray))
+    :param coords_to_fit: (list(np.ndarray))
+    :param current_xyzs: (list(list))
+    :return: (list(np.ndarray))
+    """
+    curr_coords = xyz2coord(xyzs=current_xyzs)
+    max_sum_dists, best_linker_coords = 0.0, None
+
+    for coords in [coords_to_fit, list(reversed(coords_to_fit))]:
+        new_linker_coords, _ = get_template_fitted_coords_and_cost(linker=linker,
+                                                                   template_x_coords=template_x_coords,
+                                                                   coords_to_fit=coords)
+
+        # Weight distance with tanh(2-2d) + 1 where d is the distance, to penalise any d < 2 Å
+        weighted_dists = np.tanh(2.0 - 2.0 * (distance_matrix(new_linker_coords, curr_coords))) + 1
+        inv_sum_dists = 1.0 / np.sum(weighted_dists)
+
+        # Add the linker with the least repulsion to the rest of the structure
+        if inv_sum_dists > max_sum_dists:
+            best_linker_coords = new_linker_coords
+            max_sum_dists = inv_sum_dists
+
+    if best_linker_coords is None:
+        logger.error('Fitted linker coords could not be found')
+
+    return best_linker_coords
+
+
+def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit, return_cost=False):
+    """
+    Get the coordinates of a linkers that are fitted to a template of X motifs
+
     :param linker: (object)
-    :param linker_template: (object)
+    :param template_x_coords: (list(np.ndarray))
     :param coords_to_fit: (list(np.ndarray)) must have len() = len(linker_template.x_xyzs)
+    :param return_cost: (bool) return just the cost function, which is the sum of squares of ∆dists
     :return: (np.ndarray) n_atoms x 3
     """
-
     # Construct the P matrix in the Kabsch algorithm
     p_mat = deepcopy(coords_to_fit)
     p_centroid = np.average(p_mat, axis=0)
     p_mat_trans = get_centered_matrix(p_mat)
 
     # Construct the P matrix in the Kabsch algorithm
-    q_mat = np.array([xyz2coord(xyz_line) for xyz_line in linker_template.x_xyzs])
+    q_mat = deepcopy(template_x_coords)
     q_centroid = np.average(q_mat, axis=0)
     q_mat_trans = get_centered_matrix(q_mat)
 
     # Get the optimum rotation matrix
     rot_mat = get_rot_mat_kabsch(p_mat_trans, q_mat_trans)
 
+    if return_cost:
+        new_p_mat = np.array([np.matmul(rot_mat, coord) for coord in p_mat_trans])
+        cost = np.sum(np.square(np.array([np.linalg.norm(new_p_mat[i] - q_mat_trans[i]) for i in range(len(coords_to_fit))])))
+        return cost
+
     # Apply to get the new set of coordinates
     new_linker_coords = np.array([np.matmul(rot_mat, coord - p_centroid) + q_centroid
                                   for coord in xyz2coord(linker.xyzs)])
 
     # Compute the cost function = (r - r_ideal)^2
-    new_p_mat = np.array([new_linker_coords[i] for i in linker.x_atom_ids])
-    cost = np.sum(np.square(new_p_mat - q_mat))
+    x_atom_ids = [x for x_motif in linker.x_motifs for x in x_motif.atom_ids]
+    new_p_mat = np.array([new_linker_coords[i] for i in x_atom_ids])
+    cost = np.sum(np.square(np.array([np.linalg.norm(new_p_mat[i] - q_mat[i]) for i in range(len(coords_to_fit))])))
 
     return new_linker_coords, cost
-
-
-def get_cost_xyzs(r, cage, linker, template, coords_to_fit, return_xyzs=False):
-    """
-    For an  metallocage compute the cost function, which is the sum of the square differences between both the
-    template XEEX motifs and the fitted linkers. This cost will be minimised with respect to the size of the
-    which is quantified by the centroid-M distance
-
-    :param r: (float)
-    :param cage: (object)
-    :param linker: (object)
-    :param template: (object)
-    :param coords_to_fit: (list(np.ndarray)) list of coords to fit onto the template
-    :param return_xyzs:
-    :return:
-    """
-
-    # Modify a copy of the template inplace with an r which corresponds to the centroid-M distance
-    mod_template = deepcopy(template)
-    mod_template.set_geom(r=r)
-
-    # Add the xyzs of the metals to the list of xyzs, inserting the appropriate metal atom label
-    xyzs = [[cage.metal] + m_template_xyzs[1:] for m_template_xyzs in mod_template.Metals.xyzs]
-
-    cost = 0.0
-    for n, ligand_template in enumerate(mod_template.Ligands):
-        ligand_coords, l_cost = get_template_fitted_coords_and_cost(linker=linker, linker_template=ligand_template,
-                                                                    coords_to_fit=coords_to_fit)
-        xyzs += [[linker.xyzs[i][0]] + ligand_coords[i].tolist() for i in range(linker.n_atoms)]
-        cost += l_cost
-
-        if n == 0:
-            from cgbind.input_output import xyzs2xyzfile
-            xyzs2xyzfile(xyzs=xyzs, basename='tmp4')
-
-    if return_xyzs:
-        return cost, xyzs
-    else:
-        return cost

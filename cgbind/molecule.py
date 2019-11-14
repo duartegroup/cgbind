@@ -1,31 +1,20 @@
 from rdkit.Chem import AllChem
 from rdkit import Chem
+from rdkit.Chem import rdMolDescriptors
 from cgbind.log import logger
-from cgbind.optimisation import opt_geom
-from cgbind.single_point import singlepoint
 from cgbind.input_output import print_output
 from cgbind.input_output import xyzs2xyzfile
-from cgbind.confomers import gen_conformer_mol_files
-from cgbind.confomers import confomer_mol_files_to_xyzs
+from cgbind.confomers import extract_xyzs_from_rdkit_mol_object
 from cgbind.geom import calc_com
-from cgbind.bonds import get_bond_list_from_rdkit_bonds
-from cgbind.bonds import get_xyz_bond_list
+from autode.bond_lengths import get_bond_list_from_rdkit_bonds
+from autode.bond_lengths import get_xyz_bond_list
+from cgbind import calculations
 
 
-class Molecule(object):
-
-    def optimise(self, n_cores):
-        self.xyzs, self.energy = opt_geom(self.xyzs, self.name, charge=self.charge, n_cores=n_cores)
-
-    def singlepoint(self, n_cores=1):
-        self.energy = singlepoint(self, n_cores)
+class Molecule:
 
     def print_xyzfile(self):
         xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
-
-    def set_charge(self, charge):
-        assert type(charge) == int
-        self.charge = charge
 
     def set_com(self):
         self.com = calc_com(self.xyzs)
@@ -41,8 +30,11 @@ class Molecule(object):
             self.mol_obj = Chem.MolFromSmiles(smiles)
             self.mol_obj = Chem.AddHs(self.mol_obj)
             self.charge = Chem.GetFormalCharge(self.mol_obj)
+            self.n_rot_bonds = rdMolDescriptors.CalcNumRotatableBonds(self.mol_obj)
+            self.n_h_donors = rdMolDescriptors.CalcNumHBD(self.mol_obj)
+            self.n_h_acceptors = rdMolDescriptors.CalcNumHBA(self.mol_obj)
 
-        except RuntimeError:
+        except:
             logger.error('RDKit failed to generate mol objects')
             return
 
@@ -50,29 +42,38 @@ class Molecule(object):
         self.conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=AllChem.ETKDG()))
         self.conf_filenames = [self.name + '_conf' + str(i) + '.mol' for i in self.conf_ids]
         self.bonds = get_bond_list_from_rdkit_bonds(rdkit_bonds_obj=self.mol_obj.GetBonds())
-        gen_conformer_mol_files(self)
         print_output('', '', 'Done')
 
         self.n_atoms = self.mol_obj.GetNumAtoms()
-        self.conf_xyzs = confomer_mol_files_to_xyzs(self.conf_filenames, self.n_atoms)
+        self.conf_xyzs = extract_xyzs_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=self.conf_ids)
         self.xyzs = self.conf_xyzs[0]
 
-    def __init__(self, smiles=None, name='molecule', charge=0, n_confs=10, xyzs=None):
+    def singlepoint(self, method, keywords, n_cores=1, max_core_mb=1000):
+        return calculations.singlepoint(self, method, keywords, n_cores, max_core_mb)
+
+    def optimise(self, method, keywords, n_cores=1, max_core_mb=1000):
+        return calculations.optimise(self, method, keywords, n_cores, max_core_mb)
+
+    def __init__(self, smiles=None, name='molecule', charge=0, mult=1, n_confs=10, xyzs=None, solvent=None):
         logger.info('Initialising a Molecule object for {}'.format(name))
 
         self.name = name
         self.smiles = smiles
         self.xyzs = xyzs
+        self.solvent = solvent
         self.n_confs = n_confs
 
-        self.charge = None
-        self.set_charge(charge)
+        self.charge = int(charge)
+        self.mult = mult
 
         self.energy = None
         self.mol_obj = None
         self.n_atoms = None
         self.com = None
 
+        self.n_rot_bonds = None
+        self.n_h_donors = None
+        self.n_h_acceptors = None
         self.bonds = None
 
         self.conf_ids = None

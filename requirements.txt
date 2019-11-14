@@ -3,3 +3,4 @@ numpy
 matplotlib
 pytest
 scipy
+networkx

@@ -14,8 +14,7 @@ provided an installation of ORCA is available.
 1. [rdkit](https://github.com/rdkit/rdkit)
 2. matplotlib
 3. [ORCA](https://sites.google.com/site/orcainputlibrary/home) v. 4.1 (optional)
-4. [XTB](https://www.chemie.uni-bonn.de/pctc/mulliken-center/software/xtb/xtb) v. 6.1 (optional)
-5. [MOPAC2016](http://openmopac.net) (optional)
+4. [XTB](https://github.com/grimme-lab/xtb) v. 6.2 (optional)
 
 ***
 

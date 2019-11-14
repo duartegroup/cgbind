@@ -2,6 +2,13 @@ from cgbind.log import logger
 
 heteroatoms = ['O', 'N', 'S', 'P', 'F', 'Cl']
 
+metals = ['Li', 'Be', 'Na', 'Mg', 'Al', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga',
+          'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Cs', 'Ba', 'La', 'Ce',
+          'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os',
+          'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm',
+          'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl',
+          'Mc', 'Lv']
+
 avg_bond_lengths = {
     'HH': 0.74,
     'CC': 1.54,
@@ -89,13 +96,31 @@ vdw_radii = {
     'Pt': 1.75,
     'Au': 1.66}
 
+atoms = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar',
+         'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br',
+         'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn' 'Sb', 'Te',
+         'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm',
+         'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn',
+         'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr',
+         'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og']
+
+
+def get_atomic_number(atom_label):
+
+    try:
+        return atoms.index(atom_label) + 1
+
+    except ValueError:
+        logger.warning('Could not get atomic number. Returning 6..')
+        return 6
+
 
 def get_atomic_mass(atom_label):
 
     if atom_label in atomic_masses.keys():
         atom_mass = atomic_masses[atom_label]
     else:
-        logger.error("Couldn't find the atomic mass for {}. Guessing at 10".format(atom_label))
+        logger.error(f"Couldn't find the atomic mass for {atom_label}. Guessing at 10")
         atom_mass = 10
 
     return atom_mass
@@ -106,7 +131,7 @@ def get_vdw_radii(atom_label):
     if atom_label in vdw_radii.keys():
         vdv_radii = vdw_radii[atom_label]
     else:
-        logger.error("Couldn't find the VdV radii for {}. Guessing at 1.5".format(atom_label))
+        logger.error(f"Couldn't find the VdV radii for {atom_label}. Guessing at 1.5")
         vdv_radii = 1.5
 
     return vdv_radii

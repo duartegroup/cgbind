@@ -11,20 +11,4 @@ cgbind\.egg-info/
 
 build/
 
-tests/cage_L-1\.xyz
-
-tests/gen_cage/cage_L-1\.xyz
-
-tests/gen_cage/cage_L-1_orca_sp\.inp
-
-tests/gen_cage_subst/cage_L-1\.xyz
-
-tests/gen_cage_subst/cage_L-1_acetone\.xyz
-
-tests/gen_cage_subst/cage_L-1_bq\.xyz
-
-tests/gen_cage_subst/cage_L-1_methane\.xyz
-
-tests/gen_cage/cage_L_m4l6\.xyz
-
-tests/gen_cage/tmp_cage\.xyz
+.coverage
