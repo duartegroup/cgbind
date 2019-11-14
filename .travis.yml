@@ -19,7 +19,9 @@ before_install:
   - source activate test-env
   - git clone https://github.com/duartegroup/autodE.git
   - conda install --file autodE/requirements.txt
-  - python autodE/setup.py install
+  - cd autodE
+  - python setup.py install
+  - cd ..
 
 install:
   - python setup.py install
