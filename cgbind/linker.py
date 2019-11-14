@@ -139,6 +139,8 @@ class Linker(Molecule):
     def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=200, xyzs=None):
 
         logger.info('Initialising a Linker object for {}'.format(name))
+        initalised_with_xyzs = True if xyzs is not None else False
+
         super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, xyzs=xyzs)
 
         self.arch = None
@@ -162,5 +164,11 @@ class Linker(Molecule):
         check_x_motifs(self, linker_template=self.cage_template.linkers[0])
         self.x_motifs = self._strip_possible_x_motifs_on_connectivity()
         self.dr = None
+
+        # If the linker has been initialised from xyzs then set conf_xyzs as the xyzs
+        if initalised_with_xyzs:
+            self.conf_xyzs = [self.xyzs]
+
         self.set_best_conformer()
+
         self.planar = self.is_planar()

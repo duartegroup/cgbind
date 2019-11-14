@@ -9,13 +9,15 @@ from cgbind.geom import xyz2coord
 
 def get_fitted_linker_coords(linker, template_x_coords, coords_to_fit, current_xyzs):
     """
-
+    For a linker get the best mapping onto a list of template X coords (e.g. NCN motifs in a pyridyl donor) these will
+    this can be achieved in normal or reverse order of the coordinates as to minimise the distance to the rest of the
+    metallocage structure
 
     :param linker:
-    :param template_x_coords:
-    :param coords_to_fit:
-    :param current_xyzs:
-    :return:
+    :param template_x_coords: (list(np.ndarray))
+    :param coords_to_fit: (list(np.ndarray))
+    :param current_xyzs: (list(list))
+    :return: (list(np.ndarray))
     """
     curr_coords = xyz2coord(xyzs=current_xyzs)
     max_sum_dists, best_linker_coords = 0.0, None
@@ -25,12 +27,14 @@ def get_fitted_linker_coords(linker, template_x_coords, coords_to_fit, current_x
                                                                    template_x_coords=template_x_coords,
                                                                    coords_to_fit=coords)
 
-        sum_dists = np.sum(distance_matrix(new_linker_coords, curr_coords))
+        # Weight distance with tanh(2-2d) + 1 where d is the distance, to penalise any d < 2 Å
+        weighted_dists = np.tanh(2.0 - 2.0 * (distance_matrix(new_linker_coords, curr_coords))) + 1
+        inv_sum_dists = 1.0 / np.sum(weighted_dists)
 
         # Add the linker with the least repulsion to the rest of the structure
-        if sum_dists > max_sum_dists:
+        if inv_sum_dists > max_sum_dists:
             best_linker_coords = new_linker_coords
-            max_sum_dists = sum_dists
+            max_sum_dists = inv_sum_dists
 
     if best_linker_coords is None:
         logger.error('Fitted linker coords could not be found')

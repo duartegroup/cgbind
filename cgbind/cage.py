@@ -40,18 +40,6 @@ def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
 
 class Cage:
 
-    def _is_linker_reasonable(self, linker):
-
-        if linker is None:
-            logger.error(f'Linker was None. Cannot build {self.name}')
-            return False
-
-        if linker.xyzs is None or linker.arch is None or linker.name is None:
-            logger.error(f'Linker doesn\'t have all the required attributes. Cannot build {self.name}')
-            return False
-
-        return True
-
     def get_centroid(self):
         metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
         return np.average(metal_coords, axis=0)
@@ -231,6 +219,18 @@ class Cage:
     def optimise(self, method, keywords, n_cores=1, max_core_mb=1000):
         return calculations.optimise(self, method, keywords, n_cores, max_core_mb)
 
+    def _is_linker_reasonable(self, linker):
+
+        if linker is None:
+            logger.error(f'Linker was None. Cannot build {self.name}')
+            return False
+
+        if linker.xyzs is None or linker.arch is None or linker.name is None:
+            logger.error(f'Linker doesn\'t have all the required attributes. Cannot build {self.name}')
+            return False
+
+        return True
+
     def _calc_charge(self):
         logger.info('Calculating the charge on the metallocage')
         self.charge = self.arch.n_metals * self.metal_charge + np.sum(np.array([linker.charge for linker in self.linkers]))
@@ -272,7 +272,7 @@ class Cage:
 
         return
 
-    def build(self):
+    def _build(self):
         logger.info('Building a cage geometry')
 
         if self.dr is None:
@@ -292,8 +292,8 @@ class Cage:
             shifted_coords = get_shifted_template_x_motif_coords(linker_template=template_linker, dr=self.dr)
             x_coords = [new_linker.coords[atom_id] for motif in new_linker.x_motifs for atom_id in motif.atom_ids]
 
-            linker_coords  = get_fitted_linker_coords(linker=self.linkers[i], template_x_coords=shifted_coords,
-                                                      coords_to_fit=x_coords, current_xyzs=xyzs)
+            linker_coords = get_fitted_linker_coords(linker=self.linkers[i], template_x_coords=shifted_coords,
+                                                     coords_to_fit=x_coords, current_xyzs=xyzs)
 
             xyzs += [[new_linker.xyzs[i][0]] + linker_coords[i].tolist() for i in range(new_linker.n_atoms)]
 
@@ -344,7 +344,7 @@ class Cage:
         self._calc_charge()
 
         self.reasonable_geometry = True
-        self.xyzs = self.build()
+        self.xyzs = self._build()
 
         if self.xyzs is None:
             self.reasonable_geometry = False

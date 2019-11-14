@@ -4,7 +4,7 @@ import numpy as np
 import pickle
 import os
 from cgbind.input_output import mol2file_to_xyzs
-from cgbind.bonds import get_xyz_bond_list
+from autode.bond_lengths import get_xyz_bond_list
 from cgbind.atoms import metals
 from cgbind.geom import xyz2coord
 from cgbind.x_motifs import find_x_motifs

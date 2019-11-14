@@ -1,6 +1,6 @@
 import numpy as np
 from cgbind.log import logger
-from cgbind.atoms import avg_bond_lengths
+from scipy.spatial import distance_matrix
 from cgbind.atoms import get_atomic_mass
 
 
@@ -30,24 +30,6 @@ def calc_normalised_vector(coord1, coord2):
     return vec / np.linalg.norm(vec)
 
 
-def cat_cage_subst_coords(cage, substrate, cage_coords, substrate_coords):
-    """
-    Catenate some coordinates into a set of xyzs by adding back the atom labels from the original xyzs
-    :param cage:
-    :param substrate:
-    :param cage_coords:
-    :param substrate_coords:
-    :return:
-    """
-    logger.info('Appending substrate coordinates to cage coordinates')
-
-    xyzs = [[cage.xyzs[n][0]] + cage_coords[n].tolist() for n in range(len(cage.xyzs))]
-    cage.substrate_atom_ids = list(range(len(xyzs), len(xyzs) + len(substrate.xyzs)))
-    xyzs += [[substrate.xyzs[n][0]] + substrate_coords[n].tolist() for n in range(len(substrate.xyzs))]
-
-    return xyzs
-
-
 def xyz2coord(xyzs):
     """
     For a set of xyzs in the form e.g [[C, 0.0, 0.0, 0.0], ...] convert to a np array of coordinates, containing just
@@ -61,23 +43,6 @@ def xyz2coord(xyzs):
         return np.array(xyzs[1:4])
 
 
-def molblock2xyzs(mol_block):
-    """
-    Convert an RDKit mol block to xyzs as a list of lists
-    :param mol_block:
-    :return: xyzs
-    """
-
-    xyzs = []
-
-    for line in mol_block.split('\n'):
-        if len(line.split()) == 16 and line.split()[0][-1].isdigit():
-            x, y, z, atom_label = line.split()[:4]
-            xyzs.append([atom_label, float(x), float(y), float(z)])
-
-    return xyzs
-
-
 def is_geom_reasonable(xyzs):
     """
     For an xyz list check to ensure the geometry is sensible, before an optimisation is carried out. There should be
@@ -87,17 +52,19 @@ def is_geom_reasonable(xyzs):
     """
     logger.info('Checking to see whether the geometry is reasonable')
 
-    for n in range(len(xyzs)):
-        for m in range(len(xyzs)):
-            if n > m:
-                line_i, line_j = xyzs[n], xyzs[m]
-                dist = np.linalg.norm(np.array(line_i[1:4]) - np.array(line_j[1:4]))
-                if dist < 0.8:
-                    logger.warning('There is a distance < 0.8 Å. There is likely a problem with the geometry')
-                    return False
-                if dist > 100:
-                    logger.warning('There is a distance > 100 Å. There is likely a problem with the geometry')
-                    return False
+    coords = xyz2coord(xyzs)
+
+    # Compute the distance matrix with all i,j pairs, thus add 1 to the diagonals to remove the d(ii) = 0
+    # components that would otherwise result in an unreasonable geometry
+
+    dist_mat = distance_matrix(coords, coords) + np.identity(len(coords))
+
+    if np.min(dist_mat) < 0.8:
+        logger.warning('There is a distance < 0.8 Å. There is likely a problem with the geometry')
+        return False
+    if np.max(dist_mat) > 1000:
+        logger.warning('There is a distance > 1000 Å. There is likely a problem with the geometry')
+        return False
 
     logger.info('Geometry is reasonable')
     return True

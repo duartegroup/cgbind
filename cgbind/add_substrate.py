@@ -8,7 +8,25 @@ from cgbind.atoms import heteroatoms
 from cgbind.geom import rotation_matrix
 from cgbind.geom import xyz2coord
 from cgbind.geom import calc_com
-from cgbind.geom import cat_cage_subst_coords
+
+
+def cat_cage_subst_coords(cage, substrate, cage_coords, substrate_coords):
+    """
+    Catenate some coordinates into a set of xyzs by adding back the atom labels from the original xyzs
+
+    :param cage:
+    :param substrate:
+    :param cage_coords:
+    :param substrate_coords:
+    :return:
+    """
+    logger.info('Appending substrate coordinates to cage coordinates')
+
+    xyzs = [[cage.xyzs[n][0]] + cage_coords[n].tolist() for n in range(len(cage.xyzs))]
+    cage.substrate_atom_ids = list(range(len(xyzs), len(xyzs) + len(substrate.xyzs)))
+    xyzs += [[substrate.xyzs[n][0]] + substrate_coords[n].tolist() for n in range(len(substrate.xyzs))]
+
+    return xyzs
 
 
 def add_substrate_com(cage, substrate):

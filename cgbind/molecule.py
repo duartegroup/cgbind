@@ -4,11 +4,10 @@ from rdkit.Chem import rdMolDescriptors
 from cgbind.log import logger
 from cgbind.input_output import print_output
 from cgbind.input_output import xyzs2xyzfile
-from cgbind.confomers import gen_conformer_mol_files
-from cgbind.confomers import confomer_mol_files_to_xyzs
+from cgbind.confomers import extract_xyzs_from_rdkit_mol_object
 from cgbind.geom import calc_com
-from cgbind.bonds import get_bond_list_from_rdkit_bonds
-from cgbind.bonds import get_xyz_bond_list
+from autode.bond_lengths import get_bond_list_from_rdkit_bonds
+from autode.bond_lengths import get_xyz_bond_list
 from cgbind import calculations
 
 
@@ -43,11 +42,10 @@ class Molecule:
         self.conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=AllChem.ETKDG()))
         self.conf_filenames = [self.name + '_conf' + str(i) + '.mol' for i in self.conf_ids]
         self.bonds = get_bond_list_from_rdkit_bonds(rdkit_bonds_obj=self.mol_obj.GetBonds())
-        gen_conformer_mol_files(self)
         print_output('', '', 'Done')
 
         self.n_atoms = self.mol_obj.GetNumAtoms()
-        self.conf_xyzs = confomer_mol_files_to_xyzs(self.conf_filenames, self.n_atoms)
+        self.conf_xyzs = extract_xyzs_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=self.conf_ids)
         self.xyzs = self.conf_xyzs[0]
 
     def singlepoint(self, method, keywords, n_cores=1, max_core_mb=1000):

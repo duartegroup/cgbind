@@ -4,6 +4,23 @@ import numpy as np
 xyz_list = [['H', 0.0, 0.0, 0.0], ['H', 1.0, 0.0, 0.0]]
 
 
+def test_com():
+    com = geom.calc_com(xyzs=xyz_list)
+    ideal_com = np.array([0.5, 0.0, 0.0])
+    assert np.abs(np.average(com - ideal_com)) < 1E-5
+
+
+def test_normed_vector():
+
+    coord1 = np.array([0.0, 0.0, 0.0])
+    coord2 = np.array([2.0, 0.0, 0.0])
+
+    ideal_normed_vector = np.array([1.0, 0.0, 0.0])
+    normed_vector = geom.calc_normalised_vector(coord1, coord2)
+
+    assert np.abs(np.average(ideal_normed_vector - normed_vector)) < 1E-5
+
+
 def test_xyz2coord():
 
     coord_list = geom.xyz2coord(xyz_list)
@@ -17,13 +34,6 @@ def test_xyz2coord():
 
     assert type(coord) == np.ndarray
     assert len(coord) == 3
-
-
-def test_distance_matrix():
-
-    distance_matix = geom.calc_distance_matrix(xyz_list)
-    assert distance_matix.shape == (2, 2)
-    assert distance_matix[0, 0] == 0.0
 
 
 def test_rot_matix():
@@ -46,43 +56,47 @@ def test_rot_matix():
     assert 0.999 < rot_point[2] < 1.001
 
 
-def test_com():
-    com = geom.calc_com(xyzs=xyz_list)
-    ideal_com = np.array([0.5, 0.0, 0.0])
-    assert np.abs(np.average(com - ideal_com)) < 1E-5
-
-
-def test_normed_vector():
-
-    coord1 = np.array([0.0, 0.0, 0.0])
-    coord2 = np.array([2.0, 0.0, 0.0])
-
-    ideal_normed_vector = np.array([1.0, 0.0, 0.0])
-    normed_vector = geom.calc_normalised_vector(coord1, coord2)
-
-    assert np.abs(np.average(ideal_normed_vector - normed_vector)) < 1E-5
-
-
-def test_closest_atom_id():
-    bonded_h2 = [['H', 0.0, 0.0, 0.0], ['H', 0.8, 0.0, 0.0]]
-    assert geom.get_closest_bonded_atom_id(xyzs=bonded_h2, atom_id=0) == 1
-
-
-def test_dist_calc():
-    ideal_length = 1.0
-    assert np.abs(geom.calc_dist(xyzs=xyz_list, atom_i=0, atom_j=1) - ideal_length) < 1E-5
-
-
 def test_reasonable_geom():
-    xyzs = xyz_list.copy()
-    xyzs.append(['H', 0.5, 0.0, 0.0])
-    assert geom.is_geom_reasonable(xyzs=xyzs) is False
+
+    short_xyzs = [['H', 0.0, 0.0, 0.0], ['H', 0.1, 0.0, 0.0]]
+    long_xyzs = [['H', 0.0, 0.0, 0.0], ['H', 1001.0, 0.0, 0.0]]
+
+    assert geom.is_geom_reasonable(xyzs=short_xyzs) is False
     assert geom.is_geom_reasonable(xyzs=xyz_list) is True
+    assert geom.is_geom_reasonable(xyzs=long_xyzs) is False
 
 
-def test_neighbour():
-    xyzs = xyz_list.copy()
-    xyzs.append(['H', 0.5, 0.0, 0.0])
-    dist_matrix = geom.calc_distance_matrix(xyzs)
-    assert geom.get_neighbour(atom_id=0, distance_matrix=dist_matrix, proximity=1) == 2
-    assert geom.get_neighbour(atom_id=0, distance_matrix=dist_matrix, proximity=2) == 1
+def test_rot_kabsch():
+
+    p_mat = np.array([[ 5.84606667, -0.7098, -0.42831667],
+                      [ 6.94516667, -0.0456, -0.80221667],
+                      [ 7.36736667, 1.0454, -0.16211667],
+                      [-5.88033333, -0.835, 0.01198333],
+                      [-7.05143333, -0.1629, 0.18438333],
+                      [-7.22683333, 0.7079, 1.19628333]])
+
+    q_mat = np.array([[-2.19739193, -5.39769871, -0.81494868],
+                     [-3.17969193, -6.24319871, -1.15854868],
+                     [-2.92989193, -7.56459871, -1.25704868],
+                     [2.50739193, 5.25459871, 0.97654868],
+                     [2.36369193, 6.58479871, 1.00314868],
+                     [3.43589193, 7.36609871, 1.25084868]])
+
+    rot_mat = np.array([[-0.34283885, 0.49631223, 0.79758115],
+                        [-0.933562, -0.08554556, -0.34805739],
+                        [-0.10451561, -0.86391905, 0.49266658]])
+
+    assert np.sum(geom.get_rot_mat_kabsch(p_matrix=p_mat, q_matrix=q_mat) - rot_mat) < 0.01
+
+
+def test_get_centered_matrix():
+
+    mat = np.array([[0.0, 0.0, 0.0],
+                    [1.0, 0.0, 0.0]])
+
+    assert -0.51 < geom.get_centered_matrix(mat)[0][0] < -0.49
+
+
+def test_spherical_to_cart():
+
+    assert np.sum(geom.spherical_to_cart(r=1.0, theta=0.0, phi=0.0) - np.array([0.0, 0.0, 1.0])) < 0.01
