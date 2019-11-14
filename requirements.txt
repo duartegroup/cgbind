@@ -1,6 +1,5 @@
 rdkit
 numpy
-matplotlib
 pytest
 scipy
 networkx

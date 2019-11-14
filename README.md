@@ -12,7 +12,7 @@ provided an installation of ORCA is available.
 ## Requirements
 0. Python v. 3.7
 1. [rdkit](https://github.com/rdkit/rdkit)
-2. matplotlib
+2. [autode](https://github.com/duartegroup/autodE)
 3. [ORCA](https://sites.google.com/site/orcainputlibrary/home) v. 4.1 (optional)
 4. [XTB](https://github.com/grimme-lab/xtb) v. 6.2 (optional)
 
@@ -24,7 +24,6 @@ If the requirements are already satisfied
 ```
 python setup.py install
 ```
-Otherwise, see  _installation_ for how to install **cgbind** on Windows and Mac.
 
 ***
 
