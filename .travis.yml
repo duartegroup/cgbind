@@ -18,8 +18,8 @@ before_install:
   - conda create -q -n test-env python=$TRAVIS_PYTHON_VERSION --file requirements.txt
   - source activate test-env
   - git clone https://github.com/duartegroup/autodE.git
-  - conda install --file autode/requirements.txt
-  - python autode/setup.py install
+  - conda install --file autodE/requirements.txt
+  - python autodE/setup.py install
 
 install:
   - python setup.py install
