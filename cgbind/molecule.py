@@ -40,7 +40,6 @@ class Molecule:
 
         print_output('Confomer generation for', self.name, 'Running')
         self.conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=AllChem.ETKDG()))
-        self.conf_filenames = [self.name + '_conf' + str(i) + '.mol' for i in self.conf_ids]
         self.bonds = get_bond_list_from_rdkit_bonds(rdkit_bonds_obj=self.mol_obj.GetBonds())
         print_output('', '', 'Done')
 
@@ -54,7 +53,7 @@ class Molecule:
     def optimise(self, method, keywords, n_cores=1, max_core_mb=1000):
         return calculations.optimise(self, method, keywords, n_cores, max_core_mb)
 
-    def __init__(self, smiles=None, name='molecule', charge=0, mult=1, n_confs=10, xyzs=None, solvent=None):
+    def __init__(self, smiles=None, name='molecule', charge=0, mult=1, n_confs=1, xyzs=None, solvent=None):
         logger.info('Initialising a Molecule object for {}'.format(name))
 
         self.name = name

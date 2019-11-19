@@ -301,6 +301,7 @@ class Cage:
             logger.error('Failed to build a cage')
             return None
 
+        self.n_atoms = len(xyzs)
         return xyzs
 
     def __init__(self, linker=None, metal=None, metal_charge=0, linkers=None, solvent=None, mult=1):
@@ -322,6 +323,7 @@ class Cage:
         self.cage_template = None
 
         self.metal_charge = int(metal_charge)
+        self.n_atoms = None
         self.charge = None
         self.energy, self.xyzs, self.m_ids = None, None, None
 
