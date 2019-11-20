@@ -11,18 +11,36 @@ from cgbind.geom import calc_com
 
 
 def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords):
+    """
+    Determine the energy using atom-atom repulsion derived from noble gas dimers where
+
+    V_rep(r) = exp(- r/b + a)
+
+    where a and b are parameters determined by the atom pairs. Parameters are suitable to generate V_rep in kcal mol-1
+
+    :param cage:
+    :param substrate:
+    :param cage_coords:
+    :param subst_coords:
+    :return:
+    """
 
     dist_mat = distance_matrix(cage_coords, subst_coords)
 
-    exponents = np.add.outer(np.array(substrate.vdw_radii),
-                             np.array(cage.vdw_radii))
+    # Matrix with the pairwise additions of the vdW radii
+    sum_vdw_radii = np.add.outer(np.array(cage.vdw_radii),
+                                 np.array(substrate.vdw_radii))
 
-    # TODO work out this function
-    energy_mat = np.exp((1 - dist_mat / exponents))
+    # Magic numbers derived from fitting potentials to noble gas dimers and plotting against the sum of vdw radii
+    b_mat = 0.083214 * sum_vdw_radii - 0.003768
+    a_mat = 11.576415 * (0.175541 * sum_vdw_radii + 0.316642)
+    exponent_mat = -(dist_mat / b_mat) + a_mat
+
+    energy_mat = np.exp(exponent_mat)
     energy = np.sum(energy_mat)
 
-    #       Energy for a binding cage will should be negative so this magic number controls if it is
-    return energy - 2
+    #      E is negative for favourable binding but this is a purely repulsive function so subtract a number..
+    return energy - 0.1 * (cage.n_atoms + substrate.n_atoms)
 
 
 def add_substrate_com(cagesubt):
@@ -37,7 +55,7 @@ def add_substrate_com(cagesubt):
     min_energy, curr_x = 9999999999.9, np.zeros(3)
 
     # Optimum (minimum energy) conformer
-    best_i = 0
+    best_coords = None
 
     c, s = cagesubt.cage, cagesubt.substrate
     cage_coords = get_centered_cage_coords(c.xyzs, c.m_ids)
@@ -55,21 +73,24 @@ def add_substrate_com(cagesubt):
 
             # Minimise the energy with a BFGS minimiser supporting bounds on the values (rotation is periodic)
             result = minimize(get_energy, x0=np.array(rot_angles),
-                              args=(c, s, cagesubt.energy_func, subst_coords, cage_coords), method='L-BFGS-B',
-                              bounds=Bounds(lb=0.0, ub=2*np.pi))
+                              args=(c, s, cagesubt.energy_func,cage_coords, subst_coords), method='L-BFGS-B',
+                              bounds=Bounds(lb=0.0, ub=2*np.pi), tol=0.01)
 
             energy = result.fun
-            logger.info(f'Energy is {energy}')
+            logger.info(f'Energy = {energy:.4f}')
 
             if energy < min_energy:
                 min_energy = energy
-                curr_x = result.x
-                best_i = i
+                best_coords = get_rotated_subst_coords(result.x, subst_coords)
 
-    # Get the new coordinates of the substrate that has been rotated appropriately
-    new_subst_coords = get_rotated_subst_coords(curr_x, subst_coords=xyz2coord(s.conf_xyzs[best_i]))
+    logger.info(f'Min energy = {min_energy:.4f} kcal mol-1')
+    cagesubt.binding_energy_kcal = min_energy
 
-    return cat_cage_subst_coords(c, s, cage_coords, new_subst_coords)
+    if best_coords is not None:
+        return cat_cage_subst_coords(c, s, cage_coords, best_coords)
+
+    else:
+        return None
 
 
 def get_centered_cage_coords(cage_xyzs, cage_m_ids):

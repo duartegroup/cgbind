@@ -83,6 +83,7 @@ class CageSubstrateComplex:
         self.reasonable_geometry = False
 
         self.energy_func = self._get_energy_func(energy_method)
+        self.binding_energy_kcal = None
 
         self.n_subst_confs = n_subst_confs
         self.n_init_geom = n_init_geom
