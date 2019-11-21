@@ -38,8 +38,9 @@ class Molecule:
             logger.error('RDKit failed to generate mol objects')
             return
 
-        print_output('Confomer generation for', self.name, 'Running')
+        print_output('Conformer generation for', self.name, 'Running')
         self.conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=AllChem.ETKDG()))
+        self.volume = AllChem.ComputeMolVolume(self.mol_obj)
         self.bonds = get_bond_list_from_rdkit_bonds(rdkit_bonds_obj=self.mol_obj.GetBonds())
         print_output('', '', 'Done')
 
@@ -73,6 +74,7 @@ class Molecule:
         self.n_rot_bonds = None
         self.n_h_donors = None
         self.n_h_acceptors = None
+        self.volume = None          # Å^3
         self.bonds = None
 
         self.conf_ids = None

@@ -1,6 +1,7 @@
 from cgbind.log import logger
 from copy import deepcopy
 import numpy as np
+from rdkit.Chem import AllChem
 from scipy.optimize import minimize, Bounds
 from scipy.spatial import distance_matrix
 from cgbind import geom
@@ -40,7 +41,7 @@ def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords):
     energy = np.sum(energy_mat)
 
     #      E is negative for favourable binding but this is a purely repulsive function so subtract a number..
-    return energy - 0.1 * (cage.n_atoms + substrate.n_atoms)
+    return energy - 0.5 * substrate.n_atoms
 
 
 def add_substrate_com(cagesubt):
@@ -67,6 +68,7 @@ def add_substrate_com(cagesubt):
     for i, substrate_xyzs in enumerate(s.conf_xyzs):
         subst_coords = get_centered_substrate_coords(substrate_xyzs)
         s.vdw_radii = [get_vdw_radii(atom_label=xyz[0]) for xyz in s.xyzs]
+        s.volume = AllChem.ComputeMolVolume(s.mol_obj, confId=i)
 
         for _ in range(cagesubt.n_init_geom):
             rot_angles = 2.0 * np.pi * np.random.rand(3)        # rand generates in [0, 1] so multiply with
