@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/196167631.svg)](https://zenodo.org/badge/latestdoi/196167631)  [![Build Status](https://travis-ci.org/duartegroup/cgbind.svg?branch=master)](https://travis-ci.org/duartegroup/cgbind)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3550545.svg)](https://doi.org/10.5281/zenodo.3550545) [![Build Status](https://travis-ci.org/duartegroup/cgbind.svg?branch=master)](https://travis-ci.org/duartegroup/cgbind)
 ![alt text](cgbind/common/llogo.png)
 ### *C*a*g*e*Bind*ing: A tool to for automated metallocage binding affinity calculations
 ***
