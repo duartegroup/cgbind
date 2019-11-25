@@ -1,10 +1,8 @@
 from copy import deepcopy
-import os
 import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.optimize import basinhopping, minimize
-from autode.calculation import Calculation
-from autode.methods import XTB
+from cgbind.calculations import get_charges
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
 from cgbind.build import get_fitted_linker_coords
 from cgbind.log import logger
@@ -56,20 +54,7 @@ class Cage:
         :return: (list) .cube file lines
         """
 
-        if not XTB.available:
-            logger.error('Could not calculate the ESP without an XTB install')
-            return []
-
-        xtb_sp = Calculation(name='xtb_sp', molecule=self, method=XTB, n_cores=1)
-        xtb_sp.run()
-
-        if not os.path.exists('charges'):
-            logger.error('Could not get the charges from the XTB file')
-            return []
-
-        # Charges file from XTB is one value per line
-        charges = [float(line.split()[0]) for line in open('charges', 'r').readlines()]
-
+        charges = self.get_charges()
         esp_lines = get_esp_cube_lines(charges=charges, xyzs=self.xyzs)
         return esp_lines
 
@@ -85,6 +70,9 @@ class Cage:
             [print(line, end='', file=cube_file) for line in cube_file_lines]
 
         return None
+
+    def get_charges(self):
+        return get_charges(self)
 
     def get_metal_atom_ids(self):
         logger.info(f'Getting metal_label atom ids with label {self.metal}')

@@ -52,6 +52,11 @@ class CageSubstrateComplex:
         print_output('Addition of', self.substrate.name, 'Running')
         logger.info('Adding the substrate to the center of the cage defined by the COM')
 
+        # For electrostatic addition need partial atomic charges
+        if self.energy_func.__name__ == 'electrostatic':
+            self.cage.charges = self.cage.get_charges()
+            self.substrate.charges = self.substrate.get_charges()
+
         self.xyzs = add_substrate.add_substrate_com(self)
 
         if self.xyzs is not None:

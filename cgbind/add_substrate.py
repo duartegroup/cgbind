@@ -1,6 +1,7 @@
 from cgbind.log import logger
 from copy import deepcopy
 import numpy as np
+from cgbind.constants import Constants
 from rdkit.Chem import AllChem
 from scipy.optimize import minimize, Bounds
 from scipy.spatial import distance_matrix
@@ -11,7 +12,7 @@ from cgbind.geom import xyz2coord
 from cgbind.geom import calc_com
 
 
-def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords):
+def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords, with_attraction=True):
     """
     Determine the energy using atom-atom repulsion derived from noble gas dimers where
 
@@ -23,6 +24,8 @@ def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords):
     :param substrate:
     :param cage_coords:
     :param subst_coords:
+    :param with_attraction: (bool) do or don't return the energy with a constant attractive term based on the number of
+                                   substrate atoms in the structure
     :return:
     """
 
@@ -41,7 +44,27 @@ def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords):
     energy = np.sum(energy_mat)
 
     #      E is negative for favourable binding but this is a purely repulsive function so subtract a number..
-    return energy - 0.5 * substrate.n_atoms
+    if with_attraction:
+        return energy - 0.5 * substrate.n_atoms
+
+    return energy
+
+
+def cage_subst_repulsion_and_electrostatic_func(cage, substrate, cage_coords, subst_coords):
+
+    # Calculate the distance matrix in Bohr (a0) so the energies are in au
+    dist_mat = Constants.ang2a0 * distance_matrix(cage_coords, subst_coords)
+
+    # Charges are already in units of e
+    prod_charge_mat = np.outer(cage.charges, substrate.charges)
+
+    # Compute the pairwise iteration energies as V = q1 q2 / r in atomic units
+    energy_mat = prod_charge_mat / dist_mat
+    electrostatic_energy = Constants.ha2kcalmol * np.sum(energy_mat)
+
+    repulsive_energy = cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords, with_attraction=False)
+
+    return electrostatic_energy + repulsive_energy
 
 
 def add_substrate_com(cagesubt):
@@ -147,9 +170,7 @@ def get_rotated_subst_coords(x, subst_coords):
 
 def get_energy(x, cage, substrate, energy_func, cage_coords, subst_coords):
     """
-    Calculate the cost function for a particular x, which contains the rotations in x, y, z cartesian directions
-    by rotating the subst_coords with sequencial rotations. The cost function is 1/r^6 between the cage and substrate
-    and tanh(r - 5.0) + 1.0 for the substrate heteroatoms – metal atoms.
+    Calculate the energy in kcal mol-1 for a particular x, which contains the rotations in x, y, z cartesian directions
     """
     rot_substrate_coords = get_rotated_subst_coords(x, subst_coords)
     energy = energy_func(cage, substrate, cage_coords, rot_substrate_coords)
@@ -158,4 +179,7 @@ def get_energy(x, cage, substrate, energy_func, cage_coords, subst_coords):
 
 
 cage_subst_repulsion_func.__name__ = 'repulsion'
-energy_funcs = [cage_subst_repulsion_func]
+cage_subst_repulsion_and_electrostatic_func.__name__ = 'electrostatic'
+
+energy_funcs = [cage_subst_repulsion_func,
+                cage_subst_repulsion_and_electrostatic_func]

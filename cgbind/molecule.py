@@ -19,6 +19,9 @@ class Molecule:
     def set_com(self):
         self.com = calc_com(self.xyzs)
 
+    def get_charges(self):
+        return calculations.get_charges(self)
+
     def init_smiles(self, smiles):
         """
         Initialise a Molecule object from a SMILES sting using RDKit
