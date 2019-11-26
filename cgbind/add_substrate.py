@@ -86,7 +86,11 @@ def add_substrate_com(cagesubt):
     c.vdw_radii = [get_vdw_radii(atom_label=xyz[0]) for xyz in c.xyzs]
 
     if cagesubt.n_subst_confs > 1:
-        s.gen_confs(n_confs=cagesubt.n_subst_confs)
+        try:
+            s.gen_confs(n_confs=cagesubt.n_subst_confs)
+        except (ValueError, RuntimeError):
+            logger.error('Could not generate substrate conformers')
+            return None
 
     for i, substrate_xyzs in enumerate(s.conf_xyzs):
         subst_coords = get_centered_substrate_coords(substrate_xyzs)
@@ -98,7 +102,7 @@ def add_substrate_com(cagesubt):
 
             # Minimise the energy with a BFGS minimiser supporting bounds on the values (rotation is periodic)
             result = minimize(get_energy, x0=np.array(rot_angles),
-                              args=(c, s, cagesubt.energy_func,cage_coords, subst_coords), method='L-BFGS-B',
+                              args=(c, s, cagesubt.energy_func, cage_coords, subst_coords), method='L-BFGS-B',
                               bounds=Bounds(lb=0.0, ub=2*np.pi), tol=0.01)
 
             energy = result.fun

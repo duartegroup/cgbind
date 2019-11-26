@@ -43,7 +43,13 @@ class Molecule:
 
         print_output('Conformer generation for', self.name, 'Running')
         self.conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=AllChem.ETKDG()))
-        self.volume = AllChem.ComputeMolVolume(self.mol_obj)
+
+        try:
+            self.volume = AllChem.ComputeMolVolume(self.mol_obj)
+        except ValueError:
+            logger.error('RDKit failed to compute the molecular volume')
+            return
+
         self.bonds = get_bond_list_from_rdkit_bonds(rdkit_bonds_obj=self.mol_obj.GetBonds())
         print_output('', '', 'Done')
 

@@ -27,5 +27,9 @@ class Substrate(Molecule):
         logger.info('Initialising a Substrate object for {}'.format(name))
         super(Substrate, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, xyzs=xyzs)
 
+        if self.n_atoms is None:
+            logger.error('Molecule had no atoms')
+            return
+
         self.x_atom_ids = [i for i in range(self.n_atoms) if self.xyzs[i][0] in heteroatoms]
 
