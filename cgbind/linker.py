@@ -136,12 +136,13 @@ class Linker(Molecule):
 
         return None
 
-    def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=200, xyzs=None):
+    def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=200, xyzs=None, use_etdg_confs=False):
 
         logger.info('Initialising a Linker object for {}'.format(name))
         initalised_with_xyzs = True if xyzs is not None else False
 
-        super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, xyzs=xyzs)
+        super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, xyzs=xyzs,
+                                     use_etdg_confs=use_etdg_confs)
 
         self.arch = None
         self._set_arch(arch_name)

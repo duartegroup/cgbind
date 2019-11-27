@@ -1,6 +1,7 @@
 from rdkit.Chem import AllChem
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
+from rdkit.Chem import rdPartialCharges
 from cgbind.log import logger
 from cgbind.input_output import print_output
 from cgbind.input_output import xyzs2xyzfile
@@ -19,13 +20,32 @@ class Molecule:
     def set_com(self):
         self.com = calc_com(self.xyzs)
 
-    def get_charges(self):
+    def get_charges(self, estimate=False, guess=False):
+        """
+        Get the partial atomic charges using either XTB or estimate with RDKit using the Gasteiger charge scheme
+
+        :param estimate: (bool)
+        :return:
+        """
+
+        if estimate:
+            rdPartialCharges.ComputeGasteigerCharges(self.mol_obj)
+            charges = [float(self.mol_obj.GetAtomWithIdx(i).GetProp('_GasteigerCharge')) for i in range(self.n_atoms)]
+            return charges
+
+        if guess:
+            # TODO write this function
+
+            charges = []
+            return charges
+
         return calculations.get_charges(self)
 
-    def init_smiles(self, smiles):
+    def init_smiles(self, smiles, use_etdg_confs=False):
         """
         Initialise a Molecule object from a SMILES sting using RDKit
         :param smiles: (str) SMILES string
+        :param use_etdg_confs: (bool) override the default conformer generation and use the ETDG algorithm
         :return:
         """
         logger.info('Initialising a Molecule from a SMILES strings ')
@@ -42,7 +62,8 @@ class Molecule:
             return
 
         print_output('Conformer generation for', self.name, 'Running')
-        self.conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=AllChem.ETKDG()))
+        method = AllChem.ETKDG() if use_etdg_confs is False else AllChem.ETDG()
+        self.conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=method))
 
         try:
             self.volume = AllChem.ComputeMolVolume(self.mol_obj)
@@ -63,7 +84,8 @@ class Molecule:
     def optimise(self, method, keywords, n_cores=1, max_core_mb=1000):
         return calculations.optimise(self, method, keywords, n_cores, max_core_mb)
 
-    def __init__(self, smiles=None, name='molecule', charge=0, mult=1, n_confs=1, xyzs=None, solvent=None):
+    def __init__(self, smiles=None, name='molecule', charge=0, mult=1, n_confs=1, xyzs=None, solvent=None,
+                 use_etdg_confs=False):
         logger.info('Initialising a Molecule object for {}'.format(name))
 
         self.name = name
@@ -91,7 +113,7 @@ class Molecule:
         self.conf_xyzs = None
 
         if smiles:
-            self.init_smiles(smiles)
+            self.init_smiles(smiles, use_etdg_confs=use_etdg_confs)
 
         if xyzs:
             self.n_atoms = len(xyzs)
