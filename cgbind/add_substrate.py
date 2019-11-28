@@ -10,8 +10,7 @@ from cgbind.atoms import get_vdw_radii
 from cgbind.geom import rotation_matrix
 from cgbind.geom import xyz2coord
 from cgbind.geom import calc_com
-
-
+from cgbind.utils import copy_func
 
 
 def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords, with_attraction=True):
@@ -186,9 +185,10 @@ def get_energy(x, cage, substrate, energy_func, cage_coords, subst_coords):
 
 cage_subst_repulsion_func.__name__ = 'repulsion'
 cage_subst_repulsion_and_electrostatic_func.__name__ = 'electrostatic'
-cage_subst_repulsion_and_electrostatic_func_est = cage_subst_repulsion_and_electrostatic_func
+cage_subst_repulsion_and_electrostatic_func_est = copy_func(cage_subst_repulsion_and_electrostatic_func)
 cage_subst_repulsion_and_electrostatic_func_est.__name__ = 'electrostatic_fast'
 
 
 energy_funcs = [cage_subst_repulsion_func,
-                cage_subst_repulsion_and_electrostatic_func]
+                cage_subst_repulsion_and_electrostatic_func,
+                cage_subst_repulsion_and_electrostatic_func_est]

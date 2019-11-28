@@ -53,9 +53,7 @@ class Cage:
 
         :return: (list) .cube file lines
         """
-
-        charges = self.get_charges()
-        esp_lines = get_esp_cube_lines(charges=charges, xyzs=self.xyzs)
+        esp_lines = get_esp_cube_lines(charges=self.get_charges(), xyzs=self.xyzs)
         return esp_lines
 
     def print_esp_cube_file(self):

@@ -60,6 +60,10 @@ class CageSubstrateComplex:
             self.cage.charges = self.cage.get_charges(estimate=estimate)
             self.substrate.charges = self.substrate.get_charges(estimate=estimate)
 
+            if self.cage.charges is None or self.substrate.charges is None:
+                logger.error('Could not get partial atomic charges')
+                return None
+
         self.xyzs = add_substrate.add_substrate_com(self)
 
         if self.xyzs is not None:

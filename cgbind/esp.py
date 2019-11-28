@@ -1,6 +1,7 @@
 import numpy as np
 from cgbind.geom import xyz2coord
 from cgbind.atoms import get_atomic_number
+from cgbind.log import logger
 from cgbind.constants import Constants
 from scipy.spatial.distance import cdist
 
@@ -14,6 +15,10 @@ def get_esp_cube_lines(charges, xyzs):
     :param xyzs: (list(list))
     :return: (list(str))
     """
+
+    if charges is None:
+        logger.error('Could not generate an .cube file, charges were None')
+        return []
 
     coords = xyz2coord(xyzs)
     charges = np.array(charges)

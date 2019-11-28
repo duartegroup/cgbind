@@ -38,8 +38,8 @@ def get_charges(molecule):
     logger.info('Getting charges')
 
     if not XTB.available:
-        logger.error('Could not calculate the ESP without an XTB install')
-        return []
+        logger.error('Could not calculate without an XTB install')
+        return None
 
     # Make a temporary directory
     here = os.getcwd()
@@ -61,4 +61,9 @@ def get_charges(molecule):
     os.chdir(here)
     shutil.rmtree(tmp_dirpath)
 
-    return charges
+    if len(charges) == molecule.n_atoms:
+        return charges
+
+    else:
+        logger.error('XTB failed to generate charges')
+        return None

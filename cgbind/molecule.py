@@ -25,21 +25,28 @@ class Molecule:
         Get the partial atomic charges using either XTB or estimate with RDKit using the Gasteiger charge scheme
 
         :param estimate: (bool)
+        :param guess: (bool)
         :return:
         """
 
+        charges = None
+
         if estimate:
             rdPartialCharges.ComputeGasteigerCharges(self.mol_obj)
-            charges = [float(self.mol_obj.GetAtomWithIdx(i).GetProp('_GasteigerCharge')) for i in range(self.n_atoms)]
-            return charges
+            try:
+                charges = [float(self.mol_obj.GetAtomWithIdx(i).GetProp('_GasteigerCharge')) for i in range(self.n_atoms)]
+            except:
+                logger.error('RDKit failed to generate charges')
+                return None
 
-        if guess:
+        elif guess:
             # TODO write this function
+            pass
 
-            charges = []
-            return charges
+        else:
+            charges = calculations.get_charges(self)
 
-        return calculations.get_charges(self)
+        return charges
 
     def init_smiles(self, smiles, use_etdg_confs=False):
         """
