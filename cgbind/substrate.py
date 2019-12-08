@@ -18,8 +18,8 @@ class Substrate(Molecule):
             logger.error('Could not generate conformers. Molecule did not have an associated RDKit mol_obj')
             return None
 
-        self.conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=n_confs, params=AllChem.ETKDG()))
-        self.conf_xyzs = extract_xyzs_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=self.conf_ids)
+        conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=n_confs, params=AllChem.ETKDG()))
+        self.conf_xyzs = extract_xyzs_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=conf_ids)
 
         return None
 

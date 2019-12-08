@@ -43,10 +43,6 @@ class Cage(BaseStruct):
         metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
         return np.average(metal_coords, axis=0)
 
-    def print_xyzfile(self, force=False):
-        if self.reasonable_geometry or force:
-            xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
-
     def get_esp_cube(self):
         """
         Get the electrostatic potential (ESP) in a Gaussian .cube format by calculating partial atomic charges using
@@ -217,12 +213,6 @@ class Cage(BaseStruct):
 
         return (4.0 / 3.0) * np.pi * radius**3
 
-    def singlepoint(self, method, keywords, n_cores=1, max_core_mb=1000):
-        return calculations.singlepoint(self, method, keywords, n_cores, max_core_mb)
-
-    def optimise(self, method, keywords, n_cores=1, max_core_mb=1000):
-        return calculations.optimise(self, method, keywords, n_cores, max_core_mb)
-
     def _is_linker_reasonable(self, linker):
 
         if linker is None:
@@ -305,10 +295,10 @@ class Cage(BaseStruct):
             logger.error('Failed to build a cage')
             return None
 
-        self.n_atoms = len(xyzs)
-        return self.set_xyzs(xyzs)
+        self.set_xyzs(xyzs)
+        return None
 
-    def __init__(self, name='cage', linker=None, metal=None, metal_charge=0, linkers=None, solvent=None, mult=1):
+    def __init__(self, linker=None, metal=None, metal_charge=0, linkers=None, solvent=None, mult=1, name='cage'):
         """
         Initialise a cage object
         :param name: (str)

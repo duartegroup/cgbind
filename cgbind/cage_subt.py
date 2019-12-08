@@ -10,16 +10,6 @@ from cgbind.add_substrate import energy_funcs
 
 class CageSubstrateComplex(BaseStruct):
 
-    def print_xyzfile(self, force=False):
-        if self.reasonable_geometry or force:
-            xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
-
-    def singlepoint(self, method, keywords, n_cores=1, max_core_mb=1000):
-        return calculations.singlepoint(self, method, keywords, n_cores, max_core_mb)
-
-    def optimise(self, method, keywords, n_cores=1, max_core_mb=1000, cartesian_constraints=None):
-        return calculations.optimise(self, method, keywords, n_cores, max_core_mb, cartesian_constraints)
-
     def _get_energy_func(self, energy_method):
 
         energy_method_names = [func.__name__ for func in energy_funcs]
@@ -65,15 +55,14 @@ class CageSubstrateComplex(BaseStruct):
                 logger.error('Could not get partial atomic charges')
                 return None
 
-        self.xyzs = add_substrate.add_substrate_com(self)
+        xyzs = add_substrate.add_substrate_com(self)
+        self.set_xyzs(xyzs)
 
         if self.xyzs is not None:
             self.reasonable_geometry = is_geom_reasonable(self.xyzs)
-        else:
-            logger.error('Cage-substrate xyzs are None')
-            self.reasonable_geometry = False
 
         print_output('', self.substrate.name, 'Done')
+        return None
 
     def __init__(self, cage, substrate, solvent=None, mult=1, n_subst_confs=1, n_init_geom=1, energy_method='repulsion'):
         """

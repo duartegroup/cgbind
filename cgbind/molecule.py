@@ -14,6 +14,16 @@ from cgbind import calculations
 
 class BaseStruct:
 
+    def print_xyzfile(self, force=False):
+        if self.reasonable_geometry or force:
+            xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
+
+    def singlepoint(self, method, keywords, n_cores=1, max_core_mb=1000):
+        return calculations.singlepoint(self, method, keywords, n_cores, max_core_mb)
+
+    def optimise(self, method, keywords, n_cores=1, max_core_mb=1000, cartesian_constraints=None):
+        return calculations.optimise(self, method, keywords, n_cores, max_core_mb, cartesian_constraints)
+
     def set_xyzs(self, xyzs):
         """
         Set the xyzs of a molecular structure
@@ -30,8 +40,11 @@ class BaseStruct:
             self.xyzs = xyzs
             self.n_atoms = len(xyzs)
 
+            logger.info('Successfully set xyzs and n_atoms')
+
         else:
-            logger.error('Could not set xyzs')
+            self.reasonable_geometry = False
+            logger.warning('xyzs were None -> n_atoms also None & geometry is *not* reasonable')
 
     def __init__(self, name='molecule', charge=0, mult=1, xyzs=None, solvent=None):
 
@@ -47,11 +60,10 @@ class BaseStruct:
 
         self.energy = None
 
+        self.reasonable_geometry = True
+
 
 class Molecule(BaseStruct):
-
-    def print_xyzfile(self):
-        xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
 
     def set_com(self):
         self.com = calc_com(self.xyzs)
@@ -106,7 +118,7 @@ class Molecule(BaseStruct):
 
         print_output('Conformer generation for', self.name, 'Running')
         method = AllChem.ETKDG() if use_etdg_confs is False else AllChem.ETDG()
-        self.conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=method))
+        conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=method))
 
         try:
             self.volume = AllChem.ComputeMolVolume(self.mol_obj)
@@ -117,15 +129,10 @@ class Molecule(BaseStruct):
         self.bonds = get_bond_list_from_rdkit_bonds(rdkit_bonds_obj=self.mol_obj.GetBonds())
         print_output('', '', 'Done')
 
-        self.n_atoms = self.mol_obj.GetNumAtoms()
-        self.conf_xyzs = extract_xyzs_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=self.conf_ids)
-        self.xyzs = self.conf_xyzs[0]
+        self.conf_xyzs = extract_xyzs_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=conf_ids)
+        self.set_xyzs(xyzs=self.conf_xyzs[0])
 
-    def singlepoint(self, method, keywords, n_cores=1, max_core_mb=1000):
-        return calculations.singlepoint(self, method, keywords, n_cores, max_core_mb)
-
-    def optimise(self, method, keywords, n_cores=1, max_core_mb=1000):
-        return calculations.optimise(self, method, keywords, n_cores, max_core_mb)
+        return None
 
     def __init__(self, smiles=None, name='molecule', charge=0, mult=1, n_confs=1, xyzs=None, solvent=None,
                  use_etdg_confs=False):
@@ -145,8 +152,6 @@ class Molecule(BaseStruct):
         self.volume = None          # Å^3
         self.bonds = None
 
-        self.conf_ids = None
-        self.conf_filenames = None
         self.conf_xyzs = None
 
         if smiles:

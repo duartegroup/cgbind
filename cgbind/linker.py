@@ -33,12 +33,6 @@ def cost_fitted_x_motifs(dr, linker, linker_template, x_coords):
 
 class Linker(Molecule):
 
-    def set_xyzs_best_linker_conformer(self, conf_id):
-        if conf_id is not None:
-            self.xyzs = self.conf_xyzs[conf_id]
-        else:
-            logger.error("Didn't find a suitable conformer for {}".format(self.name))
-
     def _find_possible_donor_atoms(self):
         return [i for i in range(self.n_atoms) if self.xyzs[i][0] in heteroatoms]
 
@@ -95,7 +89,7 @@ class Linker(Molecule):
             logger.info('Linker is planar')
             return True
 
-    def set_best_conformer(self):
+    def _set_best_conformer(self):
         """
         For a set of conformer xyzs (self.conf_xyzs) find the one that minimises the cost function for fitting the
         x motifs. This will loop through all the conformers and the possible combinations of x motifs in the linker.
@@ -170,6 +164,6 @@ class Linker(Molecule):
         if initalised_with_xyzs:
             self.conf_xyzs = [self.xyzs]
 
-        self.set_best_conformer()
+        self._set_best_conformer()
 
         self.planar = self.is_planar()
