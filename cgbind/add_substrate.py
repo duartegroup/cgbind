@@ -45,8 +45,9 @@ def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords, with_a
     energy = np.sum(energy_mat)
 
     #      E is negative for favourable binding but this is a purely repulsive function so subtract a number..
+    #      which is determined from the best classifier to 
     if with_attraction:
-        return energy - 0.5 * substrate.n_atoms
+        return energy - 4.0 * substrate.n_atoms
 
     return energy
 

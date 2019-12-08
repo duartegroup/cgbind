@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.optimize import basinhopping, minimize
+from cgbind.molecule import BaseStruct
 from cgbind.calculations import get_charges
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
 from cgbind.build import get_fitted_linker_coords
@@ -36,7 +37,7 @@ def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
     return -np.min(cdist(point, cage_coords))
 
 
-class Cage:
+class Cage(BaseStruct):
 
     def get_centroid(self):
         metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
@@ -305,30 +306,29 @@ class Cage:
             return None
 
         self.n_atoms = len(xyzs)
-        return xyzs
+        return self.set_xyzs(xyzs)
 
-    def __init__(self, linker=None, metal=None, metal_charge=0, linkers=None, solvent=None, mult=1):
+    def __init__(self, name='cage', linker=None, metal=None, metal_charge=0, linkers=None, solvent=None, mult=1):
         """
         Initialise a cage object
-        :param linker: Linker object
+        :param name: (str)
+        :param linker: (object)
+        :param linkers: (list(object)
         :param metal: (str)
         :param metal_charge: (int)
+        :param mult: (int) Cage multiplicity
         """
         logger.info(f'Initialising a Cage object')
 
+        super(Cage, self).__init__(name=name, charge=0, mult=mult, xyzs=None, solvent=solvent)
+
         self.metal = metal
-        self.mult = mult
-        self.solvent = solvent
-        self.name = 'cage'                                                           # Will be overwritten in _init_cage
         self.linkers = None
         self.dr = None
         self.arch = None
         self.cage_template = None
-
+        self.m_ids = None
         self.metal_charge = int(metal_charge)
-        self.n_atoms = None
-        self.charge = None
-        self.energy, self.xyzs, self.m_ids = None, None, None
 
         self.reasonable_geometry = False
 
@@ -349,7 +349,7 @@ class Cage:
         self._calc_charge()
 
         self.reasonable_geometry = True
-        self.xyzs = self._build()
+        self._build()
 
         if self.xyzs is None:
             self.reasonable_geometry = False

@@ -1,5 +1,6 @@
 from cgbind.log import logger
 from cgbind import add_substrate
+from cgbind.molecule import BaseStruct
 from cgbind.input_output import print_output
 from cgbind.geom import is_geom_reasonable
 from cgbind import calculations
@@ -7,7 +8,7 @@ from cgbind.input_output import xyzs2xyzfile
 from cgbind.add_substrate import energy_funcs
 
 
-class CageSubstrateComplex:
+class CageSubstrateComplex(BaseStruct):
 
     def print_xyzfile(self, force=False):
         if self.reasonable_geometry or force:
@@ -87,13 +88,9 @@ class CageSubstrateComplex:
         :param energy_method: (str) Energy method to use to minimise the energy
         """
 
-        self.name = cage.name + '_' + substrate.name
-        self.solvent = solvent
-        self.mult = mult
-        self.xyzs = None
-        self.energy = None
-        self.reasonable_geometry = False
+        super(CageSubstrateComplex, self).__init__(name='cage_subst', charge=0, mult=mult, xyzs=None, solvent=solvent)
 
+        self.reasonable_geometry = False
         self.energy_func = self._get_energy_func(energy_method)
         self.binding_energy_kcal = None
 
@@ -103,6 +100,7 @@ class CageSubstrateComplex:
         if not self._reasonable_cage_substrate(cage, substrate):
             return
 
+        self.name = cage.name + '_' + substrate.name
         self.cage = cage
         self.substrate = substrate
         self.charge = cage.charge + substrate.charge

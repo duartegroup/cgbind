@@ -12,7 +12,43 @@ from autode.bond_lengths import get_xyz_bond_list
 from cgbind import calculations
 
 
-class Molecule:
+class BaseStruct:
+
+    def set_xyzs(self, xyzs):
+        """
+        Set the xyzs of a molecular structure
+
+        :param xyzs: (list(list)) e.g [[C, 0.0, 0.0, 0.0], ...]
+        :return:
+        """
+
+        if xyzs is not None:
+            assert type(xyzs) == list
+            assert type(xyzs[0]) == list
+            assert len(xyzs[0]) == 4
+
+            self.xyzs = xyzs
+            self.n_atoms = len(xyzs)
+
+        else:
+            logger.error('Could not set xyzs')
+
+    def __init__(self, name='molecule', charge=0, mult=1, xyzs=None, solvent=None):
+
+        self.name = str(name)
+
+        self.n_atoms = None
+        self.xyzs = None
+        self.set_xyzs(xyzs)
+
+        self.solvent = str(solvent) if solvent is not None else None
+        self.charge = int(charge)
+        self.mult = int(mult)
+
+        self.energy = None
+
+
+class Molecule(BaseStruct):
 
     def print_xyzfile(self):
         xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
@@ -95,18 +131,12 @@ class Molecule:
                  use_etdg_confs=False):
         logger.info('Initialising a Molecule object for {}'.format(name))
 
-        self.name = name
+        super(Molecule, self).__init__(name=name, charge=charge, mult=mult, xyzs=xyzs, solvent=solvent)
+
         self.smiles = smiles
-        self.xyzs = xyzs
-        self.solvent = solvent
         self.n_confs = n_confs
 
-        self.charge = int(charge)
-        self.mult = mult
-
-        self.energy = None
         self.mol_obj = None
-        self.n_atoms = None
         self.com = None
 
         self.n_rot_bonds = None
@@ -123,5 +153,4 @@ class Molecule:
             self.init_smiles(smiles, use_etdg_confs=use_etdg_confs)
 
         if xyzs:
-            self.n_atoms = len(xyzs)
             self.bonds = get_xyz_bond_list(xyzs=self.xyzs)
