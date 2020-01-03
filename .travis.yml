@@ -45,7 +45,9 @@ jobs:
       skip-cleanup: true
     - stage: deploy
       name: Deploy to GitHub Pages
-      before_script: cd doc
+      before_script:
+      - cd doc
+      - touch .nojekyll                               # Don't use the default GitHub pages themes
       script: make html
       deploy:
         provider: pages                               # Deploy on Github pages
