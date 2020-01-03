@@ -12,8 +12,6 @@ from cgbind.atoms import get_vdw_radii
 from cgbind.geom import is_geom_reasonable
 from cgbind.geom import xyz2coord
 from cgbind.geom import spherical_to_cart
-from cgbind import calculations
-from cgbind.input_output import xyzs2xyzfile
 from cgbind.esp import get_esp_cube_lines
 
 
@@ -40,13 +38,19 @@ def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
 class Cage(BaseStruct):
 
     def get_centroid(self):
+        """
+        Get the centroid of a metallocage. Defined as the midpoint between all self.metal atoms in the structure
+
+        :return: (np.ndarray) Centroid coordinate (x, y, z)
+        """
+
         metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
         return np.average(metal_coords, axis=0)
 
     def get_esp_cube(self):
         """
         Get the electrostatic potential (ESP) in a Gaussian .cube format by calculating partial atomic charges using
-        XTB (tested with v. 6.2)
+        XTB (tested with v. 6.2). Calls self.get_charges() and depends on self.xyzs
 
         :return: (list) .cube file lines
         """
@@ -54,6 +58,11 @@ class Cage(BaseStruct):
         return esp_lines
 
     def print_esp_cube_file(self):
+        """
+        Print an electrostatic potential (ESP) .cube file. Prints the lines from self.get_esp_cube()
+
+        :return: None
+        """
 
         cube_file_lines = self.get_esp_cube()
 
@@ -73,7 +82,7 @@ class Cage(BaseStruct):
 
         :param estimate: (bool)
         :param guess: (bool) Guess the charges based on the electronegativity
-        :return:
+        :return: (function) calculations.get_charges(self)
         """
         if estimate or guess:
 
@@ -87,6 +96,12 @@ class Cage(BaseStruct):
         return get_charges(self)
 
     def get_metal_atom_ids(self):
+        """
+        Get the atom ids of the self.metal atoms in the xyzs
+
+        :return: (list(int))
+        """
+
         logger.info(f'Getting metal_label atom ids with label {self.metal}')
         try:
             return [i for i in range(len(self.xyzs)) if self.xyzs[i][0] == self.metal]
@@ -96,9 +111,10 @@ class Cage(BaseStruct):
 
     def get_cavity_vol(self):
         """
-        For a cage extract the cavity volume defined as the volume of the largest sphere, centered on the M-M midpoint
+        For a cage extract the cavity volume defined as the volume of the largest sphere, centered on the cage centroid
         that may be constructed while r < r(midpoint--closest atom)
-        :return: Cavity volume in Å^3
+
+        :return: (float) Cavity volume in Å^3
         """
         logger.info('Calculating maximum enclosed sphere')
 
@@ -123,7 +139,7 @@ class Cage(BaseStruct):
 
         if min_atom_dist_id is not None:
             vdv_radii = get_vdw_radii(atom_label=self.xyzs[min_atom_dist_id][0])
-            # V = 4/3 π r^3, where r is ithe centroid -> closest atom distance, minus it's VdW volume
+            # V = 4/3 π r^3, where r is the centroid -> closest atom distance, minus it's VdW volume
             return (4.0 / 3.0) * np.pi * (min_centriod_atom_dist - vdv_radii)**3
 
         else:
@@ -132,8 +148,9 @@ class Cage(BaseStruct):
 
     def get_m_m_dist(self):
         """
-        For a cage calculate the M-M distance
-        :return: Distance in Å
+        For a cage calculate the average M-M distance
+
+        :return: (float) Distance in Å
         """
         try:
             m_m_dists = []
@@ -155,18 +172,33 @@ class Cage(BaseStruct):
         return 0.0
 
     def get_num_rot_bonds(self):
+        """
+        Get the number of rotatable bonds in a metallocage
+
+        :return: (int)
+        """
         try:
             return sum([linker.n_rot_bonds for linker in self.linkers])
         except TypeError:
             return None
 
     def get_num_h_bond_donors(self):
+        """
+        Get the number of hydrogen bond donors in a metallocage
+
+        :return: (int)
+        """
         try:
             return sum([linker.n_h_donors for linker in self.linkers])
         except TypeError:
             return None
 
     def get_num_h_bond_acceptors(self):
+        """
+        Get the number of hydrogen bond acceptors in a metallocage
+
+        :return: (int)
+        """
         try:
             return sum([linker.n_h_acceptors for linker in self.linkers])
         except TypeError:
@@ -180,7 +212,7 @@ class Cage(BaseStruct):
         :param basinh: (bool) Find the true maximum escape sphere by basin hopping on the surface
         :param max_dist_from_metals: (float) Distance in Å on top of the average M-M distance that will be used for the
                                              search for the maximum escape sphere
-        :return:
+        :return: (float) Volume of the maximum escape sphere in Å^3
         """
         logger.info('Getting the volume of the largest sphere that can escape from the cavity')
 
@@ -300,17 +332,27 @@ class Cage(BaseStruct):
 
     def __init__(self, linker=None, metal=None, metal_charge=0, linkers=None, solvent=None, mult=1, name='cage'):
         """
-        Initialise a cage object
-        :param name: (str)
-        :param linker: (object)
-        :param linkers: (list(object)
-        :param metal: (str)
-        :param metal_charge: (int)
-        :param mult: (int) Cage multiplicity
-        """
-        logger.info(f'Initialising a Cage object')
+        Metallocage object. Inherits from cgbind.molecule.BaseStruct
 
+        :ivar self.metal: (str)
+        :ivar self.linkers: (list(Linker object))
+        :ivar self.dr: (float)
+        :ivar self.arch: (Arch object)
+        :ivar self.cage_template: (Template object)
+        :ivar self.m_ids: (list(int))
+        :ivar self.metal_charge: (int)
+
+        :param name: (str) Name of the cage
+        :param solvent: (str)
+        :param linker: (Linker object) Linker to initialise a homoleptic metallocage
+        :param linkers: (list(Linker object)) List of Linkers to inialise a metallocage
+        :param metal: (str) Atomic symbol of the metal
+        :param metal_charge: (int) Formal charge on the metal atom/ion
+        :param mult: (int) Total spin multiplicity of the cage
+        """
         super(Cage, self).__init__(name=name, charge=0, mult=mult, xyzs=None, solvent=solvent)
+
+        logger.info(f'Initialising a Cage object')
 
         self.metal = metal
         self.linkers = None

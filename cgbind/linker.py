@@ -53,6 +53,12 @@ class Linker(Molecule):
         return None
 
     def is_planar(self):
+        """
+        Determine if the linker is planar
+
+        :return: (bool)
+        """
+
         logger.info('Determining if the linker is planar')
 
         if len(self.x_motifs) != 2:
@@ -131,6 +137,17 @@ class Linker(Molecule):
         return None
 
     def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=200, xyzs=None, use_etdg_confs=False):
+        """
+        Metallocage Linker. Inherits from cgbind.molecule.Molecule
+
+        :param arch_name: (str) Name of the architecture
+        :param smiles: (str) SMILES string
+        :param name: (str) Linker name
+        :param charge: (int)
+        :param n_confs: (int) Number of initial conformers to search through
+        :param xyzs: (list(list))
+        :param use_etdg_confs: (bool) Use a different, sometimes better, conformer generation algorithm
+        """
 
         logger.info('Initialising a Linker object for {}'.format(name))
         initalised_with_xyzs = True if xyzs is not None else False
@@ -138,7 +155,7 @@ class Linker(Molecule):
         super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, xyzs=xyzs,
                                      use_etdg_confs=use_etdg_confs)
 
-        self.arch = None
+        self.arch = None                                                      #: (Arch object) Metallocage architecture
         self._set_arch(arch_name)
 
         if self.arch is None:
@@ -149,16 +166,16 @@ class Linker(Molecule):
             logger.error('Could get xyzs for linker')
             return
 
-        self.cage_template = get_template(arch_name=arch_name)
+        self.cage_template = get_template(arch_name=arch_name)                #: (Template object) Metallocage template
 
-        self.coords = xyz2coord(self.xyzs)
-        self.centroid = np.average(self.coords, axis=0)
+        self.coords = xyz2coord(self.xyzs)                                    #: (list(np.ndarray)) Linker coordinates
+        self.centroid = np.average(self.coords, axis=0)                       #: (np.ndarray) Linker centroid ~ COM
 
-        self.x_atoms = self._find_possible_donor_atoms()
-        self.x_motifs = find_x_motifs(self)
+        self.x_atoms = self._find_possible_donor_atoms()                      #: (list(int)) List of donor atom ids
+        self.x_motifs = find_x_motifs(self)                                   #: (list(Xmotif object))
         check_x_motifs(self, linker_template=self.cage_template.linkers[0])
         self.x_motifs = self._strip_possible_x_motifs_on_connectivity()
-        self.dr = None
+        self.dr = None                                                        #: (float) Template shift distance
 
         # If the linker has been initialised from xyzs then set conf_xyzs as the xyzs
         if initalised_with_xyzs:
@@ -166,4 +183,4 @@ class Linker(Molecule):
 
         self._set_best_conformer()
 
-        self.planar = self.is_planar()
+        self.planar = self.is_planar()                                        #: (bool) Linker planarity

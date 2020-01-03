@@ -126,10 +126,16 @@ def find_x_motifs(linker):
 class Xmotif:
 
     def __init__(self, atom_ids, coords):
+        """
+        Xmotif. e.g. CNC in a classic M2L4 pyridyl based linker
 
-        self.atom_ids = atom_ids
-        self.coords = coords
-        self.n_atoms = len(coords)
-        self.shift_vec = None
-        self.r = None
-        self.norm_shift_vec = None
+        :param atom_ids: (list(int))
+        :param coords: (list(np.ndarray))
+        """
+
+        self.atom_ids = atom_ids               #: (list(int)) Atom ids of the X motif
+        self.coords = coords                   #: (list(np.ndarray)) Coordinates of the x motif atoms
+        self.n_atoms = len(coords)             #: (int) Number of atoms in the X motif
+        self.shift_vec = None                  #: (np.ndarray) Vector to shift by when expanding/contracting
+        self.r = None                          #: (float) Current distance from the cage centroid to the Xmotif centroid
+        self.norm_shift_vec = None             #: (np.ndarray) Normalised shift vector

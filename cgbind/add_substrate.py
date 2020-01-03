@@ -15,19 +15,20 @@ from cgbind.utils import copy_func
 
 def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords, with_attraction=True):
     """
-    Determine the energy using atom-atom repulsion derived from noble gas dimers where
+    Determine the energy using two-body atom-atom repulsion derived from noble gas dimers where
 
     V_rep(r) = exp(- r/b + a)
 
     where a and b are parameters determined by the atom pairs. Parameters are suitable to generate V_rep in kcal mol-1
 
-    :param cage:
-    :param substrate:
-    :param cage_coords:
-    :param subst_coords:
+    :param cage: (Cage object)
+    :param substrate: (Substrate object)
+    :param cage_coords: (list(np.ndarray)) Cage coordinates
+    :param subst_coords: (list(np.ndarray)) Substrate coordinates
     :param with_attraction: (bool) do or don't return the energy with a constant attractive term based on the number of
                                    substrate atoms in the structure
-    :return:
+
+    :return: energy: (float) Potential energy (V_rep) in kcal mol-1
     """
 
     dist_mat = distance_matrix(cage_coords, subst_coords)
@@ -47,12 +48,23 @@ def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords, with_a
     #      E is negative for favourable binding but this is a purely repulsive function so subtract a number..
     #      which is determined from the best classifier to 
     if with_attraction:
-        return energy - 4.0 * substrate.n_atoms
+        return energy - 0.5 * substrate.n_atoms
 
     return energy
 
 
 def cage_subst_repulsion_and_electrostatic_func(cage, substrate, cage_coords, subst_coords):
+    """
+    Determine the energy of adding a substrate to a cage based on V_rep + V_att where the attractive term
+    is electrostatic and uses the sum of q_i q_j / r_ij interaction energies where q_i is the partial atomic
+    charge on atom i.
+
+    :param cage: (Cage object)
+    :param substrate: (Substrate object)
+    :param cage_coords: (list(np.ndarray)) Cage coordinates
+    :param subst_coords: (list(np.ndarray)) Substrate coordinates
+    :return:
+    """
 
     # Calculate the distance matrix in Bohr (a0) so the energies are in au
     dist_mat = Constants.ang2a0 * distance_matrix(cage_coords, subst_coords)
@@ -71,9 +83,13 @@ def cage_subst_repulsion_and_electrostatic_func(cage, substrate, cage_coords, su
 
 def add_substrate_com(cagesubt):
     """
-    Add a substrate the centre of a cage defined by its centre of mass (com)
-    :param cagesubt: (object)
-    :return:
+    Add a substrate the centre of a cage defined by its centre of mass (com) will minimise the energy with respect to
+    rotation of the substrate and the substrate conformer using cagesubt.energy_func. Will rotate cagesubt.n_init_geom
+    times and use cagesubt.n_subst_confs number of substrate conformers
+
+    :param cagesubt: (CageSubstrateComplex object)
+
+    :return: xyzs: (list(list))
     """
     logger.info('Adding substrate to the cage COM and minimising the energy')
 
@@ -135,7 +151,7 @@ def get_centered_cage_coords(cage_xyzs, cage_m_ids):
 
 
 def get_centered_substrate_coords(substrate_xyzs):
-    """Get the substrate coorindated that have been translated to its center of mass"""
+    """Get the substrate coordinates that have been translated to its center of mass"""
 
     subst_coords = xyz2coord(substrate_xyzs)
     subst_com = calc_com(substrate_xyzs)
@@ -144,7 +160,7 @@ def get_centered_substrate_coords(substrate_xyzs):
 
 def cat_cage_subst_coords(cage, substrate, cage_coords, substrate_coords):
     """
-    Catenate some coordinates into a set of xyzs by adding back the atom labels from the original xyzs
+    Concatenate some coordinates into a set of xyzs by adding back the atom labels from the original xyzs
 
     :param cage:
     :param substrate:
@@ -162,7 +178,7 @@ def cat_cage_subst_coords(cage, substrate, cage_coords, substrate_coords):
 
 
 def get_rotated_subst_coords(x, subst_coords):
-    """Get substrate coordinates that have been rotated by x[0] rad in the x axis etc."""
+    """Get substrate coordinates that have been rotated by x[0] radians in the x axis etc."""
 
     x_rot, y_rot, z_rot = x
 

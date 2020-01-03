@@ -15,13 +15,42 @@ from cgbind import calculations
 class BaseStruct:
 
     def print_xyzfile(self, force=False):
+        """
+        Print a .xyz file from self.xyzs provided self.reasonable_geometry is True
+
+        :param force: (bool) Force the printing of the .xyz if self.reasonable_geometry is False
+        :return: None
+        """
+
         if self.reasonable_geometry or force:
             xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
 
-    def singlepoint(self, method, keywords, n_cores=1, max_core_mb=1000):
+        return None
+
+    def singlepoint(self, method, keywords=None, n_cores=1, max_core_mb=1000):
+        """
+        Perform a single-point energy evaluation using an electronic structure theory method e.g. XTB, ORCA, G09
+
+        :param method: (autode.ElectronicStructureMethod)
+        :param keywords: (list(str)) Keywords to use for the ESM e.g. ['SP', 'PBE', 'def2-SVP']
+        :param n_cores: (int) Number of cores for the calculation to use
+        :param max_core_mb: (float) Number of megabytes of memory per core to use e.g. n_cores=2: max_core_mb=4000 =>
+                                    max 8 GB total memory usage
+        :return: None
+        """
         return calculations.singlepoint(self, method, keywords, n_cores, max_core_mb)
 
-    def optimise(self, method, keywords, n_cores=1, max_core_mb=1000, cartesian_constraints=None):
+    def optimise(self, method, keywords=None, n_cores=1, max_core_mb=1000, cartesian_constraints=None):
+        """
+        Perform a single-point energy evaluation using an electronic structure theory method e.g. XTB, ORCA, G09
+
+        :param method: (autode.ElectronicStructureMethod)
+        :param keywords: (list(str)) Keywords to use for the ESM e.g. ['Opt', 'PBE', 'def2-SVP']
+        :param n_cores: (int) Number of cores for the calculation to use
+        :param max_core_mb: (float) Number of megabytes of memory per core to use
+        :param cartesian_constraints: (list(int)) List of atom ids to constrain to their current coordinates
+        :return: None
+        """
         return calculations.optimise(self, method, keywords, n_cores, max_core_mb, cartesian_constraints)
 
     def set_xyzs(self, xyzs):
@@ -29,7 +58,7 @@ class BaseStruct:
         Set the xyzs of a molecular structure
 
         :param xyzs: (list(list)) e.g [[C, 0.0, 0.0, 0.0], ...]
-        :return:
+        :return: None
         """
 
         if xyzs is not None:
@@ -46,21 +75,32 @@ class BaseStruct:
             self.reasonable_geometry = False
             logger.warning('xyzs were None -> n_atoms also None & geometry is *not* reasonable')
 
+        return None
+
     def __init__(self, name='molecule', charge=0, mult=1, xyzs=None, solvent=None):
+        """
+        Base structure class
 
-        self.name = str(name)
+        :param name: (str)
+        :param charge: (int)
+        :param mult: (int) Spin multiplicity
+        :param xyzs: (list(list))
+        :param solvent: (str)
+        """
 
-        self.n_atoms = None
-        self.xyzs = None
+        self.name = str(name)                                               #: (str) Name of the structure
+
+        self.n_atoms = None                                                 #: (int) Number of atoms
+        self.xyzs = None                                                    #: (list(list)) Geometry of the structure
         self.set_xyzs(xyzs)
 
-        self.solvent = str(solvent) if solvent is not None else None
-        self.charge = int(charge)
-        self.mult = int(mult)
+        self.solvent = str(solvent) if solvent is not None else None        #: (str) Name of the solvent
+        self.charge = int(charge)                                           #: (int) Charge in e
+        self.mult = int(mult)                                               #: (int) Spin multiplicity 2S+1
 
-        self.energy = None
+        self.energy = None                                                  #: (float) Energy in Hartrees (Ha)
 
-        self.reasonable_geometry = True
+        self.reasonable_geometry = True                                     #: (bool)
 
 
 class Molecule(BaseStruct):
@@ -96,7 +136,7 @@ class Molecule(BaseStruct):
 
         return charges
 
-    def init_smiles(self, smiles, use_etdg_confs=False):
+    def _init_smiles(self, smiles, use_etdg_confs=False):
         """
         Initialise a Molecule object from a SMILES sting using RDKit
         :param smiles: (str) SMILES string
@@ -136,26 +176,39 @@ class Molecule(BaseStruct):
 
     def __init__(self, smiles=None, name='molecule', charge=0, mult=1, n_confs=1, xyzs=None, solvent=None,
                  use_etdg_confs=False):
+        """
+        Molecule. Inherits from cgbind.molecule.BaseStruct
+
+        :param smiles: (str) SMILES string
+        :param name: (str) Molecule name
+        :param n_confs: (int) Number of conformers to initialise with
+        :param charge: (int) Charge on the molecule
+        :param mult: (int) Spin multiplicity on the molecule
+        :param xyzs: (list(list))
+        :param use_etdg_confs: (bool) Use an alternate conformer generation algorithm
+        """
         logger.info('Initialising a Molecule object for {}'.format(name))
 
         super(Molecule, self).__init__(name=name, charge=charge, mult=mult, xyzs=xyzs, solvent=solvent)
 
-        self.smiles = smiles
-        self.n_confs = n_confs
+        self.smiles = smiles                                        #: (str) SMILES string
+        self.n_confs = n_confs                                      #: (int) Number of conformers initialised with
 
-        self.mol_obj = None
-        self.com = None
+        self.mol_obj = None                                         #: (RDKit.mol object)
+        self.com = None                                             #: (np.ndarray) Center of mass (x, y, z)
 
-        self.n_rot_bonds = None
-        self.n_h_donors = None
-        self.n_h_acceptors = None
-        self.volume = None          # Å^3
-        self.bonds = None
+        self.n_rot_bonds = None                                     #: (int) Number of rotatable bonds
+        self.n_h_donors = None                                      #: (int) Number of H-bond donors
+        self.n_h_acceptors = None                                   #: (int) Number of H-bond acceptors
+        self.volume = None                                          #: (float) Molecular volume in Å^3
+        self.bonds = None                                           #: (list(tuple)) List of bonds defined by atom ids
 
-        self.conf_xyzs = None
+        self.conf_xyzs = None                                       #: (list(xyzs)) List of xyzs of the conformers
 
         if smiles:
-            self.init_smiles(smiles, use_etdg_confs=use_etdg_confs)
+            self._init_smiles(smiles, use_etdg_confs=use_etdg_confs)
 
-        if xyzs:
+        if xyzs is not None:
             self.bonds = get_xyz_bond_list(xyzs=self.xyzs)
+        else:
+            logger.error('Failed to generate or set molecular xyzs. self.bonds is None')

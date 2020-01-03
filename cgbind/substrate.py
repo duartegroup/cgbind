@@ -1,6 +1,5 @@
 from cgbind.log import logger
 from cgbind.molecule import Molecule
-from cgbind.atoms import heteroatoms
 from rdkit.Chem import AllChem
 from cgbind.confomers import extract_xyzs_from_rdkit_mol_object
 
@@ -23,12 +22,21 @@ class Substrate(Molecule):
 
         return None
 
-    def __init__(self, smiles=None, name='substrate', n_confs=1, charge=0, mult=1, xyzs=None):
+    def __init__(self, smiles=None, name='substrate', n_confs=1, charge=0, mult=1, xyzs=None, solvent=None):
+        """
+        Substrate. Inherits from cgbind.molecule.Molecule
+
+        :param smiles: (str) SMILES string
+        :param name: (str) Molecule name
+        :param n_confs: (int) Number of conformers to initialise with
+        :param charge: (int) Charge on the molecule
+        :param mult: (int) Spin multiplicity on the molecule
+        :param xyzs: (list(list))
+        """
+
         logger.info('Initialising a Substrate object for {}'.format(name))
-        super(Substrate, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, mult=mult, xyzs=xyzs)
+        super(Substrate, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs,
+                                        mult=mult, xyzs=xyzs, solvent=solvent)
 
         if self.n_atoms is None:
-            logger.error('Molecule had no atoms')
-            return
-
-        self.x_atom_ids = [i for i in range(self.n_atoms) if self.xyzs[i][0] in heteroatoms]
+            logger.error('Substrate had no atoms')

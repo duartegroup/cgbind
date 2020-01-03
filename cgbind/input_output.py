@@ -7,11 +7,11 @@ def xyzs2xyzfile(xyzs, filename=None, basename=None, title_line=''):
     """
     For a list of xyzs in the form e.g [[C, 0.0, 0.0, 0.0], ...] convert create a standard .xyz file
 
-    :param xyzs: List of xyzs
-    :param filename: Name of the generated xyz file
-    :param basename: Name of the generated xyz file without the file extension
-    :param title_line: String to print on the title line of an xyz file
-    :return: The filename
+    :param xyzs: (list(list))
+    :param filename: (str) Name of the generated xyz file
+    :param basename: (str) Name of the generated xyz file without the file extension
+    :param title_line: (str) String to print on the title line of an xyz file
+    :return: (str) xyz filename
     """
 
     if basename is not None:
@@ -43,10 +43,11 @@ def xyzs2xyzfile(xyzs, filename=None, basename=None, title_line=''):
 def xyzfile2xyzs(filename):
     """
     Convert a standard xyz file into a list of xyzs
-    :param filename:
-    :return: List of xyzs
+
+    :param filename: (str)
+    :return: (list(list))
     """
-    logger.info('Converting {} to list of xyzs'.format(filename))
+    logger.info(f'Converting {filename} to list of xyzs')
 
     xyzs = []
 
@@ -62,13 +63,13 @@ def xyzfile2xyzs(filename):
         return None
 
     if len(xyzs) == 0:
-        logger.error('Could not read xyz lines in {}'.format(filename))
+        logger.error(f'Could not read xyz lines in {filename}')
         return None
 
     return xyzs
 
 
-def mol2file_to_xyzs(filename):
+def mol2file2xyzs(filename):
     """
     Convert a .mol file into a standard set of xyzs in the form e.g [[C, 0.0, 0.0, 0.0], ...]
 
