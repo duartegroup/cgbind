@@ -49,7 +49,7 @@ jobs:
         - cd doc
       script: make html
       after_script:
-        - touch _build/html..nojekyll                 # Don't use the default GitHub pages themes
+        - touch _build/html/.nojekyll                 # Don't use the default GitHub pages themes
       deploy:
         provider: pages                               # Deploy on Github pages
         skip_cleanup: true
