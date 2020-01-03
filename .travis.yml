@@ -38,6 +38,7 @@ jobs:
   include:
     - stage: build and test                           # Build and test in parallel
       name: Build
+      before_script: cd doc
       script: make html                               # Build the docs
       skip-cleanup: true
     - script: python -m pytest tests/                 # Run all the tests
