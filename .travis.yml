@@ -31,18 +31,18 @@ script:
   - skip
 
 stages:
-  - build and test
+  - test and build
   - deploy
 
 jobs:
   include:
-    - stage: build and test                           # Build and test in parallel
+    - stage: test and build                           # Build and test in parallel
       name: Build
-      before_script: cd doc
+      before_script:
+        - python -m pytest tests/                     # Run all the tests
+        - cd doc
       script: make html                               # Build the docs
       skip-cleanup: true
-    - script: python -m pytest tests/                 # Run all the tests
-      name: Test
     - stage: deploy
       name: Deploy to GitHub Pages
       before_script: cd doc
@@ -50,5 +50,5 @@ jobs:
       deploy:
         provider: pages                               # Deploy on Github pages
         skip_cleanup: true
-        github_token: "$token"                        # defined via the Travis interface
-        local_dir: build/html
+        github_token: "$token"                        # Defined via the Travis interface
+        local_dir: doc/_build/html
