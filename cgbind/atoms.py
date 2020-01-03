@@ -106,6 +106,13 @@ atoms = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al',
 
 
 def get_atomic_number(atom_label):
+    """
+    Get the atomic number of an atom given by its atomic symbol e.g. Kr --> 36
+
+    :param atom_label: (str) Atomic symbol
+    :return: (int) Atomic number
+    """
+    assert type(atom_label) == str
 
     try:
         return atoms.index(atom_label) + 1
@@ -116,6 +123,13 @@ def get_atomic_number(atom_label):
 
 
 def get_atomic_mass(atom_label):
+    """
+    Get the atomic mass in amu given the atomic symbol e.g. C --> 12.01
+
+    :param atom_label: (str) Atomic symbol
+    :return: (int) Atomic number
+    """
+    assert type(atom_label) == str
 
     if atom_label in atomic_masses.keys():
         atom_mass = atomic_masses[atom_label]
@@ -127,6 +141,12 @@ def get_atomic_mass(atom_label):
 
 
 def get_vdw_radii(atom_label):
+    """
+    Get the van der Wall radii of an atom givne its atomic symbol e.g. Kr --> ~2 Å
+
+    :param atom_label: (str) Atomic symbol
+    :return: (float) VdW radius in Å
+    """
 
     if atom_label in vdw_radii.keys():
         vdv_radii = vdw_radii[atom_label]

@@ -13,7 +13,7 @@ def get_fitted_linker_coords(linker, template_x_coords, coords_to_fit, current_x
     this can be achieved in normal or reverse order of the coordinates as to minimise the distance to the rest of the
     metallocage structure
 
-    :param linker:
+    :param linker: (Linker object)
     :param template_x_coords: (list(np.ndarray))
     :param coords_to_fit: (list(np.ndarray))
     :param current_xyzs: (list(list))
@@ -46,7 +46,7 @@ def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit
     """
     Get the coordinates of a linkers that are fitted to a template of X motifs
 
-    :param linker: (object)
+    :param linker: (Linker object)
     :param template_x_coords: (list(np.ndarray))
     :param coords_to_fit: (list(np.ndarray)) must have len() = len(linker_template.x_xyzs)
     :param return_cost: (bool) return just the cost function, which is the sum of squares of ∆dists

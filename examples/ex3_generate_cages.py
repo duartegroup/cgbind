@@ -1,4 +1,4 @@
-from cgbind import Cage, Linker, parallelise_func
+from cgbind import Cage, Linker
 from multiprocessing import Pool
 
 

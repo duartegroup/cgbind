@@ -5,7 +5,7 @@ import os
 
 def extract_xyzs_from_rdkit_mol_object(mol_obj, conf_ids):
     """
-    Generate xyz lists for all the conformers in mol.conf_ids
+    Generate xyz lists for all the conformers in conf_ids
     :param mol_obj: Molecule object
     :param conf_ids: (list) list of conformer ids to convert to xyz
     :return: (list) of xyz lists

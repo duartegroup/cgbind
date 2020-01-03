@@ -5,14 +5,14 @@
 
 **cgbind** automates the process of generating M2L4 metallocage structures from just SMILES strings of the corresponding
 linker (_L_). Binding affinity calculations may also be evaluated via input of both linker and substrate SMILES,
-provided an installation of ORCA is available. 
+provided an installation of ORCA or XTB is available. A graphical user interface (GUI) is currently available in alpha at cgbind.com.
 
 ***
 
 ## Requirements
 0. Python v. 3.7
 1. [rdkit](https://github.com/rdkit/rdkit)
-2. [autode](https://github.com/duartegroup/autodE)
+2. [autode](https://github.com/duartegroup/autodE) latest
 3. [ORCA](https://sites.google.com/site/orcainputlibrary/home) v. 4.1 (optional)
 4. [XTB](https://github.com/grimme-lab/xtb) v. 6.2 (optional)
 

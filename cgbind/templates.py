@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 import pickle
 import os
-from cgbind.input_output import mol2file_to_xyzs
+from cgbind.input_output import mol2file2xyzs
 from autode.bond_lengths import get_xyz_bond_list
 from cgbind.atoms import metals
 from cgbind.geom import xyz2coord
@@ -68,11 +68,18 @@ def get_template(arch_name='m2l4', folder_path=None):
 class Metal:
 
     def __init__(self, label, atom_id, coord):
+        """
+        Template metal
 
-        self.label = label
-        self.atom_id = atom_id
-        self.coord = coord
-        self.shift_vec = None
+        :param label: (str) Atomic symbol of the metal
+        :param atom_id: (int) Atom id in the Template
+        :param coord: (np.ndarray) Coordinate of the atom
+        """
+
+        self.label = label                                #: (str) Atomic symbol
+        self.atom_id = atom_id                            #: (int)
+        self.coord = coord                                #: (np.ndarray) Coordinate of the atom/ion
+        self.shift_vec = None                             #: (np.ndarray) Vector to shift by when expanding/contracting
 
 
 class Linker:
@@ -85,14 +92,14 @@ class Linker:
         :param xyzs: (list(list))
         :param x_atoms: (list(int)) Donor atom ids in the xyzs
         """
-        self.xyzs = xyzs
-        self.x_atoms = x_atoms
-        self.coords = xyz2coord(xyzs)
-        self.bonds = get_xyz_bond_list(xyzs=self.xyzs)
-        self.centroid = np.average(self.coords, axis=0)
+        self.xyzs = xyzs                                       #: (list(list))
+        self.x_atoms = x_atoms                                 #: (list(int)) List of donor atoms in the linker
+        self.coords = xyz2coord(xyzs)                          #: (list(np.ndarray)) Linker coordinates
+        self.bonds = get_xyz_bond_list(xyzs=self.xyzs)         #: (list(tuple))
+        self.centroid = np.average(self.coords, axis=0)        #: (np.ndarray)
 
-        self.x_motifs = find_x_motifs(self)
-        check_x_motifs(linker_template=self)                             # check that the x_motifs are the same length -
+        self.x_motifs = find_x_motifs(self)                    #: (list(Xmotif objects)
+        check_x_motifs(linker_template=self)            # check that the x_motifs are the same length
 
 
 class Template:
@@ -231,6 +238,11 @@ class Template:
         return None
 
     def save_template(self):
+        """
+        Save the template to ./lib/self.arch_name.obj
+
+        :return: None
+        """
         logger.info('Saving metallocage template')
 
         # Templates will be saved to here/lib/
@@ -242,10 +254,16 @@ class Template:
         return None
 
     def __init__(self, arch_name, mol2_filename):
+        """
+        Initialise a Template object
+
+        :param arch_name: (str) Name of the architecture
+        :param mol2_filename: (str) Name of the .mol2 file to read a structure from e.g. downloaded from the CCDC
+        """
 
         self.arch_name = arch_name
 
-        all_xyzs = mol2file_to_xyzs(filename=mol2_filename)
+        all_xyzs = mol2file2xyzs(filename=mol2_filename)
         self.mols_xyzs = find_mols_in_xyzs(xyzs=all_xyzs)
         self.xyzs, self.metal_label = self._find_metallocage_mol()
 

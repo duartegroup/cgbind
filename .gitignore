@@ -12,3 +12,4 @@ cgbind\.egg-info/
 build/
 
 .coverage
+doc/_build/
