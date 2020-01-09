@@ -52,7 +52,7 @@ def check_x_motifs(linker=None, linker_template=None):
     return None
 
 
-def find_x_motifs(linker):
+def find_x_motifs(linker, all_possibilities=False):
     """
     Find the X motifs in a structure which correspond to the X atoms and their nearest neighbours. These motifs will
     be searched in a linker object and the RMSD minimised
@@ -81,6 +81,7 @@ def find_x_motifs(linker):
 
     # Combine x_motifs that are bonded, thus should be considered a single motif
     bonded_x_motif_sets = []
+
     for n, x_motif_i in enumerate(x_motifs):
         bonded_x_motif = x_motif_i.copy()
 
@@ -96,23 +97,31 @@ def find_x_motifs(linker):
 
         bonded_x_motif_sets.append(set(bonded_x_motif))
 
+    if all_possibilities:
+        bonded_x_motif_sets += [set(x_motif) for x_motif in x_motifs]
+
     # Add the largest set to the bonded_x_motifs as a list. Some motifs will be missed due to the oder in which
     # they're added
 
-    largest_unique_bonded_x_motif_sets = []
-    # Sort the sets according to size, then don't add identical sets or subsets
-    for x_motif in reversed(sorted(bonded_x_motif_sets, key=len)):
+    if not all_possibilities:
+        largest_unique_bonded_x_motif_sets = []
+        # Sort the sets according to size, then don't add identical sets or subsets
+        for x_motif in reversed(sorted(bonded_x_motif_sets, key=len)):
 
-        unique = True
-        for unique_x_motif in largest_unique_bonded_x_motif_sets:
+            unique = True
+            for unique_x_motif in largest_unique_bonded_x_motif_sets:
 
-            # If the motif is already in the unique list then don't append, nor if the motif is a subset
-            if x_motif == unique_x_motif or x_motif.issubset(unique_x_motif):
-                unique = False
-                break
+                # If the motif is already in the unique list then don't append, nor if the motif is a subset
+                if x_motif == unique_x_motif or x_motif.issubset(unique_x_motif):
+                    unique = False
+                    break
 
-        if unique:
-            largest_unique_bonded_x_motif_sets.append(x_motif)
+            if unique:
+                largest_unique_bonded_x_motif_sets.append(x_motif)
+    else:
+        largest_unique_bonded_x_motif_sets = bonded_x_motif_sets
+
+    print(largest_unique_bonded_x_motif_sets)
 
     logger.info(f'Found {len(largest_unique_bonded_x_motif_sets)} X motifs in the linker')
 

@@ -172,7 +172,7 @@ class Linker(Molecule):
         self.centroid = np.average(self.coords, axis=0)                       #: (np.ndarray) Linker centroid ~ COM
 
         self.x_atoms = self._find_possible_donor_atoms()                      #: (list(int)) List of donor atom ids
-        self.x_motifs = find_x_motifs(self)                                   #: (list(Xmotif object))
+        self.x_motifs = find_x_motifs(self, all_possibilities=True)           #: (list(Xmotif object))
         check_x_motifs(self, linker_template=self.cage_template.linkers[0])
         self.x_motifs = self._strip_possible_x_motifs_on_connectivity()
         self.dr = None                                                        #: (float) Template shift distance
