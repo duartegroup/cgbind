@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 from scipy.spatial.distance import cdist
 from scipy.optimize import basinhopping, minimize
 from cgbind.molecule import BaseStruct
@@ -298,7 +299,7 @@ class Cage(BaseStruct):
 
         return
 
-    def _build(self, with_linker_confs=False, cost_threshold=2):
+    def _build(self, with_linker_confs=False, max_per_atom_repulsion=0.001):
         logger.info('Building a cage geometry')
         assert self.homoleptic or self.homoleptic
 
@@ -311,27 +312,43 @@ class Cage(BaseStruct):
             if not with_linker_confs:
                 linker_conf_list = linker_conf_list[:1]
 
+            min_repulsion, best_linker = 99999999.9, None
             for linker in linker_conf_list:
-                total_cost = 0.0
-                [print(x_motif.atom_ids) for x_motif in linker.x_motifs]
+                repulsion = 0.0
 
                 for i, template_linker in enumerate(self.cage_template.linkers):
 
                     linker_xyzs, cost = get_linker_xyzs_to_add_and_cost(linker, template_linker, curr_xyzs=xyzs)
-                    total_cost += cost
+                    repulsion += cost
+
+                    if linker_xyzs is None:
+                        logger.error('Failed to get linker')
+                        break
+
                     xyzs += linker_xyzs
 
-                if total_cost < cost_threshold:
-                    logger.info(f'Total cost for building cage is {total_cost:.2f} < {cost_threshold:.2f}')
+                if repulsion < min_repulsion:
+                    min_repulsion = repulsion
+                    best_linker = deepcopy(linker)
+
+                if repulsion / len(xyzs) < max_per_atom_repulsion:
+                    logger.info(f'Total L-L repulsion in building cage is {repulsion:.2f}')
                     self.dr = linker.dr
                     break
 
                 else:
                     xyzs = []
 
-            if len(xyzs) == 0:
+            if len(xyzs) == 0 and best_linker is None:
                 logger.error('Could not achieve the required cost threshold for building the cage')
                 return
+
+            logger.warning('Failed to reach the threshold. Returning the cage that minimises the L-L repulsion')
+            self.dr = best_linker.dr
+            xyzs = []
+            for i, template_linker in enumerate(self.cage_template.linkers):
+                linker_xyzs, _ = get_linker_xyzs_to_add_and_cost(best_linker, template_linker, curr_xyzs=xyzs)
+                xyzs += linker_xyzs
 
         if self.heteroleptic:
             logger.critical('NOT IMPLEMENTED YET')

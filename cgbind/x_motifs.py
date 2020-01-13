@@ -1,6 +1,39 @@
 import numpy as np
 from copy import deepcopy
 from cgbind.log import logger
+from cgbind.atoms import get_metal_favoured_heteroatoms
+
+
+def sort_x_motifs(x_motifs_list, linker, metal):
+    """
+    Sort a list of X motifs by the favourability of the M--X interaction
+
+    :param x_motifs_list: (list((list(Xmotif)))
+    :param linker: (Linker)
+    :param metal: (str)
+    :return:
+    """
+    logger.info('Sorting the X motif list by the best M--X interactions')
+
+    if metal is None:
+        logger.warning('Could not sort x motifs list. Metal was not specified')
+        return x_motifs_list
+
+    fav_x_atoms = get_metal_favoured_heteroatoms(metal=metal)
+    x_motifs_list_and_cost = {}
+
+    for x_motifs in x_motifs_list:
+        cost = 0
+
+        for x_motif in x_motifs:
+            for atom_id in x_motif.atom_ids:
+                atom = linker.xyzs[atom_id][0]  # Atomic symbol
+                if atom in fav_x_atoms:
+                    cost += fav_x_atoms.index(atom)
+
+        x_motifs_list_and_cost[x_motifs] = cost
+
+    return sorted(x_motifs_list_and_cost, key=x_motifs_list_and_cost.get)
 
 
 def get_shifted_template_x_motif_coords(linker_template, dr):

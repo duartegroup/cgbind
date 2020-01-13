@@ -1,5 +1,6 @@
 from copy import deepcopy
 import numpy as np
+from scipy.optimize import minimize, Bounds
 from scipy.spatial import distance_matrix
 from cgbind.log import logger
 from cgbind.geom import get_centered_matrix
@@ -30,7 +31,7 @@ def get_fitted_linker_coords_and_repulsion(linker, template_x_coords, coords_to_
         if len(current_xyzs) == 0:
             return new_linker_coords, 0.0
 
-        repulsion = np.sum(np.power(distance_matrix(new_linker_coords, curr_coords), -6))
+        repulsion = np.sum(np.power(distance_matrix(new_linker_coords, curr_coords), -12))
 
         # Add the linker with the least repulsion to the rest of the structure
         if repulsion < min_repulsion:
@@ -40,7 +41,7 @@ def get_fitted_linker_coords_and_repulsion(linker, template_x_coords, coords_to_
     if best_linker_coords is None:
         logger.error('Fitted linker coords could not be found')
 
-    return best_linker_coords, repulsion
+    return best_linker_coords, min_repulsion
 
 
 def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit, return_cost=False):
@@ -111,5 +112,57 @@ def get_linker_xyzs_to_add_and_cost(linker, template_linker, curr_xyzs):
                                                                  coords_to_fit=x_coords, current_xyzs=curr_xyzs)
     logger.info(f'Repulsive cost for adding the linker is {cost:.5f}')
 
+    if linker_coords is None:
+        logger.error('Linker coords were None')
+        return None, cost
+
     linker_xyzs = [[new_linker.xyzs[i][0]] + linker_coords[i].tolist() for i in range(new_linker.n_atoms)]
     return linker_xyzs, cost
+
+
+def cost_fitted_x_motifs(dr, linker, linker_template, x_coords):
+    """
+    For a linker compute the cost function (RMSD) for fitting all the coordinates in the x motifs to a template which
+    which be shifted by dr in the corresponding shift_vec
+
+    :param linker: (object)
+    :param linker_template: (object)
+    :param x_coords: (list(np.ndarray))
+    :param dr: (float)
+    :return:
+    """
+
+    shifted_coords = get_shifted_template_x_motif_coords(linker_template=linker_template, dr=dr)
+    cost = get_template_fitted_coords_and_cost(linker, template_x_coords=shifted_coords, coords_to_fit=x_coords,
+                                               return_cost=True)
+    return cost
+
+
+def get_new_linker_and_cost(linker_xyzs, linker, x_motifs, template_linker):
+    """
+    For a set of linker xyzs e.g. one conformer and a linker object together with a list of x motifs in the
+    structure return cost function associated with fitting the X motifs to the template
+
+    :param linker_xyzs: (list(list))
+    :param linker: (Linker)
+    :param x_motifs: (list(Xmotif))
+    :param template_linker: (Template.Linker)
+    :return: (tuple(Linker, float)) New linker and cost
+    """
+
+    coords = xyz2coord(linker_xyzs)
+    x_coords = [coords[atom_id] for motif in x_motifs for atom_id in motif.atom_ids]
+
+    # Minimise the cost function as a function of dr in Å
+    min_result = minimize(cost_fitted_x_motifs, x0=np.array([1.0]), args=(linker, template_linker, x_coords),
+                          method='L-BFGS-B', tol=1e-3, bounds=Bounds(-100.0, 10.0))
+
+    # Set attributes of the new linker
+    new_linker = deepcopy(linker)
+    new_linker.dr = min_result.x[0]
+    new_linker.xyzs = linker_xyzs
+    new_linker.coords = coords
+    new_linker.centroid = np.average(new_linker.coords, axis=0)
+    new_linker.x_motifs = x_motifs
+
+    return new_linker, min_result.fun

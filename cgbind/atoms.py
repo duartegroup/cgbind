@@ -121,7 +121,7 @@ def get_metal_favoured_heteroatoms(metal):
     try:
         return metals_and_favored_heteroatoms[metal]
 
-    except ValueError:
+    except KeyError:
         logger.warning(f'Favoured {metal}--donor interactions are not tabulated')
         return heteroatoms
 

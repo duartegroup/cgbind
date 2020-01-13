@@ -3,6 +3,7 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem import rdPartialCharges
 from cgbind.log import logger
+from cgbind.config import Config
 from cgbind.input_output import print_output
 from cgbind.input_output import xyzs2xyzfile
 from cgbind.confomers import extract_xyzs_from_rdkit_mol_object
@@ -158,7 +159,8 @@ class Molecule(BaseStruct):
 
         print_output('Conformer generation for', self.name, 'Running')
         method = AllChem.ETKDG() if use_etdg_confs is False else AllChem.ETDG()
-        method.pruneRmsThresh = 0.1
+        method.pruneRmsThresh = 0.3
+        method.numThreads = Config.n_cores
         conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=method))
         try:
             self.volume = AllChem.ComputeMolVolume(self.mol_obj)

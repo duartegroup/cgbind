@@ -1,68 +1,17 @@
 from cgbind.log import logger
 import numpy as np
 import itertools
-from copy import deepcopy
-from scipy.optimize import minimize, Bounds
+from cgbind.config import Config
+from multiprocessing import Pool
 from cgbind.molecule import Molecule
-from cgbind.x_motifs import get_shifted_template_x_motif_coords
-from cgbind.atoms import get_metal_favoured_heteroatoms
 from cgbind.architectures import archs
 from cgbind.atoms import heteroatoms
 from cgbind.geom import xyz2coord
+from cgbind.build import get_new_linker_and_cost
 from cgbind.templates import get_template
 from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import check_x_motifs
-from cgbind.build import get_template_fitted_coords_and_cost
-
-
-def cost_fitted_x_motifs(dr, linker, linker_template, x_coords):
-    """
-    For a linker compute the cost function (RMSD) for fitting all the coordinates in the x motifs to a template which
-    which be shifted by dr in the corresponding shift_vec
-
-    :param linker: (object)
-    :param linker_template: (object)
-    :param x_coords: (list(np.ndarray))
-    :param dr: (float)
-    :return:
-    """
-
-    shifted_coords = get_shifted_template_x_motif_coords(linker_template=linker_template, dr=dr)
-    cost = get_template_fitted_coords_and_cost(linker, template_x_coords=shifted_coords, coords_to_fit=x_coords,
-                                               return_cost=True)
-    return cost
-
-
-def sort_x_motifs(x_motifs_list, linker, metal):
-    """
-    Sort a list of X motifs by the favourability of the M--X interaction
-
-    :param x_motifs_list: (list((list(Xmotif)))
-    :param linker: (Linker)
-    :param metal: (str)
-    :return:
-    """
-    logger.info('Sorting the X motif list by the best M--X interactions')
-
-    if metal is None:
-        logger.warning('Could not sort x motifs list. Metal was not specified')
-        return x_motifs_list
-
-    fav_x_atoms = get_metal_favoured_heteroatoms(metal=metal)
-    x_motifs_list_and_cost = {}
-
-    for x_motifs in x_motifs_list:
-        cost = 0
-
-        for x_motif in x_motifs:
-            for atom_id in x_motif.atom_ids:
-                atom = linker.xyzs[atom_id][0]  # Atomic symbol
-                if atom in fav_x_atoms:
-                    cost += fav_x_atoms.index(atom)
-
-        x_motifs_list_and_cost[x_motifs] = cost
-
-    return sorted(x_motifs_list_and_cost, key=x_motifs_list_and_cost.get)
+from cgbind.x_motifs import sort_x_motifs
 
 
 class Linker(Molecule):
@@ -153,27 +102,20 @@ class Linker(Molecule):
         # Sort the list of x_motifs in the linker by the most favourable M––X interaction
         x_motifs_list = sort_x_motifs(x_motifs_list, linker=self, metal=metal)
 
-        logger.info(f'Have {len(x_motifs_list)*self.n_confs} iterations to do')
-        for x_motifs in x_motifs_list:
+        logger.info(f'Have {len(x_motifs_list)*len(self.conf_xyzs)} iterations to do')
+        for i, x_motifs in enumerate(x_motifs_list):
+
+            # Execute calculation to get cost of adding a particular conformation to the template in parallel
+            logger.info(f'Running with {Config.n_cores} cores. Iteration {i}/{len(x_motifs_list)}')
+            with Pool(processes=Config.n_cores) as pool:
+                results = [pool.apply_async(get_new_linker_and_cost, (xyzs, self, x_motifs, template_linker))
+                           for xyzs in self.conf_xyzs]
+
+                linkers_and_cost_tuples = [res.get(timeout=None) for res in results]
+
             linkers_and_cost = {}
-            for xyzs in self.conf_xyzs:
-                coords = xyz2coord(xyzs)
-                x_coords = [coords[atom_id] for motif in x_motifs for atom_id in motif.atom_ids]
-
-                # Minimise the cost function as a function of dr in Å
-                min_result = minimize(cost_fitted_x_motifs, x0=np.array([1.0]), args=(self, template_linker, x_coords),
-                                      method='L-BFGS-B', tol=1e-3, bounds=Bounds(-100.0, 10.0))
-
-                # Set attributes of the new linker
-                new_linker = deepcopy(self)
-                new_linker.dr = min_result.x[0]
-                new_linker.xyzs = xyzs
-                new_linker.coords = xyz2coord(xyzs)
-                new_linker.centroid = np.average(new_linker.coords, axis=0)
-                new_linker.x_motifs = x_motifs
-
-                # Add the new linker to the dictionary with the value = cost function for fitting
-                linkers_and_cost[new_linker] = min_result.fun
+            for (linker, cost) in linkers_and_cost_tuples:
+                linkers_and_cost[linker] = cost
 
             # Sort this block of linkers the cost function. Not sorted the full list to retain the block structure with
             # X motifs
