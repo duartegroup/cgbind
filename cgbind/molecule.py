@@ -158,8 +158,8 @@ class Molecule(BaseStruct):
 
         print_output('Conformer generation for', self.name, 'Running')
         method = AllChem.ETKDG() if use_etdg_confs is False else AllChem.ETDG()
+        method.pruneRmsThresh = 0.1
         conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=method))
-
         try:
             self.volume = AllChem.ComputeMolVolume(self.mol_obj)
         except ValueError:

@@ -103,25 +103,20 @@ def find_x_motifs(linker, all_possibilities=False):
     # Add the largest set to the bonded_x_motifs as a list. Some motifs will be missed due to the oder in which
     # they're added
 
-    if not all_possibilities:
-        largest_unique_bonded_x_motif_sets = []
-        # Sort the sets according to size, then don't add identical sets or subsets
-        for x_motif in reversed(sorted(bonded_x_motif_sets, key=len)):
+    largest_unique_bonded_x_motif_sets = []
+    # Sort the sets according to size, then don't add identical sets or subsets
+    for x_motif in reversed(sorted(bonded_x_motif_sets, key=len)):
 
-            unique = True
-            for unique_x_motif in largest_unique_bonded_x_motif_sets:
+        unique = True
+        for unique_x_motif in largest_unique_bonded_x_motif_sets:
 
-                # If the motif is already in the unique list then don't append, nor if the motif is a subset
-                if x_motif == unique_x_motif or x_motif.issubset(unique_x_motif):
-                    unique = False
-                    break
+            # If the motif is already in the unique list then don't append, nor if the motif is a subset
+            if x_motif == unique_x_motif or (x_motif.issubset(unique_x_motif) and not all_possibilities):
+                unique = False
+                break
 
-            if unique:
-                largest_unique_bonded_x_motif_sets.append(x_motif)
-    else:
-        largest_unique_bonded_x_motif_sets = bonded_x_motif_sets
-
-    print(largest_unique_bonded_x_motif_sets)
+        if unique:
+            largest_unique_bonded_x_motif_sets.append(x_motif)
 
     logger.info(f'Found {len(largest_unique_bonded_x_motif_sets)} X motifs in the linker')
 

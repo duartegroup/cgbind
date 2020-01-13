@@ -25,7 +25,9 @@ def test_get_fitted_linker_coords():
                                     [10., 0., 5.],
                                     [10., 0., 10.]])
 
-    actual_transformed_coords = build.get_fitted_linker_coords(linker=l, template_x_coords=template_coords,
-                                                               coords_to_fit=coords_to_fit, current_xyzs=current_xyzs)
+    actual_transformed_coords, _ = build.get_fitted_linker_coords_and_repulsion(linker=l,
+                                                                                template_x_coords=template_coords,
+                                                                                coords_to_fit=coords_to_fit,
+                                                                                current_xyzs=current_xyzs)
 
     assert np.abs(np.sum(ideal_linker_coords - actual_transformed_coords)) < 0.001

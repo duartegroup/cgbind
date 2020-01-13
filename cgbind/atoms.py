@@ -104,6 +104,27 @@ atoms = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al',
          'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr',
          'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og']
 
+# TODO: Make this less empirical... e.g. tabulate all M-L bond enthalpies using CCSDT//DFT
+metals_and_favored_heteroatoms = {
+    'Pd': ['P', 'N', 'S', 'O', 'F', 'Cl']
+}
+
+
+def get_metal_favoured_heteroatoms(metal):
+    """
+    For a metal return the list of favoured donor atoms from most -> least favoured
+    :param metal: (str) Atomic symbol
+    :return: (list(str))
+    """
+    assert type(metal) == str
+
+    try:
+        return metals_and_favored_heteroatoms[metal]
+
+    except ValueError:
+        logger.warning(f'Favoured {metal}--donor interactions are not tabulated')
+        return heteroatoms
+
 
 def get_atomic_number(atom_label):
     """

@@ -37,6 +37,8 @@ def xyz2coord(xyzs):
     :param xyzs: List of xyzs
     :return: numpy array of coords
     """
+    if len(xyzs) == 0:
+        return np.zeros(1)
     if isinstance(xyzs[0], list):
         return np.array([np.array(line[1:4]) for line in xyzs])
     else:

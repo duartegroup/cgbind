@@ -1,9 +1,11 @@
 from cgbind.log import logger
 import numpy as np
 import itertools
+from copy import deepcopy
 from scipy.optimize import minimize, Bounds
 from cgbind.molecule import Molecule
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
+from cgbind.atoms import get_metal_favoured_heteroatoms
 from cgbind.architectures import archs
 from cgbind.atoms import heteroatoms
 from cgbind.geom import xyz2coord
@@ -29,6 +31,38 @@ def cost_fitted_x_motifs(dr, linker, linker_template, x_coords):
     cost = get_template_fitted_coords_and_cost(linker, template_x_coords=shifted_coords, coords_to_fit=x_coords,
                                                return_cost=True)
     return cost
+
+
+def sort_x_motifs(x_motifs_list, linker, metal):
+    """
+    Sort a list of X motifs by the favourability of the M--X interaction
+
+    :param x_motifs_list: (list((list(Xmotif)))
+    :param linker: (Linker)
+    :param metal: (str)
+    :return:
+    """
+    logger.info('Sorting the X motif list by the best M--X interactions')
+
+    if metal is None:
+        logger.warning('Could not sort x motifs list. Metal was not specified')
+        return x_motifs_list
+
+    fav_x_atoms = get_metal_favoured_heteroatoms(metal=metal)
+    x_motifs_list_and_cost = {}
+
+    for x_motifs in x_motifs_list:
+        cost = 0
+
+        for x_motif in x_motifs:
+            for atom_id in x_motif.atom_ids:
+                atom = linker.xyzs[atom_id][0]  # Atomic symbol
+                if atom in fav_x_atoms:
+                    cost += fav_x_atoms.index(atom)
+
+        x_motifs_list_and_cost[x_motifs] = cost
+
+    return sorted(x_motifs_list_and_cost, key=x_motifs_list_and_cost.get)
 
 
 class Linker(Molecule):
@@ -95,27 +129,33 @@ class Linker(Molecule):
             logger.info('Linker is planar')
             return True
 
-    def _set_best_conformer(self):
+    def get_ranked_linker_conformers(self, metal=None):
         """
-        For a set of conformer xyzs (self.conf_xyzs) find the one that minimises the cost function for fitting the
-        x motifs. This will loop through all the conformers and the possible combinations of x motifs in the linker.
+        For this linker, return a list of Linker objects with appropriate .xyzs, .dr and .x_motifs attributes ordered
+        by their cost function low -> high i.e. good to bad. This will loop through all the conformers and the possible
+        combinations of x motifs in the linker. Linker.dr controls how large the template needs to be to make
+        the best fit
 
-        Set self.xyzs, self.coords and self.centroid from the best xyzs
-
-        Also sets self.dr which controls how large the template needs to be to make the best fit and self.x_motifs
-        on which ever get the minimal cost function
-
-        :return:
+        :param metal: (str) Atomic symbol of the metal
+        :return: (list(Linker))
         """
+        logger.info('Getting linkers ranked by cost')
 
-        min_cost = 99999.9
+        linkers = []
 
         template_linker = self.cage_template.linkers[0]
         n_x_motifs_in_linker = len(template_linker.x_motifs)
 
-        # For all the possible combinations of x_motifs minimise the RMSD between the x_motifs and the template
+        # For all the possible combinations of x_motifs minimise the SSD between the x_motifs and the template
         # x_motifs. The template needs to be modified to accommodate longer linkers with the same architecture
-        for x_motifs in itertools.combinations(self.x_motifs, n_x_motifs_in_linker):
+        x_motifs_list = list(itertools.combinations(self.x_motifs, n_x_motifs_in_linker))
+
+        # Sort the list of x_motifs in the linker by the most favourable M––X interaction
+        x_motifs_list = sort_x_motifs(x_motifs_list, linker=self, metal=metal)
+
+        logger.info(f'Have {len(x_motifs_list)*self.n_confs} iterations to do')
+        for x_motifs in x_motifs_list:
+            linkers_and_cost = {}
             for xyzs in self.conf_xyzs:
                 coords = xyz2coord(xyzs)
                 x_coords = [coords[atom_id] for motif in x_motifs for atom_id in motif.atom_ids]
@@ -124,17 +164,22 @@ class Linker(Molecule):
                 min_result = minimize(cost_fitted_x_motifs, x0=np.array([1.0]), args=(self, template_linker, x_coords),
                                       method='L-BFGS-B', tol=1e-3, bounds=Bounds(-100.0, 10.0))
 
-                if min_result.fun < min_cost:
-                    min_cost = min_result.fun
-                    self.dr = min_result.x[0]
-                    self.xyzs = xyzs
-                    self.x_motifs = x_motifs
+                # Set attributes of the new linker
+                new_linker = deepcopy(self)
+                new_linker.dr = min_result.x[0]
+                new_linker.xyzs = xyzs
+                new_linker.coords = xyz2coord(xyzs)
+                new_linker.centroid = np.average(new_linker.coords, axis=0)
+                new_linker.x_motifs = x_motifs
 
-        logger.info(f'Found the best conformer and x motifs: C = {min_cost:.4f}, dr = {self.dr}')
-        self.coords = xyz2coord(self.xyzs)
-        self.centroid = np.average(self.coords, axis=0)
+                # Add the new linker to the dictionary with the value = cost function for fitting
+                linkers_and_cost[new_linker] = min_result.fun
 
-        return None
+            # Sort this block of linkers the cost function. Not sorted the full list to retain the block structure with
+            # X motifs
+            linkers += sorted(linkers_and_cost, key=linkers_and_cost.get)
+
+        return linkers
 
     def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=200, xyzs=None, use_etdg_confs=False):
         """
@@ -180,7 +225,3 @@ class Linker(Molecule):
         # If the linker has been initialised from xyzs then set conf_xyzs as the xyzs
         if initalised_with_xyzs:
             self.conf_xyzs = [self.xyzs]
-
-        self._set_best_conformer()
-
-        self.planar = self.is_planar()                                        #: (bool) Linker planarity
