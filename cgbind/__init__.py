@@ -1,5 +1,6 @@
 from cgbind import defaults
 from cgbind import geom
+from cgbind.config import Config
 from cgbind.constants import Constants
 from cgbind.linker import Linker
 from cgbind.cage import Cage
@@ -14,6 +15,7 @@ __version__ = '1.0.0'
 
 
 __all__ = [
+    'Config',
     'Constants',
     'defaults',
     'geom',

@@ -9,7 +9,7 @@ from cgbind.geom import xyz2coord
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
 
 
-def get_fitted_linker_coords_and_repulsion(linker, template_x_coords, coords_to_fit, current_xyzs):
+def get_fitted_linker_coords_and_cost(linker, template_x_coords, coords_to_fit, current_xyzs):
     """
     For a linker get the best mapping onto a list of template X coords (e.g. NCN motifs in a pyridyl donor) these will
     this can be achieved in normal or reverse order of the coordinates as to maximise the distance to the rest of the
@@ -22,29 +22,29 @@ def get_fitted_linker_coords_and_repulsion(linker, template_x_coords, coords_to_
     :return: (list(np.ndarray)), (float)
     """
     curr_coords = xyz2coord(xyzs=current_xyzs)
-    min_repulsion, best_linker_coords = 99999999999.9, None
+    min_cost, best_linker_coords = 99999999999.9, None
 
     for coords in [coords_to_fit, list(reversed(coords_to_fit))]:
-        new_linker_coords, _ = get_template_fitted_coords_and_cost(linker=linker,
-                                                                   template_x_coords=template_x_coords,
-                                                                   coords_to_fit=coords)
+        new_linker_coords, cost = get_kfitted_coords_and_cost(linker=linker,
+                                                              template_x_coords=template_x_coords,
+                                                              coords_to_fit=coords)
         if len(current_xyzs) == 0:
             return new_linker_coords, 0.0
 
         repulsion = np.sum(np.power(distance_matrix(new_linker_coords, curr_coords), -12))
 
         # Add the linker with the least repulsion to the rest of the structure
-        if repulsion < min_repulsion:
+        if repulsion + cost < min_cost:
             best_linker_coords = new_linker_coords
-            min_repulsion = repulsion
+            min_cost = repulsion + cost
 
     if best_linker_coords is None:
         logger.error('Fitted linker coords could not be found')
 
-    return best_linker_coords, min_repulsion
+    return best_linker_coords, min_cost
 
 
-def get_template_fitted_coords_and_cost(linker, template_x_coords, coords_to_fit, return_cost=False):
+def get_kfitted_coords_and_cost(linker, template_x_coords, coords_to_fit, return_cost=False):
     """
     Get the coordinates of a linkers that are fitted to a template of X motifs
 
@@ -107,10 +107,9 @@ def get_linker_xyzs_to_add_and_cost(linker, template_linker, curr_xyzs):
     shifted_coords = get_shifted_template_x_motif_coords(linker_template=template_linker, dr=new_linker.dr)
     x_coords = [new_linker.coords[atom_id] for motif in new_linker.x_motifs for atom_id in motif.atom_ids]
 
-    linker_coords, cost = get_fitted_linker_coords_and_repulsion(linker=new_linker,
-                                                                 template_x_coords=shifted_coords,
-                                                                 coords_to_fit=x_coords, current_xyzs=curr_xyzs)
-    logger.info(f'Repulsive cost for adding the linker is {cost:.5f}')
+    linker_coords, cost = get_fitted_linker_coords_and_cost(linker=new_linker, template_x_coords=shifted_coords,
+                                                            coords_to_fit=x_coords, current_xyzs=curr_xyzs)
+    logger.info(f'Repulsive + fitting cost for adding the linker is {cost:.5f}')
 
     if linker_coords is None:
         logger.error('Linker coords were None')
@@ -133,8 +132,8 @@ def cost_fitted_x_motifs(dr, linker, linker_template, x_coords):
     """
 
     shifted_coords = get_shifted_template_x_motif_coords(linker_template=linker_template, dr=dr)
-    cost = get_template_fitted_coords_and_cost(linker, template_x_coords=shifted_coords, coords_to_fit=x_coords,
-                                               return_cost=True)
+    cost = get_kfitted_coords_and_cost(linker, template_x_coords=shifted_coords, coords_to_fit=x_coords,
+                                       return_cost=True)
     return cost
 
 
@@ -166,3 +165,61 @@ def get_new_linker_and_cost(linker_xyzs, linker, x_motifs, template_linker):
     new_linker.x_motifs = x_motifs
 
     return new_linker, min_result.fun
+
+
+def build_homoleptic_cage(cage, max_cost):
+    """
+    Construct the geometry (xyzs) of a homoleptic cage
+
+    :param cage: (Cage)
+    :param max_cost: (float) Maximum cost to break out of the loop over
+    :return:
+    """
+
+    # Get the list of Linkers ordered by the best fit to the template
+    linker_conf_list = cage.linkers[0].get_ranked_linker_conformers(metal=cage.metal)
+    logger.info(f'Have {len(linker_conf_list)} conformers to fit')
+
+    min_cost, best_linker = 99999999.9, None
+    xyzs = []
+
+    # TODO: Parallelise
+    for linker in linker_conf_list:
+        cage_cost = 0.0
+
+        for i, template_linker in enumerate(cage.cage_template.linkers):
+
+            linker_xyzs, cost = get_linker_xyzs_to_add_and_cost(linker, template_linker, curr_xyzs=xyzs)
+            cage_cost += cost
+
+            if linker_xyzs is None:
+                logger.error('Failed to get linker')
+                break
+
+            xyzs += linker_xyzs
+
+        if cage_cost < min_cost:
+            min_cost = cage_cost
+            best_linker = deepcopy(linker)
+
+        if cage_cost < max_cost:
+            logger.info(f'Total L-L repulsion + fit to template in building cage is {cage_cost:.2f}')
+            break
+
+        else:
+            xyzs = []
+
+    if len(xyzs) == 0:
+        if best_linker is None:
+            logger.error('Could not achieve the required cost threshold for building the cage')
+            return
+        else:
+            logger.warning('Failed to reach the threshold. Returning the cage that minimises the L-L repulsion')
+
+    cage.dr = best_linker.dr
+    xyzs = []
+    for i, template_linker in enumerate(cage.cage_template.linkers):
+        linker_xyzs, _ = get_linker_xyzs_to_add_and_cost(best_linker, template_linker, curr_xyzs=xyzs)
+        xyzs += linker_xyzs
+
+    return xyzs

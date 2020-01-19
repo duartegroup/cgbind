@@ -158,7 +158,7 @@ class Molecule(BaseStruct):
             return
 
         print_output('Conformer generation for', self.name, 'Running')
-        method = AllChem.ETKDG() if use_etdg_confs is False else AllChem.ETDG()
+        method = AllChem.ETKDGv2() if use_etdg_confs is False else AllChem.ETDG()
         method.pruneRmsThresh = 0.3
         method.numThreads = Config.n_cores
         conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=method))
