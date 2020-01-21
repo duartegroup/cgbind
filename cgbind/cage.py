@@ -303,17 +303,18 @@ class Cage(BaseStruct):
         assert self.homoleptic or self.homoleptic
 
         if self.homoleptic:
-            xyzs = build_homoleptic_cage(self, max_cost)
+            build_homoleptic_cage(self, max_cost)
 
         if self.heteroleptic:
             logger.critical('NOT IMPLEMENTED YET')
             exit()
 
-        if len(xyzs) != self.arch.n_metals + np.sum(np.array([linker.n_atoms for linker in self.linkers])):
-            logger.error('Failed to build a cage')
-            return None
+        if self.reasonable_geometry:
+            if len(self.xyzs) != self.arch.n_metals + np.sum(np.array([linker.n_atoms for linker in self.linkers])):
+                logger.error('Failed to build a cage')
+                self.reasonable_geometry = False
+                return None
 
-        self.set_xyzs(xyzs)
         return None
 
     def __init__(self, linker=None, metal=None, metal_charge=0, linkers=None, solvent=None, mult=1, name='cage'):
@@ -368,7 +369,7 @@ class Cage(BaseStruct):
 
         self._calc_charge()
 
-        self.reasonable_geometry = True
+        self.reasonable_geometry = False
         self._build()
 
         if self.xyzs is None:

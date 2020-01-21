@@ -63,9 +63,14 @@ class BaseStruct:
         """
 
         if xyzs is not None:
-            assert type(xyzs) == list
-            assert type(xyzs[0]) == list
-            assert len(xyzs[0]) == 4
+            try:
+                assert type(xyzs) == list
+                assert type(xyzs[0]) == list
+                assert len(xyzs[0]) == 4
+
+            except AssertionError:
+                self.reasonable_geometry = False
+                logger.warning('xyzs were not of the correct format. xyzs are not set')
 
             self.xyzs = xyzs
             self.n_atoms = len(xyzs)

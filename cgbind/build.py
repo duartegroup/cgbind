@@ -227,4 +227,5 @@ def build_homoleptic_cage(cage, max_cost):
         metal_coord = cage.dr * metal.shift_vec / np.linalg.norm(metal.shift_vec) + metal.coord
         xyzs.append([cage.metal] + metal_coord.tolist())
 
-    return xyzs
+    cage.set_xyzs(xyzs)
+    return None
