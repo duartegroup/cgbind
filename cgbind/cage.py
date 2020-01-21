@@ -45,15 +45,22 @@ class Cage(BaseStruct):
         metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
         return np.average(metal_coords, axis=0)
 
-    def get_esp_cube(self):
+    def get_esp_cube(self, return_min_max=False):
         """
         Get the electrostatic potential (ESP) in a Gaussian .cube format by calculating partial atomic charges using
         XTB (tested with v. 6.2). Calls self.get_charges() and depends on self.xyzs
 
+        :param return_min_max: (bool) Return the minimum and maximum of the ESP along with the cube file lines
+                                      evaluated roughly on the VdW surface
         :return: (list) .cube file lines
         """
-        esp_lines = get_esp_cube_lines(charges=self.get_charges(), xyzs=self.xyzs)
-        return esp_lines
+        esp_lines, (min_esp, max_esp) = get_esp_cube_lines(charges=self.get_charges(), xyzs=self.xyzs)
+
+        if return_min_max:
+            return esp_lines, min_esp, max_esp
+
+        else:
+            return esp_lines
 
     def print_esp_cube_file(self):
         """

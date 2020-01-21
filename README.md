@@ -1,11 +1,12 @@
-[![DOI](https://zenodo.org/badge/196167631.svg)](https://zenodo.org/badge/latestdoi/196167631)  [![Build Status](https://travis-ci.org/duartegroup/cgbind.svg?branch=master)](https://travis-ci.org/duartegroup/cgbind)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3550545.svg)](https://doi.org/10.5281/zenodo.3550545) [![Build Status](https://travis-ci.org/duartegroup/cgbind.svg?branch=master)](https://travis-ci.org/duartegroup/cgbind)
 ![alt text](cgbind/common/llogo.png)
 ### *C*a*g*e*Bind*ing: A tool to for automated metallocage binding affinity calculations
 ***
 
 **cgbind** automates the process of generating M2L4 metallocage structures from just SMILES strings of the corresponding
 linker (_L_). Binding affinity calculations may also be evaluated via input of both linker and substrate SMILES,
-provided an installation of ORCA or XTB is available. A graphical user interface (GUI) is currently available in alpha at cgbind.com.
+provided an installation of ORCA or XTB is available. A graphical user interface (GUI) in _alpha_ is currently available 
+at [cgbind.com](http://cgbind.com).
 
 ***
 
@@ -40,4 +41,5 @@ To load as a module:
 import cgbind
 ```
 
-See _examples/_ for how to use **cgbind**. 
+See _examples/_ for how to use **cgbind**. Additional documentation is available at 
+[duartegroup.github.io/cgbind/](https://duartegroup.github.io/cgbind/).
