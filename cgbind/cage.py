@@ -369,7 +369,7 @@ class Cage(BaseStruct):
         self._calc_charge()
 
         self.reasonable_geometry = True
-        self._build(with_linker_confs=True)
+        self._build()
 
         if self.xyzs is None:
             self.reasonable_geometry = False
