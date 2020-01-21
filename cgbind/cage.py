@@ -298,7 +298,7 @@ class Cage(BaseStruct):
 
         return
 
-    def _build(self, with_linker_confs=False, max_cost=10):
+    def _build(self, max_cost=10):
         logger.info('Building a cage geometry')
         assert self.homoleptic or self.homoleptic
 
@@ -308,11 +308,6 @@ class Cage(BaseStruct):
         if self.heteroleptic:
             logger.critical('NOT IMPLEMENTED YET')
             exit()
-
-        # Add the metals from the template shifted by dr
-        for metal in self.cage_template.metals:
-            metal_coord = self.dr * metal.shift_vec / np.linalg.norm(metal.shift_vec) + metal.coord
-            xyzs.append([self.metal] + metal_coord.tolist())
 
         if len(xyzs) != self.arch.n_metals + np.sum(np.array([linker.n_atoms for linker in self.linkers])):
             logger.error('Failed to build a cage')

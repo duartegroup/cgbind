@@ -212,7 +212,7 @@ def build_homoleptic_cage(cage, max_cost):
     if len(xyzs) == 0:
         if best_linker is None:
             logger.error('Could not achieve the required cost threshold for building the cage')
-            return
+            return None
         else:
             logger.warning('Failed to reach the threshold. Returning the cage that minimises the L-L repulsion')
 
@@ -221,5 +221,10 @@ def build_homoleptic_cage(cage, max_cost):
     for i, template_linker in enumerate(cage.cage_template.linkers):
         linker_xyzs, _ = get_linker_xyzs_to_add_and_cost(best_linker, template_linker, curr_xyzs=xyzs)
         xyzs += linker_xyzs
+
+    # Add the metals from the template shifted by dr
+    for metal in cage.cage_template.metals:
+        metal_coord = cage.dr * metal.shift_vec / np.linalg.norm(metal.shift_vec) + metal.coord
+        xyzs.append([cage.metal] + metal_coord.tolist())
 
     return xyzs
