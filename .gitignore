@@ -13,3 +13,5 @@ build/
 
 .coverage
 doc/_build/
+
+cgbind/ext/esp_gen.c

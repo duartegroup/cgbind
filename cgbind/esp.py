@@ -21,7 +21,7 @@ def get_esp_cube_lines(charges, xyzs):
 
     if charges is None:
         logger.error('Could not generate an .cube file, charges were None')
-        return []
+        return [], (None, None)
 
     coords = xyz2coord(xyzs)
     charges = np.array(charges)
