@@ -4,7 +4,6 @@ from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem import rdPartialCharges
 from cgbind.log import logger
 from cgbind.config import Config
-from cgbind.input_output import print_output
 from cgbind.input_output import xyzs2xyzfile
 from cgbind.confomers import extract_xyzs_from_rdkit_mol_object
 from cgbind.geom import calc_com
@@ -162,7 +161,6 @@ class Molecule(BaseStruct):
             logger.error('RDKit failed to generate mol objects')
             return
 
-        print_output('Conformer generation for', self.name, 'Running')
         method = AllChem.ETKDGv2() if use_etdg_confs is False else AllChem.ETDG()
         method.pruneRmsThresh = 0.3
         method.numThreads = Config.n_cores
@@ -174,7 +172,6 @@ class Molecule(BaseStruct):
             return
 
         self.bonds = get_bond_list_from_rdkit_bonds(rdkit_bonds_obj=self.mol_obj.GetBonds())
-        print_output('', '', 'Done')
 
         self.conf_xyzs = extract_xyzs_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=conf_ids)
         self.set_xyzs(xyzs=self.conf_xyzs[0])

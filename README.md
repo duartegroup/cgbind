@@ -3,10 +3,12 @@
 ### *C*a*g*e*Bind*ing: A tool to for automated metallocage binding affinity calculations
 ***
 
-**cgbind** automates the process of generating M2L4 metallocage structures from just SMILES strings of the corresponding
-linker (_L_). Binding affinity calculations may also be evaluated via input of both linker and substrate SMILES,
-provided an installation of ORCA or XTB is available. A graphical user interface (GUI) in _alpha_ is currently available 
-at [cgbind.com](http://cgbind.com).
+**cgbind** automates the process of generating M2L4 metallocage structures
+from just SMILES strings of the corresponding linker (_L_). Binding affinity
+calculations may also be evaluated via input of both linker and substrate
+SMILES, provided an installation of ORCA or XTB is available. A graphical
+user interface (GUI) in _alpha_ is currently available at
+[cgbind.com](http://cgbind.com).
 
 ***
 
@@ -21,6 +23,7 @@ at [cgbind.com](http://cgbind.com).
 
 ## Installation
 
+For installation instructions see the [docs](https://duartegroup.github.io/cgbind/install.html).
 If the requirements are already satisfied
 ```
 python setup.py install
@@ -30,8 +33,9 @@ python setup.py install
 
 ## Usage
 ### Generating SMILES strings
-[SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system) strings can be generated directly
-from ChemDraw. For example:
+[SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system)
+strings can be generated directly from ChemDraw. For example:
+
 ![alt text](cgbind/common/SMILES_generation.png)
 
 
@@ -41,5 +45,5 @@ To load as a module:
 import cgbind
 ```
 
-See _examples/_ for how to use **cgbind**. Additional documentation is available at 
-[duartegroup.github.io/cgbind/](https://duartegroup.github.io/cgbind/).
+See _examples/_ and the [docs](https://duartegroup.github.io/cgbind/examples.html)
+for how to use **cgbind**.

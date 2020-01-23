@@ -15,3 +15,5 @@ build/
 doc/_build/
 
 cgbind/ext/esp_gen.c
+
+cgbind/ext/esp_gen.html

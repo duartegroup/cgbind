@@ -3,51 +3,44 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to cgbind's documentation!
-==================================
+.. _contents:
+
+Overview
+========
+
+cgbind is a Python toolkit designed for the construction, analysis and property prediction of metallocages. Examples on
+how to use the Python API are avalible here, as well as a full reference for the main object available. A web app
+interface is available at `cgbind.com <http://cgbind.com>`_ and provides most of the functionality within the toolkit
+with improvements planned!
+
+
+Licence
+-------
+
+cgbind is free and open-source and can be found on `GitHub <https://github.com/duartegroup/cgbind>`_. It is distributed
+under the MIT licence such that
+
+
+Documentation
+-------------
+
+.. only:: html
+
+    :Release: |version|
+    :Date: |today|
 
 .. toctree::
-   :maxdepth:  5
-   :caption: Contents:
+   :maxdepth: 1
 
-.. autoclass:: cgbind.molecule.BaseStruct
-
-.. autoclass:: cgbind.molecule.Molecule
-
-.. autoclass:: cgbind.architectures.Arch
-
-.. autoclass:: cgbind.Linker
-
-.. autoclass:: cgbind.Cage
-
-.. autoclass:: cgbind.Substrate
-
-.. autoclass:: cgbind.CageSubstrateComplex
-
-.. autoclass:: cgbind.MOPAC
-
-.. autoclass:: cgbind.ORCA
-
-.. autoclass:: cgbind.XTB
-
-.. autoclass:: cgbind.templates.Template
-
-.. autoclass:: cgbind.templates.Metal
-
-.. autoclass:: cgbind.templates.Linker
-
-.. autoclass:: cgbind.constants.Constants
-
-.. autofunction:: cgbind.input_output.xyzs2xyzfile
-
-.. autofunction:: cgbind.input_output.xyzfile2xyzs
-
-.. autofunction:: cgbind.input_output.mol2file2xyzs
-
+   install
+   examples
+   ref/index
+   citing
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+* :ref:`glossary`

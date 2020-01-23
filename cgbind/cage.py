@@ -5,7 +5,6 @@ from cgbind.molecule import BaseStruct
 from cgbind.calculations import get_charges
 from cgbind.build import build_homoleptic_cage
 from cgbind.log import logger
-from cgbind.input_output import print_output
 from cgbind.atoms import get_vdw_radii
 from cgbind.geom import is_geom_reasonable
 from cgbind.geom import xyz2coord
@@ -300,14 +299,13 @@ class Cage(BaseStruct):
         self.linkers = linkers
         self.cage_template = linkers[0].cage_template
 
-        logger.warning('Hetroleptic cages will have the average dr of all linkers')
-        self.dr = np.average(np.array([linker.dr for linker in linkers]))
+        logger.warning('Heteroleptic cages will have the average dr of all linkers')
 
         return
 
     def _build(self, max_cost=10):
         logger.info('Building a cage geometry')
-        assert self.homoleptic or self.homoleptic
+        assert self.homoleptic or self.heteroleptic
 
         if self.homoleptic:
             build_homoleptic_cage(self, max_cost)
@@ -381,10 +379,8 @@ class Cage(BaseStruct):
 
         if self.xyzs is None:
             self.reasonable_geometry = False
-            print_output('Cage build for', self.name, 'Failed')
             return
 
         self.m_ids = self.get_metal_atom_ids()
         self.reasonable_geometry = is_geom_reasonable(self.xyzs)
-
-        print_output('Cage', self.name, 'Built')
+        logger.info(f'Generated cage sucsessfully. Geometry is reasonable {self.reasonable_geometry}')

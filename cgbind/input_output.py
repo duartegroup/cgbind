@@ -124,8 +124,3 @@ def mol2file2xyzs(filename):
             return
 
     return xyzs
-
-
-def print_output(process, name, state):
-    print("{:<30s}{:<50s}{:>10s}".format(process, name, state))
-    return None

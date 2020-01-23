@@ -12,12 +12,15 @@
 #
 # -- Project information -----------------------------------------------------
 import sphinx_rtd_theme
+import cgbind
+
 
 autodoc_default_options = {
     'members':         True,
     'special-members': '__init__'
     }
 
+version = cgbind.__version__
 
 project = 'cgbind'
 copyright = '2019, Tom Young'

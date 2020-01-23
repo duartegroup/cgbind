@@ -1,10 +1,7 @@
 from cgbind.log import logger
 from cgbind import add_substrate
 from cgbind.molecule import BaseStruct
-from cgbind.input_output import print_output
 from cgbind.geom import is_geom_reasonable
-from cgbind import calculations
-from cgbind.input_output import xyzs2xyzfile
 from cgbind.add_substrate import energy_funcs
 
 
@@ -53,7 +50,6 @@ class CageSubstrateComplex(BaseStruct):
 
         :return: None
         """
-        print_output('Addition of', self.substrate.name, 'Running')
         logger.info('Adding the substrate to the center of the cage defined by the COM')
         logger.info(f'Using {self.energy_func.__name__}')
 
@@ -74,7 +70,6 @@ class CageSubstrateComplex(BaseStruct):
         if self.xyzs is not None:
             self.reasonable_geometry = is_geom_reasonable(self.xyzs)
 
-        print_output('', self.substrate.name, 'Done')
         return None
 
     def __init__(self, cage, substrate, solvent=None, mult=1, n_subst_confs=1, n_init_geom=1, energy_method='repulsion'):
