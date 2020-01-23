@@ -7,7 +7,7 @@ import numpy as np
 
 cdef list get_esp_vals(int nx, int ny, int nz, double[:, :] coords, double[:] min_carts,
                double[:] charges, int n_atoms, double rx, double ry, double rz,
-               double[:] dists, double[:] esp_vals,):
+               double[:] dists, double[:] esp_vals):
 
     cdef double min_val = 1E9
     cdef double max_val = -1E9
