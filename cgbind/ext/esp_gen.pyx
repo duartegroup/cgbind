@@ -51,7 +51,7 @@ cdef list get_esp_vals(int nx, int ny, int nz, double[:, :] coords, double[:] mi
                     if esp_val < min_val:
                         min_val = esp_val
                 if 1.5 < min_dist < 2.0:
-                    if esp_val > min_val:
+                    if esp_val > max_val:
                         max_val = esp_val
 
                 esp_vals[i*nx*ny + j * ny + k] = esp_val
