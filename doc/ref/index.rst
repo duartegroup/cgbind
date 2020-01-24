@@ -5,6 +5,10 @@ Reference
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
 
    classes
+   input_output
+   geom
+   config
+   templates

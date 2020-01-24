@@ -32,14 +32,13 @@ python setup.py install
 ***
 
 ## Usage
-### Generating SMILES strings
-[SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system)
-strings can be generated directly from ChemDraw. For example:
+
+**cgbind** constructs cages from SMILES [SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system)
+strings, which can be generated directly from ChemDraw.
 
 ![alt text](cgbind/common/SMILES_generation.png)
 
 
-### Using cgbind
 To load as a module:
 ```python
 import cgbind

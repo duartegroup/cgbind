@@ -31,7 +31,7 @@ class Linker(Molecule):
     def _set_arch(self, arch_name):
 
         for arch in archs:
-            if arch_name == arch.name:
+            if arch_name.lower() == arch.name.lower():
                 self.arch = arch
         return None
 

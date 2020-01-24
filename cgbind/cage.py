@@ -322,7 +322,7 @@ class Cage(BaseStruct):
 
         return None
 
-    def __init__(self, linker=None, metal=None, metal_charge=0, linkers=None, solvent=None, mult=1, name='cage'):
+    def __init__(self, linker=None, metal='M', metal_charge=0, linkers=None, solvent=None, mult=1, name='cage'):
         """
         Metallocage object. Inherits from cgbind.molecule.BaseStruct
 

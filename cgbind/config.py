@@ -1,4 +1,6 @@
 class Config:
+    """
+    General configuration
+    """
 
-    # Maximum number of cores to use throughout the code
-    n_cores = 1
+    n_cores = 1    #: Maximum number of cores to use throughout the code

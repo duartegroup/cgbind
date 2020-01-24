@@ -14,6 +14,7 @@ from cgbind.x_motifs import check_x_motifs
 def find_mols_in_xyzs(xyzs, allow_same=False):
     """
     From a list of xyzs determine the bonds in the system, thus the distinct molecules in the system
+
     :param xyzs: (list(list)) standard xyzs
     :param allow_same: (bool) add only the unique molecules (False) or add every molecule (True)
     :return: (list(xyzs))
@@ -46,6 +47,7 @@ def find_mols_in_xyzs(xyzs, allow_same=False):
 def get_template(arch_name='m2l4', folder_path=None):
     """
     Get a template defined by the architectures arch_name. The saved objects are in
+
     :param arch_name: (str)
     :param folder_path: (str) Path to the folder where the templates are stored. Has a default
     :return: (object) Template

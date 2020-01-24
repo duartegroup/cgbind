@@ -9,7 +9,7 @@ Overview
 ========
 
 cgbind is a Python toolkit designed for the construction, analysis and property prediction of metallocages. Examples on
-how to use the Python API are avalible here, as well as a full reference for the main object available. A web app
+how to use the Python API are avalible here, as well as a full reference for the main objects and methods. A web app
 interface is available at `cgbind.com <http://cgbind.com>`_ and provides most of the functionality within the toolkit
 with improvements planned!
 
@@ -18,7 +18,7 @@ Licence
 -------
 
 cgbind is free and open-source and can be found on `GitHub <https://github.com/duartegroup/cgbind>`_. It is distributed
-under the MIT licence such that
+under the MIT licence, such that any modification, distribution, usage (academic and commercial) is acceptable.
 
 
 Documentation
@@ -36,11 +36,11 @@ Documentation
    examples
    ref/index
    citing
+   archs
+
 
 Indices and tables
 ------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
-* :ref:`glossary`

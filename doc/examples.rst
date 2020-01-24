@@ -4,7 +4,7 @@ Examples
 .. currentmodule:: cgbind
 
 A few examples for generating and analysing metallocages. The full examples are available on
-`GitHub <https://github.com/duartegroup/cgbind/tree/master/examples>`_
+`GitHub <https://github.com/duartegroup/cgbind/tree/master/examples>`_.
 
 Generating a Metallocage
 ------------------------
