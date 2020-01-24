@@ -54,7 +54,7 @@ def test_init_cage():
     assert os.path.exists('cage_tmp.xyz')
     os.remove('cage_tmp.xyz')
 
-    assert c.get_metal_atom_ids() == [0, 1]
+    assert c.get_metal_atom_ids() == [144, 145]
     assert 122 < c.get_cavity_vol() < 124       # Å^3
     assert 11.5 < c.get_m_m_dist() < 12.5       # Å
 

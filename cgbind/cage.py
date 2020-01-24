@@ -1,13 +1,10 @@
-from copy import deepcopy
 import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.optimize import basinhopping, minimize
 from cgbind.molecule import BaseStruct
 from cgbind.calculations import get_charges
-from cgbind.x_motifs import get_shifted_template_x_motif_coords
-from cgbind.build import get_fitted_linker_coords
+from cgbind.build import build_homoleptic_cage
 from cgbind.log import logger
-from cgbind.input_output import print_output
 from cgbind.atoms import get_vdw_radii
 from cgbind.geom import is_geom_reasonable
 from cgbind.geom import xyz2coord
@@ -271,6 +268,7 @@ class Cage(BaseStruct):
 
     def _init_homoleptic_cage(self, linker):
         logger.info(f'Initialising a homoleptic cage')
+        self.homoleptic = True
 
         if not self._is_linker_reasonable(linker):
             logger.error('Linker was not reasonable')
@@ -286,6 +284,7 @@ class Cage(BaseStruct):
 
     def _init_heteroleptic_cage(self, linkers):
         logger.info(f'Initialising a heteroleptic cage')
+        self.heteroleptic = True
 
         if not all([self._is_linker_reasonable(linker) for linker in linkers]):
             logger.error('Not all linkers were reasonable')
@@ -300,44 +299,30 @@ class Cage(BaseStruct):
         self.linkers = linkers
         self.cage_template = linkers[0].cage_template
 
-        logger.warning('Hetroleptic cages will have the average dr of all linkers')
-        self.dr = np.average(np.array([linker.dr for linker in linkers]))
+        logger.warning('Heteroleptic cages will have the average dr of all linkers')
 
         return
 
-    def _build(self):
+    def _build(self, max_cost=10):
         logger.info('Building a cage geometry')
+        assert self.homoleptic or self.heteroleptic
 
-        if self.dr is None:
-            logger.error('Cannot build a cage dr was None')
-            return None
+        if self.homoleptic:
+            build_homoleptic_cage(self, max_cost)
 
-        xyzs = []
-        # Add the metals from the template shifted by dr
-        for metal in self.cage_template.metals:
-            metal_coord = self.dr * metal.shift_vec / np.linalg.norm(metal.shift_vec) + metal.coord
-            xyzs.append([self.metal] + metal_coord.tolist())
+        if self.heteroleptic:
+            logger.critical('NOT IMPLEMENTED YET')
+            exit()
 
-        # Add the linkers by shifting the x_motifs in each linker templates by dr and finding the best rot matrix
-        for i, template_linker in enumerate(self.cage_template.linkers):
+        if self.reasonable_geometry:
+            if len(self.xyzs) != self.arch.n_metals + np.sum(np.array([linker.n_atoms for linker in self.linkers])):
+                logger.error('Failed to build a cage')
+                self.reasonable_geometry = False
+                return None
 
-            new_linker = deepcopy(self.linkers[i])
-            shifted_coords = get_shifted_template_x_motif_coords(linker_template=template_linker, dr=self.dr)
-            x_coords = [new_linker.coords[atom_id] for motif in new_linker.x_motifs for atom_id in motif.atom_ids]
-
-            linker_coords = get_fitted_linker_coords(linker=self.linkers[i], template_x_coords=shifted_coords,
-                                                     coords_to_fit=x_coords, current_xyzs=xyzs)
-
-            xyzs += [[new_linker.xyzs[i][0]] + linker_coords[i].tolist() for i in range(new_linker.n_atoms)]
-
-        if len(xyzs) != self.arch.n_metals + np.sum(np.array([linker.n_atoms for linker in self.linkers])):
-            logger.error('Failed to build a cage')
-            return None
-
-        self.set_xyzs(xyzs)
         return None
 
-    def __init__(self, linker=None, metal=None, metal_charge=0, linkers=None, solvent=None, mult=1, name='cage'):
+    def __init__(self, linker=None, metal='M', metal_charge=0, linkers=None, solvent=None, mult=1, name='cage'):
         """
         Metallocage object. Inherits from cgbind.molecule.BaseStruct
 
@@ -370,6 +355,8 @@ class Cage(BaseStruct):
         self.metal_charge = int(metal_charge)
 
         self.reasonable_geometry = False
+        self.homoleptic = False
+        self.heteroleptic = False
 
         if linker is not None:
             self._init_homoleptic_cage(linker)
@@ -387,15 +374,13 @@ class Cage(BaseStruct):
 
         self._calc_charge()
 
-        self.reasonable_geometry = True
+        self.reasonable_geometry = False
         self._build()
 
         if self.xyzs is None:
             self.reasonable_geometry = False
-            print_output('Cage build for', self.name, 'Failed')
             return
 
         self.m_ids = self.get_metal_atom_ids()
         self.reasonable_geometry = is_geom_reasonable(self.xyzs)
-
-        print_output('Cage', self.name, 'Built')
+        logger.info(f'Generated cage sucsessfully. Geometry is reasonable {self.reasonable_geometry}')

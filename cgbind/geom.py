@@ -7,8 +7,9 @@ from cgbind.atoms import get_atomic_mass
 def calc_com(xyzs):
     """
     Calculate the centre of mass for a list of xyzs
-    :param xyzs:
-    :return:
+
+    :param xyzs: (list(list)) shape: Nx3
+    :return: (np.ndarray) shape: 3
     """
     logger.info('Calculating centre of mass ')
 
@@ -34,9 +35,12 @@ def xyz2coord(xyzs):
     """
     For a set of xyzs in the form e.g [[C, 0.0, 0.0, 0.0], ...] convert to a np array of coordinates, containing just
     just the x, y, z coordinates
-    :param xyzs: List of xyzs
-    :return: numpy array of coords
+
+    :param xyzs: (list(list)) shape: Nx3 or 3
+    :return: {np.ndarray) shape: Nx3 or 3
     """
+    if len(xyzs) == 0:
+        return np.zeros(1)
     if isinstance(xyzs[0], list):
         return np.array([np.array(line[1:4]) for line in xyzs])
     else:
@@ -47,8 +51,9 @@ def is_geom_reasonable(xyzs):
     """
     For an xyz list check to ensure the geometry is sensible, before an optimisation is carried out. There should be
     no distances smaller than 0.7 Å
-    :param xyzs: List of xyzs
-    :return:
+
+    :param xyzs: list(list))
+    :return: (bool)
     """
     logger.info('Checking to see whether the geometry is reasonable')
 
@@ -74,6 +79,9 @@ def rotation_matrix(axis, theta):
     """
     Return the rotation matrix associated with counterclockwise rotation about
     the given axis by theta radians.
+
+    :param axis: (np.ndarray) Unit vector in 3D to rotate around
+    :param theta: (float) Angle in radians
     """
     axis = np.asarray(axis)
     axis = axis/np.linalg.norm(axis)
@@ -90,6 +98,7 @@ def get_rot_mat_kabsch(p_matrix, q_matrix):
     """
     Get the optimal rotation matrix with the Kabsch algorithm. Notation is from
     https://en.wikipedia.org/wiki/Kabsch_algorithm
+
     :param p_matrix: (np.ndarray)
     :param q_matrix: (np.ndarray)
     :return: (np.ndarray) rotation matrix
@@ -108,6 +117,7 @@ def get_rot_mat_kabsch(p_matrix, q_matrix):
 def get_centered_matrix(mat):
     """
     For a list of coordinates n.e. a n_atoms x 3 matrix as a np array translate to the center of the coordinates
+
     :param mat: (np.ndarray)
     :return: (np.ndarray) translated coordinates
     """

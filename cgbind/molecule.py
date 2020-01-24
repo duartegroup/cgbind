@@ -3,7 +3,7 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem import rdPartialCharges
 from cgbind.log import logger
-from cgbind.input_output import print_output
+from cgbind.config import Config
 from cgbind.input_output import xyzs2xyzfile
 from cgbind.confomers import extract_xyzs_from_rdkit_mol_object
 from cgbind.geom import calc_com
@@ -62,9 +62,14 @@ class BaseStruct:
         """
 
         if xyzs is not None:
-            assert type(xyzs) == list
-            assert type(xyzs[0]) == list
-            assert len(xyzs[0]) == 4
+            try:
+                assert type(xyzs) == list
+                assert type(xyzs[0]) == list
+                assert len(xyzs[0]) == 4
+
+            except AssertionError:
+                self.reasonable_geometry = False
+                logger.warning('xyzs were not of the correct format. xyzs are not set')
 
             self.xyzs = xyzs
             self.n_atoms = len(xyzs)
@@ -156,10 +161,10 @@ class Molecule(BaseStruct):
             logger.error('RDKit failed to generate mol objects')
             return
 
-        print_output('Conformer generation for', self.name, 'Running')
-        method = AllChem.ETKDG() if use_etdg_confs is False else AllChem.ETDG()
+        method = AllChem.ETKDGv2() if use_etdg_confs is False else AllChem.ETDG()
+        method.pruneRmsThresh = 0.3
+        method.numThreads = Config.n_cores
         conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=method))
-
         try:
             self.volume = AllChem.ComputeMolVolume(self.mol_obj)
         except ValueError:
@@ -167,7 +172,6 @@ class Molecule(BaseStruct):
             return
 
         self.bonds = get_bond_list_from_rdkit_bonds(rdkit_bonds_obj=self.mol_obj.GetBonds())
-        print_output('', '', 'Done')
 
         self.conf_xyzs = extract_xyzs_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=conf_ids)
         self.set_xyzs(xyzs=self.conf_xyzs[0])

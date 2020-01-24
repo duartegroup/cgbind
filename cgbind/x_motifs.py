@@ -1,6 +1,39 @@
 import numpy as np
 from copy import deepcopy
 from cgbind.log import logger
+from cgbind.atoms import get_metal_favoured_heteroatoms
+
+
+def sort_x_motifs(x_motifs_list, linker, metal):
+    """
+    Sort a list of X motifs by the favourability of the M--X interaction
+
+    :param x_motifs_list: (list((list(Xmotif)))
+    :param linker: (Linker)
+    :param metal: (str)
+    :return:
+    """
+    logger.info('Sorting the X motif list by the best M--X interactions')
+
+    if metal is None:
+        logger.warning('Could not sort x motifs list. Metal was not specified')
+        return x_motifs_list
+
+    fav_x_atoms = get_metal_favoured_heteroatoms(metal=metal)
+    x_motifs_list_and_cost = {}
+
+    for x_motifs in x_motifs_list:
+        cost = 0
+
+        for x_motif in x_motifs:
+            for atom_id in x_motif.atom_ids:
+                atom = linker.xyzs[atom_id][0]  # Atomic symbol
+                if atom in fav_x_atoms:
+                    cost += fav_x_atoms.index(atom)
+
+        x_motifs_list_and_cost[x_motifs] = cost
+
+    return sorted(x_motifs_list_and_cost, key=x_motifs_list_and_cost.get)
 
 
 def get_shifted_template_x_motif_coords(linker_template, dr):
@@ -52,7 +85,7 @@ def check_x_motifs(linker=None, linker_template=None):
     return None
 
 
-def find_x_motifs(linker):
+def find_x_motifs(linker, all_possibilities=False):
     """
     Find the X motifs in a structure which correspond to the X atoms and their nearest neighbours. These motifs will
     be searched in a linker object and the RMSD minimised
@@ -81,6 +114,7 @@ def find_x_motifs(linker):
 
     # Combine x_motifs that are bonded, thus should be considered a single motif
     bonded_x_motif_sets = []
+
     for n, x_motif_i in enumerate(x_motifs):
         bonded_x_motif = x_motif_i.copy()
 
@@ -96,6 +130,9 @@ def find_x_motifs(linker):
 
         bonded_x_motif_sets.append(set(bonded_x_motif))
 
+    if all_possibilities:
+        bonded_x_motif_sets += [set(x_motif) for x_motif in x_motifs]
+
     # Add the largest set to the bonded_x_motifs as a list. Some motifs will be missed due to the oder in which
     # they're added
 
@@ -107,7 +144,7 @@ def find_x_motifs(linker):
         for unique_x_motif in largest_unique_bonded_x_motif_sets:
 
             # If the motif is already in the unique list then don't append, nor if the motif is a subset
-            if x_motif == unique_x_motif or x_motif.issubset(unique_x_motif):
+            if x_motif == unique_x_motif or (x_motif.issubset(unique_x_motif) and not all_possibilities):
                 unique = False
                 break
 

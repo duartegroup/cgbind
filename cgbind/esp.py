@@ -1,9 +1,10 @@
 import numpy as np
+from time import time
 from cgbind.geom import xyz2coord
 from cgbind.atoms import get_atomic_number
 from cgbind.log import logger
 from cgbind.constants import Constants
-from scipy.spatial.distance import cdist
+from esp_gen import get_cube_lines
 
 
 def get_esp_cube_lines(charges, xyzs):
@@ -16,10 +17,11 @@ def get_esp_cube_lines(charges, xyzs):
     :return: (list(str)), (min ESP value, max ESP value)
     """
     logger.info('Calculating the ESP and generating a .cube file')
+    start_time = time()
 
     if charges is None:
         logger.error('Could not generate an .cube file, charges were None')
-        return []
+        return [], (None, None)
 
     coords = xyz2coord(xyzs)
     charges = np.array(charges)
@@ -57,27 +59,9 @@ def get_esp_cube_lines(charges, xyzs):
         cube_file_lines.append(f'{get_atomic_number(atom_label):>5d}{0.0:>12f}'
                                f'{Constants.ang2a0*x:>12f}{Constants.ang2a0*y:>12f}{Constants.ang2a0*z:>12f}\n')
 
-    min_val, max_val = 1E9, -1E9
-    for i in range(nx):
-        for j in range(ny):
-            for k in range(nz):
+    # Looping over x, y, z is slow in python so use Cython extension
+    cube_val_lines, min_val, max_val = get_cube_lines(nx, ny, nz, coords, min_carts, charges, vox_size)
+    cube_file_lines += cube_val_lines
 
-                vox_point = min_carts + np.array([(i + 0.5) * rx, (j + 0.5) * ry, (k + 0.5) * rz])
-                dists = cdist(np.array([vox_point]), coords)[0]
-
-                esp_val = np.sum(charges / dists)
-
-                # Min and max values are on *roughly* the van der Walls surface i.e. a distance r from the closest atom
-                # where r is the VdW radius of the closest atom. Taken as 1.5 -> 2.0 Å here
-                if esp_val < min_val and 1.5 < min(dists) < 2.0:
-                    min_val = esp_val
-                if esp_val > max_val and 1.5 < min(dists) < 2.0:
-                    max_val = esp_val
-
-                cube_file_lines.append(f'{esp_val:>15.5E}  ')
-                if k % 6 == 5:
-                    cube_file_lines.append('\n')
-
-            cube_file_lines.append('\n')
-
+    logger.info(f'ESP generated in {time()-start_time:.3f} s')
     return cube_file_lines, (min_val, max_val)
