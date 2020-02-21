@@ -1,7 +1,6 @@
 from cgbind.log import logger
 from cgbind import add_substrate
 from cgbind.molecule import BaseStruct
-from cgbind.geom import is_geom_reasonable
 from cgbind.add_substrate import energy_funcs
 
 
@@ -66,9 +65,6 @@ class CageSubstrateComplex(BaseStruct):
 
         xyzs = add_substrate.add_substrate_com(self)
         self.set_xyzs(xyzs)
-
-        if self.xyzs is not None:
-            self.reasonable_geometry = is_geom_reasonable(self.xyzs)
 
         return None
 

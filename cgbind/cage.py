@@ -107,10 +107,14 @@ class Cage(BaseStruct):
         """
 
         logger.info(f'Getting metal_label atom ids with label {self.metal}')
+        if self.xyzs is None:
+            logger.error('Could not get metal atom ids. xyzs were None')
+            return None
+
         try:
             return [i for i in range(len(self.xyzs)) if self.xyzs[i][0] == self.metal]
         except TypeError or IndexError or AttributeError:
-            logger.error('Could not get metal_label atom ids. Returning None')
+            logger.error('Could not get metal label atom ids. Returning None')
             return None
 
     def get_cavity_vol(self):
@@ -346,7 +350,7 @@ class Cage(BaseStruct):
 
         logger.info(f'Initialising a Cage object')
 
-        self.metal = metal
+        self.metal = str(metal)
         self.linkers = None
         self.dr = None
         self.arch = None
@@ -377,10 +381,5 @@ class Cage(BaseStruct):
         self.reasonable_geometry = False
         self._build()
 
-        if self.xyzs is None:
-            self.reasonable_geometry = False
-            return
-
         self.m_ids = self.get_metal_atom_ids()
-        self.reasonable_geometry = is_geom_reasonable(self.xyzs)
         logger.info(f'Generated cage sucsessfully. Geometry is reasonable {self.reasonable_geometry}')

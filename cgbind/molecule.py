@@ -3,6 +3,7 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem import rdPartialCharges
 from cgbind.log import logger
+from cgbind.geom import is_geom_reasonable
 from cgbind.config import Config
 from cgbind.input_output import xyzs2xyzfile
 from cgbind.confomers import extract_xyzs_from_rdkit_mol_object
@@ -75,6 +76,9 @@ class BaseStruct:
             self.n_atoms = len(xyzs)
 
             logger.info('Successfully set xyzs and n_atoms')
+
+            self.reasonable_geometry = is_geom_reasonable(self.xyzs)
+            logger.info(f'Geometry is reasonable: {self.reasonable_geometry}')
 
         else:
             self.reasonable_geometry = False
