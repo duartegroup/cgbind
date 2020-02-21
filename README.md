@@ -3,12 +3,11 @@
 ### *C*a*g*e*Bind*ing: A tool to for automated metallocage binding affinity calculations
 ***
 
-**cgbind** automates the process of generating M2L4 metallocage structures
+**cgbind** automates the process of generating metallocage structures
 from just SMILES strings of the corresponding linker (_L_). Binding affinity
 calculations may also be evaluated via input of both linker and substrate
-SMILES, provided an installation of ORCA or XTB is available. A graphical
-user interface (GUI) in _alpha_ is currently available at
-[cgbind.com](http://cgbind.com).
+SMILES. A graphical user interface (GUI) in _alpha_ is available at
+[cgbind.chem.ox.ac.uk](http://cgbind.chem.ox.ac.uk).
 
 ***
 
