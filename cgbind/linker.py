@@ -6,6 +6,7 @@ from multiprocessing import Pool
 from cgbind.molecule import Molecule
 from cgbind.architectures import archs
 from cgbind.atoms import heteroatoms
+from cgbind.atoms import get_max_valency
 from cgbind.geom import xyz2coord
 from cgbind.build import get_new_linker_and_cost
 from cgbind.templates import get_template
@@ -16,8 +17,51 @@ from cgbind.x_motifs import sort_x_motifs
 
 class Linker(Molecule):
 
+    def __eq__(self, other):
+        """
+        Linkers are the same if their SMILES strings are identical, otherwise very close centroids should serve as a
+        unique measure for linkers with identical (up to numerical precision) coordinates
+
+        :param other:
+        :return:
+        """
+
+        if self.smiles is not None:
+            return self.smiles == other.smiles
+
+        dist = np.linalg.norm(self.centroid - other.centroid)
+        return True if dist < 1E-9 else False
+
+    def __hash__(self):
+        return hash((self.name, self.smiles, self.charge, self.centroid[0]))
+
     def _find_possible_donor_atoms(self):
-        return [i for i in range(self.n_atoms) if self.xyzs[i][0] in heteroatoms]
+        """
+        For the atoms in the linker find all those capable of donating a 'lone pair' to a metal i.e. being a donor/
+        'X-atom'
+
+        :return: (list(int)) donor atoms
+        """
+        donor_atom_ids = []
+
+        for atom_id in range(self.n_atoms):
+            atom_label, _, _, _ = self.xyzs[atom_id]
+
+            if atom_label in heteroatoms:
+                max_valency = get_max_valency(atom_label=atom_label)
+                n_bonds = 0
+
+                for bond in self.bonds:
+                    if atom_id in bond:
+                        n_bonds += 1
+
+                # If the number of bonds is lower than the max valancy for that atom then there should be a lone pair
+                # and a donor atom has been found
+                if n_bonds < max_valency:
+                    donor_atom_ids.append(atom_id)
+
+        logger.info(f'Found {len(donor_atom_ids)} possible X atoms')
+        return donor_atom_ids
 
     def _strip_possible_x_motifs_on_connectivity(self):
         """
@@ -106,7 +150,7 @@ class Linker(Molecule):
         for i, x_motifs in enumerate(x_motifs_list):
 
             # Execute calculation to get cost of adding a particular conformation to the template in parallel
-            logger.info(f'Running with {Config.n_cores} cores. Iteration {i}/{len(x_motifs_list)}')
+            logger.info(f'Running with {Config.n_cores} cores. Iteration {i+1}/{len(x_motifs_list)}')
             with Pool(processes=Config.n_cores) as pool:
                 results = [pool.apply_async(get_new_linker_and_cost, (xyzs, self, x_motifs, template_linker))
                            for xyzs in self.conf_xyzs]
@@ -123,7 +167,7 @@ class Linker(Molecule):
 
         return linkers
 
-    def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=200, xyzs=None, use_etdg_confs=False):
+    def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=300, xyzs=None, use_etdg_confs=False):
         """
         Metallocage Linker. Inherits from cgbind.molecule.Molecule
 

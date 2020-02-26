@@ -110,6 +110,28 @@ metals_and_favored_heteroatoms = {
 }
 
 
+def get_max_valency(atom_label):
+
+    if atom_label in ['B', 'Al', 'Ga']:
+        return 4
+
+    elif atom_label in ['C', 'Si', 'Ge']:
+        return 4
+
+    elif atom_label in ['N', 'P', 'As']:
+        return 4
+
+    elif atom_label in ['O', 'S', 'Se']:
+        return 3
+
+    elif atom_label == 'F':
+        return 2
+
+    else:
+        logger.warning('Could not find a maximum valency, returning 4')
+        return 4
+
+
 def get_metal_favoured_heteroatoms(metal):
     """
     For a metal return the list of favoured donor atoms from most -> least favoured

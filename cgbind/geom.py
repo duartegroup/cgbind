@@ -71,7 +71,6 @@ def is_geom_reasonable(xyzs):
         logger.warning('There is a distance > 1000 Å. There is likely a problem with the geometry')
         return False
 
-    logger.info('Geometry is reasonable')
     return True
 
 

@@ -152,7 +152,7 @@ class Molecule(BaseStruct):
         :param use_etdg_confs: (bool) override the default conformer generation and use the ETDG algorithm
         :return:
         """
-        logger.info('Initialising a Molecule from a SMILES strings ')
+        logger.info('Initialising a Molecule from a SMILES string')
         try:
             self.mol_obj = Chem.MolFromSmiles(smiles)
             self.mol_obj = Chem.AddHs(self.mol_obj)
@@ -165,10 +165,13 @@ class Molecule(BaseStruct):
             logger.error('RDKit failed to generate mol objects')
             return
 
+        logger.info('Running conformation generation with RDKit... running')
         method = AllChem.ETKDGv2() if use_etdg_confs is False else AllChem.ETDG()
         method.pruneRmsThresh = 0.3
         method.numThreads = Config.n_cores
         conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=method))
+        logger.info('                                          ... done')
+
         try:
             self.volume = AllChem.ComputeMolVolume(self.mol_obj)
         except ValueError:
@@ -218,5 +221,6 @@ class Molecule(BaseStruct):
 
         if xyzs is not None:
             self.bonds = get_xyz_bond_list(xyzs=self.xyzs)
-        else:
+
+        if smiles is None and xyzs is None:
             logger.error('Failed to generate or set molecular xyzs. self.bonds is None')

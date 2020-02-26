@@ -177,14 +177,13 @@ def build_homoleptic_cage(cage, max_cost):
     """
 
     # Get the list of Linkers ordered by the best fit to the template
-    linker_conf_list = cage.linkers[0].get_ranked_linker_conformers(metal=cage.metal)
-    logger.info(f'Have {len(linker_conf_list)} conformers to fit')
+    ranked_linkers = cage.linkers[0].get_ranked_linker_conformers(metal=cage.metal)
+    logger.info(f'Have {len(ranked_linkers)} conformers to fit')
 
     min_cost, best_linker = 99999999.9, None
     xyzs = []
 
-    # TODO: Parallelise
-    for linker in linker_conf_list:
+    for linker in ranked_linkers:
         cage_cost = 0.0
 
         for i, template_linker in enumerate(cage.cage_template.linkers):
@@ -221,6 +220,38 @@ def build_homoleptic_cage(cage, max_cost):
     for i, template_linker in enumerate(cage.cage_template.linkers):
         linker_xyzs, _ = get_linker_xyzs_to_add_and_cost(best_linker, template_linker, curr_xyzs=xyzs)
         xyzs += linker_xyzs
+
+    # Add the metals from the template shifted by dr
+    for metal in cage.cage_template.metals:
+        metal_coord = cage.dr * metal.shift_vec / np.linalg.norm(metal.shift_vec) + metal.coord
+        xyzs.append([cage.metal] + metal_coord.tolist())
+
+    cage.set_xyzs(xyzs)
+    return None
+
+
+def build_heteroleptic_cage(cage, max_cost):
+    logger.info('Building a heteroleptic cage')
+    logger.warning('Due to the very large space that needs to be minimised only the *best* linker conformer is used')
+
+    added_linkers, xyzs = [], []
+
+    for i, linker in enumerate(cage.linkers):
+
+        ranked_linkers = linker.get_ranked_linker_conformers(metal=cage.metal)
+
+        for ranked_linker in ranked_linkers:
+            linker_xyzs, cost = get_linker_xyzs_to_add_and_cost(ranked_linker, cage.cage_template.linkers[i],
+                                                                curr_xyzs=xyzs)
+
+            if cost < max_cost:
+                logger.info(f'L-L repulsion + fit to template in building cage is {cost:.2f}')
+                cage.linkers[i] = ranked_linker
+                xyzs += linker_xyzs
+                break
+
+    logger.warning('Heteroleptic cages will have the average dr of all linkers - using the average')
+    cage.dr = np.average(np.array([linker.dr for linker in cage.linkers]))
 
     # Add the metals from the template shifted by dr
     for metal in cage.cage_template.metals:

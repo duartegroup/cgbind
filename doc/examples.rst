@@ -44,5 +44,5 @@ escape sphere (Å\ :sup:`3`) as a window size probe
 
 To check all the current methods available
 
-    >>> methods = [method for method in dir(cage) if callable(getattr(cgbind.Cage, method))]
+    >>> methods = [method for method in dir(cgbind.Cage) if callable(getattr(cgbind.Cage, method))]
     >>> print(methods)

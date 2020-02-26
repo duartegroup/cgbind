@@ -37,4 +37,4 @@ for filename in os.listdir(folder_path):
                           n_metals=template.n_metals,
                           n_linkers=template.n_linkers))
 
-logger.info(f'Have {len(archs)} architectures')
+logger.info(f'Have {len(archs)} architectures: {[arch.name for arch in archs]}')

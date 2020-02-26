@@ -4,9 +4,9 @@ from scipy.optimize import basinhopping, minimize
 from cgbind.molecule import BaseStruct
 from cgbind.calculations import get_charges
 from cgbind.build import build_homoleptic_cage
+from cgbind.build import build_heteroleptic_cage
 from cgbind.log import logger
 from cgbind.atoms import get_vdw_radii
-from cgbind.geom import is_geom_reasonable
 from cgbind.geom import xyz2coord
 from cgbind.geom import spherical_to_cart
 from cgbind.esp import get_esp_cube_lines
@@ -280,11 +280,10 @@ class Cage(BaseStruct):
 
         self.name = 'cage_' + linker.name
         self.arch = linker.arch
-        self.dr = linker.dr
         self.linkers = [linker for _ in range(linker.arch.n_linkers)]
         self.cage_template = linker.cage_template
 
-        return
+        return None
 
     def _init_heteroleptic_cage(self, linkers):
         logger.info(f'Initialising a heteroleptic cage')
@@ -303,11 +302,9 @@ class Cage(BaseStruct):
         self.linkers = linkers
         self.cage_template = linkers[0].cage_template
 
-        logger.warning('Heteroleptic cages will have the average dr of all linkers')
+        return None
 
-        return
-
-    def _build(self, max_cost=10):
+    def _build(self, max_cost):
         logger.info('Building a cage geometry')
         assert self.homoleptic or self.heteroleptic
 
@@ -315,8 +312,7 @@ class Cage(BaseStruct):
             build_homoleptic_cage(self, max_cost)
 
         if self.heteroleptic:
-            logger.critical('NOT IMPLEMENTED YET')
-            exit()
+            build_heteroleptic_cage(self, max_cost)
 
         if self.reasonable_geometry:
             if len(self.xyzs) != self.arch.n_metals + np.sum(np.array([linker.n_atoms for linker in self.linkers])):
@@ -326,7 +322,7 @@ class Cage(BaseStruct):
 
         return None
 
-    def __init__(self, linker=None, metal='M', metal_charge=0, linkers=None, solvent=None, mult=1, name='cage'):
+    def __init__(self, linker=None, metal='M', metal_charge=0, linkers=None, solvent=None, mult=1, name='cage', max_cost=3):
         """
         Metallocage object. Inherits from cgbind.molecule.BaseStruct
 
@@ -345,6 +341,7 @@ class Cage(BaseStruct):
         :param metal: (str) Atomic symbol of the metal
         :param metal_charge: (int) Formal charge on the metal atom/ion
         :param mult: (int) Total spin multiplicity of the cage
+        :param max_cost: (float) Acceptable ligand-ligand repulsion to accommodate in metallocage construction
         """
         super(Cage, self).__init__(name=name, charge=0, mult=mult, xyzs=None, solvent=solvent)
 
@@ -379,7 +376,7 @@ class Cage(BaseStruct):
         self._calc_charge()
 
         self.reasonable_geometry = False
-        self._build()
+        self._build(max_cost=max_cost)
 
         self.m_ids = self.get_metal_atom_ids()
-        logger.info(f'Generated cage sucsessfully. Geometry is reasonable {self.reasonable_geometry}')
+        logger.info(f'Generated cage successfully. Geometry is reasonable: {self.reasonable_geometry}')
