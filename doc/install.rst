@@ -14,7 +14,7 @@ To install ``cgbind`` inside a conda environment first close the repository and 
     $ git clone https://github.com/duartegroup/cgbind.git
     $ cd cgbind
 
-then create and activate the virtual environment with the appropriate dependencies::
+then create and activate a virtual environment with the appropriate dependencies::
 
     $ conda config --append channels conda-forge
     $ conda create -n cgbind_env --file requirements.txt

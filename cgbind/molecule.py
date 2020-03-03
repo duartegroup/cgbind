@@ -3,6 +3,7 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem import rdPartialCharges
 from cgbind.log import logger
+from cgbind.geom import xyz2coord
 from cgbind.geom import is_geom_reasonable
 from cgbind.config import Config
 from cgbind.input_output import xyzs2xyzfile
@@ -54,6 +55,9 @@ class BaseStruct:
         """
         return calculations.optimise(self, method, keywords, n_cores, max_core_mb, cartesian_constraints)
 
+    def set_com(self):
+        self.com = calc_com(self.xyzs)
+
     def set_xyzs(self, xyzs):
         """
         Set the xyzs of a molecular structure
@@ -74,6 +78,8 @@ class BaseStruct:
 
             self.xyzs = xyzs
             self.n_atoms = len(xyzs)
+            self.coords = xyz2coord(self.xyzs)
+            self.set_com()
 
             logger.info('Successfully set xyzs and n_atoms')
 
@@ -101,6 +107,8 @@ class BaseStruct:
 
         self.n_atoms = None                                                 #: (int) Number of atoms
         self.xyzs = None                                                    #: (list(list)) Geometry of the structure
+        self.coords = None                                                  #: (np.ndarray) Coordinates, no atoms labels
+        self.com = None                                                     #: (np.ndarray) Center of mass (x, y, z)
         self.set_xyzs(xyzs)
 
         self.solvent = str(solvent) if solvent is not None else None        #: (str) Name of the solvent
@@ -113,9 +121,6 @@ class BaseStruct:
 
 
 class Molecule(BaseStruct):
-
-    def set_com(self):
-        self.com = calc_com(self.xyzs)
 
     def get_charges(self, estimate=False, guess=False):
         """
@@ -206,7 +211,6 @@ class Molecule(BaseStruct):
         self.n_confs = n_confs                                      #: (int) Number of conformers initialised with
 
         self.mol_obj = None                                         #: (RDKit.mol object)
-        self.com = None                                             #: (np.ndarray) Center of mass (x, y, z)
 
         self.n_rot_bonds = None                                     #: (int) Number of rotatable bonds
         self.n_h_donors = None                                      #: (int) Number of H-bond donors

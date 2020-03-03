@@ -94,7 +94,7 @@ def find_x_motifs(linker, all_possibilities=False):
     """
 
     def centroid_atom_distance(atom_i):
-        return np.linalg.norm(linker.coords[atom_i] - linker.centroid)
+        return np.linalg.norm(linker.coords[atom_i] - linker.com)
 
     x_motifs = []
 

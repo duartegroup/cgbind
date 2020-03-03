@@ -6,10 +6,8 @@ from cgbind.x_motifs import Xmotif
 
 def test_get_fitted_linker_coords():
 
-    l = Linker(arch_name='m2l4')
-
     # Generate a fictitious linker structure with two donor atoms..
-    l.xyzs = [['N', 0.0, 0.0, 0.0], ['C', 5.0, 0.0, 0.0], ['N', 10.0, 0.0, 0.0]]
+    l = Linker(arch_name='m2l4', xyzs=[['N', 0.0, 0.0, 0.0], ['C', 5.0, 0.0, 0.0], ['N', 10.0, 0.0, 0.0]])
 
     l.x_motifs = [Xmotif(atom_ids=[0], coords=[np.array([0.0, 0.0, 0.0])]),
                   Xmotif(atom_ids=[2], coords=[np.array([10.0, 0.0, 0.0])])]

@@ -5,9 +5,9 @@ from cgbind.config import Config
 from multiprocessing import Pool
 from cgbind.molecule import Molecule
 from cgbind.architectures import archs
+from cgbind.exceptions import *
 from cgbind.atoms import heteroatoms
 from cgbind.atoms import get_max_valency
-from cgbind.geom import xyz2coord
 from cgbind.build import get_new_linker_and_cost
 from cgbind.templates import get_template
 from cgbind.x_motifs import find_x_motifs
@@ -22,18 +22,18 @@ class Linker(Molecule):
         Linkers are the same if their SMILES strings are identical, otherwise very close centroids should serve as a
         unique measure for linkers with identical (up to numerical precision) coordinates
 
-        :param other:
+        :param other: (Linker)
         :return:
         """
 
         if self.smiles is not None:
             return self.smiles == other.smiles
 
-        dist = np.linalg.norm(self.centroid - other.centroid)
+        dist = np.linalg.norm(self.com - other.centroid)
         return True if dist < 1E-9 else False
 
     def __hash__(self):
-        return hash((self.name, self.smiles, self.charge, self.centroid[0]))
+        return hash((self.name, self.smiles, self.charge, self.com[0]))
 
     def _find_possible_donor_atoms(self):
         """
@@ -69,17 +69,29 @@ class Linker(Molecule):
         :return: (list) new list of x motifs
         """
         logger.info('Stripping x motifs from liker based on the n atoms in each must = template')
-        return [x_motif for x_motif in self.x_motifs
-                if x_motif.n_atoms == self.cage_template.linkers[0].x_motifs[0].n_atoms]
+        self.x_motifs = [x_motif for x_motif in self.x_motifs
+                         if x_motif.n_atoms == self.cage_template.linkers[0].x_motifs[0].n_atoms]
+        return None
 
     def _set_arch(self, arch_name):
 
         for arch in archs:
             if arch_name.lower() == arch.name.lower():
                 self.arch = arch
+
+        if self.arch is None:
+            raise ArchitectureNotFound(message=f'\nAvailable architecture names are {[arch.name for arch in archs]}')
+
         return None
 
-    def is_planar(self):
+    def _check_structure(self):
+        if self.xyzs is None:
+            logger.error('Could get xyzs for linker')
+            raise NoXYZs
+
+        return None
+
+    def is_planar(self, ssd_threshold=1):
         """
         Determine if the linker is planar
 
@@ -114,7 +126,7 @@ class Linker(Molecule):
         rel_sum_dist = sum_dist / self.n_atoms
         logger.info(f'Relative sum of distances was {rel_sum_dist}')
 
-        if np.abs(rel_sum_dist) > 1:
+        if np.abs(rel_sum_dist) > ssd_threshold:
             logger.info('Sum of signed plane-coord distances was highly != 0. Linker is probably not planar')
             return False
 
@@ -151,11 +163,16 @@ class Linker(Molecule):
 
             # Execute calculation to get cost of adding a particular conformation to the template in parallel
             logger.info(f'Running with {Config.n_cores} cores. Iteration {i+1}/{len(x_motifs_list)}')
+            logger.disabled = True
+
             with Pool(processes=Config.n_cores) as pool:
                 results = [pool.apply_async(get_new_linker_and_cost, (xyzs, self, x_motifs, template_linker))
                            for xyzs in self.conf_xyzs]
 
                 linkers_and_cost_tuples = [res.get(timeout=None) for res in results]
+
+            # Renable the logging that would otherwise dominate with lots of conformers and/or Xmotifs
+            logger.disabled = False
 
             linkers_and_cost = {}
             for (linker, cost) in linkers_and_cost_tuples:
@@ -179,35 +196,24 @@ class Linker(Molecule):
         :param xyzs: (list(list))
         :param use_etdg_confs: (bool) Use a different, sometimes better, conformer generation algorithm
         """
-
-        logger.info('Initialising a Linker object for {}'.format(name))
+        logger.info(f'Initialising a Linker object for {name}')
         initalised_with_xyzs = True if xyzs is not None else False
-
-        super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, xyzs=xyzs,
-                                     use_etdg_confs=use_etdg_confs)
 
         self.arch = None                                                      #: (Arch object) Metallocage architecture
         self._set_arch(arch_name)
 
-        if self.arch is None:
-            logger.error(f'Not a valid architecture. Valid are {[arch.name for arch in archs]}')
-            return
+        super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, xyzs=xyzs,
+                                     use_etdg_confs=use_etdg_confs)
 
-        if self.xyzs is None:
-            logger.error('Could get xyzs for linker')
-            return
-
+        self._check_structure()
         self.cage_template = get_template(arch_name=arch_name)                #: (Template object) Metallocage template
-
-        self.coords = xyz2coord(self.xyzs)                                    #: (list(np.ndarray)) Linker coordinates
-        self.centroid = np.average(self.coords, axis=0)                       #: (np.ndarray) Linker centroid ~ COM
 
         self.x_atoms = self._find_possible_donor_atoms()                      #: (list(int)) List of donor atom ids
         self.x_motifs = find_x_motifs(self, all_possibilities=True)           #: (list(Xmotif object))
         check_x_motifs(self, linker_template=self.cage_template.linkers[0])
-        self.x_motifs = self._strip_possible_x_motifs_on_connectivity()
+        self._strip_possible_x_motifs_on_connectivity()
         self.dr = None                                                        #: (float) Template shift distance
 
-        # If the linker has been initialised from xyzs then set conf_xyzs as the xyzs
+        # If the linker has been initialised from xyzs then set conf_xyzs as a list containing only the xyzs
         if initalised_with_xyzs:
             self.conf_xyzs = [self.xyzs]

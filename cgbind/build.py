@@ -159,9 +159,7 @@ def get_new_linker_and_cost(linker_xyzs, linker, x_motifs, template_linker):
     # Set attributes of the new linker
     new_linker = deepcopy(linker)
     new_linker.dr = min_result.x[0]
-    new_linker.xyzs = linker_xyzs
-    new_linker.coords = coords
-    new_linker.centroid = np.average(new_linker.coords, axis=0)
+    new_linker.set_xyzs(linker_xyzs)
     new_linker.x_motifs = x_motifs
 
     return new_linker, min_result.fun
