@@ -4,7 +4,7 @@
 Classes
 *******
 
-.. automodule:: cgbind.Linker
+.. autoclass:: cgbind.Linker
 
 .. autoclass:: cgbind.Cage
 

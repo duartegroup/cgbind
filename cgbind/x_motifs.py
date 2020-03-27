@@ -1,5 +1,7 @@
 import numpy as np
+import itertools
 from copy import deepcopy
+from cgbind.exceptions import CgbindCritical
 from cgbind.log import logger
 from cgbind.atoms import get_metal_favoured_heteroatoms
 
@@ -62,7 +64,7 @@ def get_shifted_template_x_motif_coords(linker_template, dr):
             coord += dr * motif.norm_shift_vec
             shifted_coords.append(coord)
 
-    return shifted_coords
+    return np.array(shifted_coords)
 
 
 def check_x_motifs(linker=None, linker_template=None):
@@ -80,15 +82,23 @@ def check_x_motifs(linker=None, linker_template=None):
         linker.x_motifs = [motif for motif in linker.x_motifs if motif.n_atoms == linker_template.x_motifs[0].n_atoms]
         logger.info(f'Now have {len(linker.x_motifs)} motifs in the linker')
 
+    if len(linker.x_motifs) == 0:
+        raise CgbindCritical(message='Have 0 Xmotifs – cannot build a cage. Is the template correct?')
+
     if len(linker.x_motifs) > 0:
         logger.info(f'Number of atoms in the x motifs is {linker.x_motifs[0].n_atoms}')
     return None
 
 
-def find_x_motifs(linker, all_possibilities=False):
+def powerset(s):
+    """[0, 1, 2] -> [(0, 1), (1, 2) (0, 2), (0, 1 2)]"""
+    return itertools.chain.from_iterable(itertools.combinations(s, r) for r in range(2, len(s)+1))
+
+
+def find_x_motifs(linker):
     """
-    Find the X motifs in a structure which correspond to the X atoms and their nearest neighbours. These motifs will
-    be searched in a linker object and the RMSD minimised
+    Find the X motifs in a structure which correspond to the X atoms and their nearest neighbours. These may be joined
+    if they are bonded
 
     :return: (list(list(int)))
     """
@@ -112,55 +122,83 @@ def find_x_motifs(linker, all_possibilities=False):
         x_motif.append(donor_atom)
         x_motifs.append(x_motif)
 
-    # Combine x_motifs that are bonded, thus should be considered a single motif
-    bonded_x_motif_sets = []
+    # Get all the combinations of x motifs with length > 2 up to the total number of x_motifs
+    x_motif_combinations = powerset(s=deepcopy(x_motifs))
 
-    for n, x_motif_i in enumerate(x_motifs):
-        bonded_x_motif = x_motif_i.copy()
+    logger.info(f'Have {len(list(powerset(s=deepcopy(x_motifs))))} groups of X motifs to determine if they are bonded')
+    for i, x_motif_group in enumerate(x_motif_combinations):
+        logger.info(f'Determining if all {len(x_motif_group)} x motifs in this group are bonded')
 
-        # Loop over all other motifs that are not the same
-        for m, x_motifs_j in enumerate(x_motifs):
-            if n != m:
+        inter_x_motif_bonds = 0
+        bonded = False
 
-                for (i, j) in linker.bonds:
-                    # Check that there is a bond between x_motif i and x_motif j
-                    if (i in bonded_x_motif and j in x_motifs_j) or (j in bonded_x_motif and i in x_motifs_j):
-                        bonded_x_motif += x_motifs_j
+        for (x_motif_i, x_motif_j) in itertools.combinations(x_motif_group, 2):
+            for atom_index_i in x_motif_i:
+                for atom_index_j in x_motif_j:
+                    if (atom_index_i, atom_index_j) in linker.bonds or (atom_index_j, atom_index_i) in linker.bonds:
+
+                        # If atoms i and j are bonded then we can have this x motif
+                        bonded = True
                         break
 
-        bonded_x_motif_sets.append(set(bonded_x_motif))
+                if bonded:
+                    break
 
-    if all_possibilities:
-        bonded_x_motif_sets += [set(x_motif) for x_motif in x_motifs]
+            if bonded:
+                inter_x_motif_bonds += 1
 
-    # Add the largest set to the bonded_x_motifs as a list. Some motifs will be missed due to the oder in which
-    # they're added
+        # All x motifs in the group need to be bonded to each other, with the n. bonds -1 e.g. 3 Xmotifs need 2 bonds
+        if inter_x_motif_bonds == len(x_motif_group) - 1:
 
-    largest_unique_bonded_x_motif_sets = []
-    # Sort the sets according to size, then don't add identical sets or subsets
-    for x_motif in reversed(sorted(bonded_x_motif_sets, key=len)):
+            # Construct the set of all atoms in the bonded Xmotif (set so no repeated atoms)
+            bonded_x_motif = []
+            for x_motif in x_motif_group:
+                bonded_x_motif += list(x_motif)
 
-        unique = True
-        for unique_x_motif in largest_unique_bonded_x_motif_sets:
+            x_motifs.append(list(set(bonded_x_motif)))
 
-            # If the motif is already in the unique list then don't append, nor if the motif is a subset
-            if x_motif == unique_x_motif or (x_motif.issubset(unique_x_motif) and not all_possibilities):
-                unique = False
-                break
-
-        if unique:
-            largest_unique_bonded_x_motif_sets.append(x_motif)
-
-    logger.info(f'Found {len(largest_unique_bonded_x_motif_sets)} X motifs in the linker')
+    logger.info(f'Found {len(x_motifs)} X motifs in the linker, with {set([len(x) for x in x_motifs])} atoms')
 
     # Order the x_motifs according to the centroid – coord distance: smallest -> largest
     sorted_x_motifs_ids = [sorted(list(x_motif), key=centroid_atom_distance)
-                           for x_motif in largest_unique_bonded_x_motif_sets]
+                           for x_motif in x_motifs]
 
     return [Xmotif(atom_ids=motif, coords=[linker.coords[i] for i in motif]) for motif in sorted_x_motifs_ids]
 
 
+def get_maximally_connected_x_motifs(x_motifs, x_atoms):
+    """
+    Given a list of Xmotifs find those that are maximally connected, i.e. the ones that contain all the donor atoms
+    but also are the largest in size
+
+    :param x_motifs: (list(cgbind.x_motifs.Xmotif)
+    :param x_atoms: (list(int))
+    :return:
+    """
+
+    #                      X motif lengths sorted from high to low
+    for x_motif_length in reversed(sorted(set([len(x) for x in x_motifs]))):
+
+        new_x_motifs = [x for x in x_motifs if len(x) == x_motif_length]
+
+        # Add all the atom ids of the xmotifs to a single list
+        x_motifs_atoms = []
+        for x_motif in new_x_motifs:
+            x_motifs_atoms += x_motif.atom_ids
+
+        # All the donor (X) atoms need to be in the full list
+        if all(x_atom in x_motifs_atoms for x_atom in x_atoms):
+            logger.info(f'Returning {len(new_x_motifs)} Xmotifs each with {len(new_x_motifs[0])} atoms')
+            return new_x_motifs
+
+    logger.critical('Could not find a set of x motifs of the same length with all the donor atoms')
+    raise CgbindCritical
+
+
 class Xmotif:
+
+    def __len__(self):
+        return len(self.atom_ids)
 
     def __init__(self, atom_ids, coords):
         """

@@ -6,3 +6,9 @@ class ArchitectureNotFound(Exception):
 
 class NoXYZs(Exception):
     """Exception for a molecule that had no 3D coordinates (xyzs)"""
+
+
+class CgbindCritical(Exception):
+    """Non recoverable error"""
+    def __init__(self, message):
+        super().__init__(message)
