@@ -55,7 +55,7 @@ def test_init_cage():
     os.remove('cage_tmp.xyz')
 
     assert c.get_metal_atom_ids() == [144, 145]
-    assert 122 < c.get_cavity_vol() < 124       # Å^3
+    assert 122 < c.get_cavity_vol() < 130       # Å^3
     assert 11.5 < c.get_m_m_dist() < 12.5       # Å
 
     # The below are none as the structure is not initialised with SMILES string, thus there are no RDKit objects
