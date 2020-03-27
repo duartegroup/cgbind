@@ -209,7 +209,7 @@ class Linker(Molecule):
         self.cage_template = get_template(arch_name=arch_name)                #: (Template object) Metallocage template
 
         self.x_atoms = self._find_possible_donor_atoms()                      #: (list(int)) List of donor atom ids
-        self.x_motifs = find_x_motifs(self, all_possibilities=True)           #: (list(Xmotif object))
+        self.x_motifs = find_x_motifs(self)                                   #: (list(Xmotif object))
         check_x_motifs(self, linker_template=self.cage_template.linkers[0])
         self._strip_possible_x_motifs_on_connectivity()
         self.dr = None                                                        #: (float) Template shift distance

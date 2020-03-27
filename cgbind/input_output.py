@@ -1,6 +1,7 @@
 import os
 from datetime import date
 from cgbind.log import logger
+from cgbind.exceptions import FileMalformatted
 
 
 def xyzs2xyzfile(xyzs, filename=None, basename=None, title_line=''):
@@ -64,7 +65,57 @@ def xyzfile2xyzs(filename):
 
     if len(xyzs) == 0:
         logger.error(f'Could not read xyz lines in {filename}')
-        return None
+        raise FileMalformatted
+
+    return xyzs
+
+
+def molfile2xyzs(filename):
+    """
+    Convert a .mol file to a list of xyzs
+
+    e.g. for methane:
+    _____________________
+
+     OpenBabel03272015013D
+
+      5  4  0  0  0  0  0  0  0  0999 V2000
+       -0.2783    0.0756    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+        0.7917    0.0756    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+       -0.6349   -0.9294   -0.0876 H   0  0  0  0  0  0  0  0  0  0  0  0
+       -0.6349    0.6539   -0.8266 H   0  0  0  0  0  0  0  0  0  0  0  0
+       -0.6349    0.5022    0.9141 H   0  0  0  0  0  0  0  0  0  0  0  0
+      1  2  1  0  0  0  0
+      1  3  1  0  0  0  0
+      1  4  1  0  0  0  0
+      1  5  1  0  0  0  0
+    M  END
+    _____________________
+
+    :param filename: (str)
+    :return: (list(list))
+    """
+    xyzs = []
+
+    if not (os.path.exists(filename) and filename.endswith('.mol')):
+        logger.error('Could not read .mol file')
+        raise FileMalformatted
+
+    with open(filename, 'r') as mol_file:
+        mol_lines = mol_file.readlines()[3:]
+        try:
+            n_atoms = int(mol_lines[0].split()[0])
+
+        except ValueError:
+            raise FileMalformatted
+
+        for line in mol_lines[1:n_atoms+1]:
+            x, y, z, atom_label = line.split()[:4]
+            xyzs.append([atom_label, float(x), float(y), float(z)])
+
+    if len(xyzs) == 0:
+        logger.error(f'Could not read xyz lines in {filename}')
+        raise FileMalformatted
 
     return xyzs
 
@@ -78,11 +129,11 @@ def mol2file2xyzs(filename):
     """
     logger.info('Converting .mol2 file to xyzs')
 
-    try:
-        mol_file_lines = open(filename, 'r').readlines()
-    except IOError:
-        logger.error('.mol2 file does not exist')
-        return
+    if not (os.path.exists(filename) and filename.endswith('.mol2')):
+        logger.error('Could not read .mol2 file')
+        raise FileMalformatted
+
+    mol_file_lines = open(filename, 'r').readlines()
 
     # Get the unformatted xyzs from the .mol2 file. The atom labels will not be standard
     unformat_xyzs, xyz_block = [], False
@@ -98,9 +149,11 @@ def mol2file2xyzs(filename):
                     unformat_xyzs.append([atom_label, float(x), float(y), float(z)])
                 except TypeError:
                     logger.error('There was a problem with the .mol2 file')
-                    return
+                    raise FileMalformatted
+
             except IndexError:
                 logger.error('There was a problem with the .mol2 file')
+                raise FileMalformatted
 
         # e.g.   @<TRIPOS>ATOM
         #        1 Pd1     -2.1334  12.0093  11.5778   Pd        1 RES1   2.0000
@@ -111,8 +164,11 @@ def mol2file2xyzs(filename):
     for xyz_line in unformat_xyzs:
         atom_label = xyz_line[0]
 
+        if len(atom_label) == 1:
+            xyzs.append([atom_label] + xyz_line[1:])
+
         # e.g. Pd1 or C58
-        if atom_label[0].isalpha() and not atom_label[1].isalpha():
+        elif atom_label[0].isalpha() and not atom_label[1].isalpha():
             xyzs.append([atom_label[0]] + xyz_line[1:])
 
         # e.g. Pd10
