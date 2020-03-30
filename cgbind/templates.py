@@ -5,9 +5,11 @@ import pickle
 import os
 from cgbind.input_output import mol2file2xyzs
 from autode.bond_lengths import get_xyz_bond_list
+from cgbind.geom import calc_com
 from cgbind.atoms import metals
 from cgbind.geom import xyz2coord
 from cgbind.x_motifs import find_x_motifs
+from cgbind.x_motifs import get_maximally_connected_x_motifs
 from cgbind.x_motifs import check_x_motifs
 
 
@@ -98,9 +100,10 @@ class Linker:
         self.x_atoms = x_atoms                                 #: (list(int)) List of donor atoms in the linker
         self.coords = xyz2coord(xyzs)                          #: (list(np.ndarray)) Linker coordinates
         self.bonds = get_xyz_bond_list(xyzs=self.xyzs)         #: (list(tuple))
-        self.centroid = np.average(self.coords, axis=0)        #: (np.ndarray)
+        self.com = calc_com(xyzs=xyzs)                         #: (np.ndarray)
 
         self.x_motifs = find_x_motifs(self)                    #: (list(Xmotif objects)
+        self.x_motifs = get_maximally_connected_x_motifs(self.x_motifs, x_atoms=x_atoms)
         check_x_motifs(linker_template=self)            # check that the x_motifs are the same length
 
 
