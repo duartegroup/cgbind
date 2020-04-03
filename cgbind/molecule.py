@@ -16,17 +16,17 @@ from cgbind import calculations
 
 class BaseStruct:
 
-    def print_xyzfile(self, force=False):
+    def print_xyzfile(self):
         """
         Print a .xyz file from self.xyzs provided self.reasonable_geometry is True
 
         :param force: (bool) Force the printing of the .xyz if self.reasonable_geometry is False
         :return: None
         """
+        if not self.reasonable_geometry:
+            print('WARNING: Geometry is not reasonable')
 
-        if self.reasonable_geometry or force:
-            xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
-
+        xyzs2xyzfile(xyzs=self.xyzs, basename=self.name)
         return None
 
     def singlepoint(self, method, keywords=None, n_cores=1, max_core_mb=1000):

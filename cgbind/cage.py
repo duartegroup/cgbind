@@ -90,10 +90,13 @@ class Cage(BaseStruct):
         """
         if estimate or guess:
 
-            charges = [self.metal_charge] * self.arch.n_metals
+            charges = []
             for linker in self.linkers:
                 linker_charges = linker.get_charges(estimate=estimate, guess=guess)
                 charges += linker_charges
+
+            # Metals are added last
+            charges += [self.metal_charge] * self.arch.n_metals
 
             return charges
 
@@ -198,6 +201,7 @@ class Cage(BaseStruct):
         """
         try:
             return sum([linker.n_h_donors for linker in self.linkers])
+
         except TypeError:
             return None
 
@@ -208,7 +212,10 @@ class Cage(BaseStruct):
         :return: (int)
         """
         try:
-            return sum([linker.n_h_acceptors for linker in self.linkers])
+            print(self.linkers[0].x_atoms)
+            n_donor_atoms = sum([len(linker.x_atoms) for linker in self.linkers])
+
+            return max(sum([linker.n_h_acceptors for linker in self.linkers]) - n_donor_atoms, 0)
         except TypeError:
             return None
 
@@ -322,7 +329,7 @@ class Cage(BaseStruct):
 
         return None
 
-    def __init__(self, linker=None, metal='M', metal_charge=0, linkers=None, solvent=None, mult=1, name='cage', max_cost=3):
+    def __init__(self, linker=None, metal='M', metal_charge=0, linkers=None, solvent=None, mult=1, name='cage', max_cost=5):
         """
         Metallocage object. Inherits from cgbind.molecule.BaseStruct
 

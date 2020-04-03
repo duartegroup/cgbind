@@ -2,8 +2,8 @@ from setuptools import setup
 from Cython.Build import cythonize
 from setuptools.extension import Extension
 
-extensions = [Extension('esp_gen',
-                        ['cgbind/ext/esp_gen.pyx'])]
+extensions = [Extension('esp_gen', ['cgbind/ext/esp_gen.pyx'])]
+
 
 setup(
     name='cgbind',

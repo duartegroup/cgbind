@@ -128,8 +128,8 @@ def get_max_valency(atom_label):
         return 2
 
     else:
-        logger.warning('Could not find a maximum valency, returning 4')
-        return 4
+        logger.warning('Could not find a maximum valency, returning 6')
+        return 6
 
 
 def get_metal_favoured_heteroatoms(metal):

@@ -71,6 +71,10 @@ class Linker(Molecule):
         logger.info('Stripping x motifs from liker based on the n atoms in each must = template')
         self.x_motifs = [x_motif for x_motif in self.x_motifs
                          if x_motif.n_atoms == self.cage_template.linkers[0].x_motifs[0].n_atoms]
+
+        logger.info(f'Current number of donor atoms = {len(self.x_motifs)}')
+        self.x_atoms = [atom_id for x_motif in self.x_motifs for atom_id in x_motif.atom_ids if atom_id in self.x_atoms]
+        logger.info(f'New number of donor atoms = {len(self.x_motifs)}')
         return None
 
     def _set_arch(self, arch_name):
@@ -134,7 +138,7 @@ class Linker(Molecule):
             logger.info('Linker is planar')
             return True
 
-    def get_ranked_linker_conformers(self, metal=None):
+    def get_ranked_linker_conformers(self, metal=None, n=0):
         """
         For this linker, return a list of Linker objects with appropriate .xyzs, .dr and .x_motifs attributes ordered
         by their cost function low -> high i.e. good to bad. This will loop through all the conformers and the possible
@@ -148,7 +152,7 @@ class Linker(Molecule):
 
         linkers = []
 
-        template_linker = self.cage_template.linkers[0]
+        template_linker = self.cage_template.linkers[n]
         n_x_motifs_in_linker = len(template_linker.x_motifs)
 
         # For all the possible combinations of x_motifs minimise the SSD between the x_motifs and the template

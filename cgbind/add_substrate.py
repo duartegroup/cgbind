@@ -65,7 +65,6 @@ def cage_subst_repulsion_and_electrostatic_func(cage, substrate, cage_coords, su
     :param subst_coords: (list(np.ndarray)) Substrate coordinates
     :return:
     """
-
     # Calculate the distance matrix in Bohr (a0) so the energies are in au
     dist_mat = Constants.ang2a0 * distance_matrix(cage_coords, subst_coords)
 
@@ -91,7 +90,7 @@ def add_substrate_com(cagesubt):
 
     :return: xyzs: (list(list))
     """
-    logger.info('Adding substrate to the cage COM and minimising the energy')
+    logger.info(f'Adding substrate to the cage COM and minimising the energy with {cagesubt.energy_func.__name__}')
 
     # Minimum energy initialisation and the x parameter array (angles to rotate about the x, y, z axes)
     min_energy, curr_x = 9999999999.9, np.zeros(3)
