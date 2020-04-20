@@ -7,9 +7,9 @@ from cgbind.cage import Cage
 from cgbind.substrate import Substrate
 from cgbind.cage_subt import CageSubstrateComplex
 from cgbind.templates import Template
-from autode.wrappers.MOPAC import MOPAC
-from autode.wrappers.ORCA import ORCA
-from autode.wrappers.XTB import XTB
+from autode.wrappers.MOPAC import mopac
+from autode.wrappers.ORCA import orca
+from autode.wrappers.XTB import xtb
 
 __version__ = '1.0.0'
 
@@ -23,7 +23,7 @@ __all__ = [
     'Cage',
     'Substrate',
     'CageSubstrateComplex',
-    'MOPAC',
-    'ORCA',
-    'XTB'
+    'mopac',
+    'orca',
+    'xtb'
     ]

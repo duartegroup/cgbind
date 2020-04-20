@@ -3,11 +3,10 @@ import networkx as nx
 import numpy as np
 import pickle
 import os
-from cgbind.input_output import mol2file2xyzs
-from autode.bond_lengths import get_xyz_bond_list
+from cgbind.input_output import mol2file_to_atoms
+from cgbind.bonds import get_bond_list_from_atoms
 from cgbind.geom import calc_com
 from cgbind.atoms import metals
-from cgbind.geom import xyz2coord
 from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import get_maximally_connected_x_motifs
 from cgbind.x_motifs import check_x_motifs
@@ -268,7 +267,7 @@ class Template:
 
         self.arch_name = arch_name
 
-        all_xyzs = mol2file2xyzs(filename=mol2_filename)
+        all_xyzs = mol2file_to_atoms(filename=mol2_filename)
         self.mols_xyzs = find_mols_in_xyzs(xyzs=all_xyzs)
         self.xyzs, self.metal_label = self._find_metallocage_mol()
 

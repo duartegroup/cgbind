@@ -1,4 +1,6 @@
 from cgbind.log import logger
+from autode.atoms import Atom
+import numpy as np
 
 heteroatoms = ['O', 'N', 'S', 'P', 'F', 'Cl']
 
@@ -110,21 +112,24 @@ metals_and_favored_heteroatoms = {
 }
 
 
-def get_max_valency(atom_label):
+def get_max_valency(atom):
 
-    if atom_label in ['B', 'Al', 'Ga']:
+    if atom.label in ['H', 'F']:
+        return 1
+
+    if atom.label in ['B', 'Al', 'Ga']:
         return 4
 
-    elif atom_label in ['C', 'Si', 'Ge']:
+    elif atom.label in ['C', 'Si', 'Ge']:
         return 4
 
-    elif atom_label in ['N', 'P', 'As']:
+    elif atom.label in ['N', 'P', 'As']:
         return 4
 
-    elif atom_label in ['O', 'S', 'Se']:
+    elif atom.label in ['O', 'S', 'Se']:
         return 3
 
-    elif atom_label == 'F':
+    elif atom.label == 'F':
         return 2
 
     else:
@@ -148,53 +153,51 @@ def get_metal_favoured_heteroatoms(metal):
         return heteroatoms
 
 
-def get_atomic_number(atom_label):
+def get_atomic_number(atom):
     """
     Get the atomic number of an atom given by its atomic symbol e.g. Kr --> 36
 
-    :param atom_label: (str) Atomic symbol
+    :param atom: (cgbind.atoms.Atom)
     :return: (int) Atomic number
     """
-    assert type(atom_label) == str
 
     try:
-        return atoms.index(atom_label) + 1
+        return atoms.index(atom.label) + 1
 
     except ValueError:
         logger.warning('Could not get atomic number. Returning 6..')
         return 6
 
 
-def get_atomic_mass(atom_label):
+def get_atomic_mass(atom):
     """
     Get the atomic mass in amu given the atomic symbol e.g. C --> 12.01
 
-    :param atom_label: (str) Atomic symbol
+    :param atom: (cgbind.atoms.Atom)
     :return: (int) Atomic number
     """
-    assert type(atom_label) == str
 
-    if atom_label in atomic_masses.keys():
-        atom_mass = atomic_masses[atom_label]
+    if atom.label in atomic_masses.keys():
+        atom_mass = atomic_masses[atom.label]
     else:
-        logger.error(f"Couldn't find the atomic mass for {atom_label}. Guessing at 10")
+        logger.error(f"Couldn't find the atomic mass for {atom.label}. Guessing at 10")
         atom_mass = 10
 
     return atom_mass
 
 
-def get_vdw_radii(atom_label):
+def get_vdw_radii(atom):
     """
     Get the van der Wall radii of an atom givne its atomic symbol e.g. Kr --> ~2 Å
 
-    :param atom_label: (str) Atomic symbol
+    :param atom: (cgbind.atoms.Atom)
     :return: (float) VdW radius in Å
     """
 
-    if atom_label in vdw_radii.keys():
-        vdv_radii = vdw_radii[atom_label]
+    if atom.label in vdw_radii.keys():
+        vdv_radii = vdw_radii[atom.label]
     else:
-        logger.error(f"Couldn't find the VdV radii for {atom_label}. Guessing at 1.5")
+        logger.error(f"Couldn't find the VdV radii for {atom.label}. Guessing at 1.5")
         vdv_radii = 1.5
 
     return vdv_radii

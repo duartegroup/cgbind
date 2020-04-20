@@ -29,9 +29,9 @@ def sort_x_motifs(x_motifs_list, linker, metal):
 
         for x_motif in x_motifs:
             for atom_id in x_motif.atom_ids:
-                atom = linker.xyzs[atom_id][0]  # Atomic symbol
-                if atom in fav_x_atoms:
-                    cost += fav_x_atoms.index(atom)
+                atom_label = linker.atoms[atom_id].label
+                if atom_label in fav_x_atoms:
+                    cost += fav_x_atoms.index(atom_label)
 
         x_motifs_list_and_cost[x_motifs] = cost
 
@@ -104,7 +104,7 @@ def find_x_motifs(linker):
     """
 
     def centroid_atom_distance(atom_i):
-        return np.linalg.norm(linker.coords[atom_i] - linker.com)
+        return np.linalg.norm(linker.atoms[atom_i].coord - linker.com)
 
     x_motifs = []
 
@@ -163,7 +163,7 @@ def find_x_motifs(linker):
     sorted_x_motifs_ids = [sorted(list(x_motif), key=centroid_atom_distance)
                            for x_motif in x_motifs]
 
-    return [Xmotif(atom_ids=motif, coords=[linker.coords[i] for i in motif]) for motif in sorted_x_motifs_ids]
+    return [Xmotif(atom_ids=motif, coords=[linker.atoms[i].coord for i in motif]) for motif in sorted_x_motifs_ids]
 
 
 def get_maximally_connected_x_motifs(x_motifs, x_atoms):

@@ -7,7 +7,6 @@ from cgbind.build import build_homoleptic_cage
 from cgbind.build import build_heteroleptic_cage
 from cgbind.log import logger
 from cgbind.atoms import get_vdw_radii
-from cgbind.geom import xyz2coord
 from cgbind.geom import spherical_to_cart
 from cgbind.esp import get_esp_cube_lines
 
@@ -41,7 +40,7 @@ class Cage(BaseStruct):
         :return: (np.ndarray) Centroid coordinate (x, y, z)
         """
 
-        metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal in xyz]
+        metal_coords = np.array([atom.coord for atom in self.atoms if self.metal == atom.label])
         return np.average(metal_coords, axis=0)
 
     def get_esp_cube(self, return_min_max=False):
@@ -53,7 +52,7 @@ class Cage(BaseStruct):
                                       evaluated roughly on the VdW surface
         :return: (list) .cube file lines
         """
-        esp_lines, (min_esp, max_esp) = get_esp_cube_lines(charges=self.get_charges(), xyzs=self.xyzs)
+        esp_lines, (min_esp, max_esp) = get_esp_cube_lines(charges=self.get_charges(), atoms=self.atoms)
 
         if return_min_max:
             return esp_lines, min_esp, max_esp
@@ -110,12 +109,12 @@ class Cage(BaseStruct):
         """
 
         logger.info(f'Getting metal_label atom ids with label {self.metal}')
-        if self.xyzs is None:
+        if self.n_atoms == 0:
             logger.error('Could not get metal atom ids. xyzs were None')
             return None
 
         try:
-            return [i for i in range(len(self.xyzs)) if self.xyzs[i][0] == self.metal]
+            return [i for i in range(self.n_atoms) if self.atoms[i].label == self.metal]
         except TypeError or IndexError or AttributeError:
             logger.error('Could not get metal label atom ids. Returning None')
             return None
@@ -139,8 +138,8 @@ class Cage(BaseStruct):
                 return 0.0
 
             # Compute the smallest distance to the centroid
-            for i in range(len(self.xyzs)):
-                dist = np.linalg.norm(xyz2coord(self.xyzs[i]) - centroid)
+            for i in range(self.n_atoms):
+                dist = np.linalg.norm(self.atoms[i].coord - centroid)
                 if dist < min_centriod_atom_dist:
                     min_centriod_atom_dist = dist
                     min_atom_dist_id = i
@@ -149,7 +148,7 @@ class Cage(BaseStruct):
             pass
 
         if min_atom_dist_id is not None:
-            vdv_radii = get_vdw_radii(atom_label=self.xyzs[min_atom_dist_id][0])
+            vdv_radii = get_vdw_radii(atom=self.atoms[min_atom_dist_id])
             # V = 4/3 π r^3, where r is the centroid -> closest atom distance, minus it's VdW volume
             return (4.0 / 3.0) * np.pi * (min_centriod_atom_dist - vdv_radii)**3
 
@@ -168,8 +167,8 @@ class Cage(BaseStruct):
             for m_id_i in range(len(self.m_ids)):
                 for m_id_j in range(len(self.m_ids)):
                     if m_id_i > m_id_j:
-                        dist = np.linalg.norm(xyz2coord(self.xyzs[self.m_ids[m_id_i]]) -
-                                              xyz2coord(self.xyzs[self.m_ids[m_id_j]]))
+                        dist = np.linalg.norm(self.atoms[self.m_ids[m_id_i]].coord -
+                                              self.atoms[self.m_ids[m_id_j]].coord)
                         m_m_dists.append(dist)
 
             if len(m_m_dists) > 0:
@@ -233,16 +232,19 @@ class Cage(BaseStruct):
 
         max_sphere_escape_r = 99999999999999.9
         avg_m_m_dist = self.get_m_m_dist()
-        cage_coords = xyz2coord(self.xyzs) - self.get_centroid()
+
+        centroid = self.get_centroid()
+        cage_coords = self.get_coords()
+        cage_coords = np.array([coord - centroid for coord in cage_coords])
 
         # For a distance from the origin (the cage centroid) calculate the largest sphere possible without hitting atoms
         opt_theta_phi, opt_r = np.zeros(2), 0.0
-        for r in np.linspace(0.0, avg_m_m_dist + max_dist_from_metals, 20):
+        for r in np.linspace(0.0, avg_m_m_dist + max_dist_from_metals, 30):
             if basinh:
                 opt = basinhopping(get_max_sphere_negative_radius, x0=opt_theta_phi, stepsize=1.0, niter=5,
                                    minimizer_kwargs={'args': (r, cage_coords), 'method': 'BFGS'})
             else:
-                opt = minimize(get_max_sphere_negative_radius, x0=opt_theta_phi, args= (r, cage_coords), method='BFGS')
+                opt = minimize(get_max_sphere_negative_radius, x0=opt_theta_phi, args=(r, cage_coords), method='BFGS')
 
             opt_theta_phi = opt.x
 
@@ -255,7 +257,7 @@ class Cage(BaseStruct):
         sphere_point = spherical_to_cart(r=opt_r, theta=opt_theta_phi[0], phi=opt_theta_phi[1])
         atom_id = np.argmin([np.linalg.norm(coord - sphere_point) for coord in cage_coords])
 
-        radius = max_sphere_escape_r - get_vdw_radii(atom_label=self.xyzs[atom_id][0])
+        radius = max_sphere_escape_r - get_vdw_radii(atom=self.atoms[atom_id])
         logger.info(f'Radius of largest sphere that can escape from the cavity = {radius}')
 
         return (4.0 / 3.0) * np.pi * radius**3
@@ -266,7 +268,7 @@ class Cage(BaseStruct):
             logger.error(f'Linker was None. Cannot build {self.name}')
             return False
 
-        if linker.xyzs is None or linker.arch is None or linker.name is None:
+        if linker.n_atoms == 0 or linker.arch is None or linker.name is None:
             logger.error(f'Linker doesn\'t have all the required attributes. Cannot build {self.name}')
             return False
 
@@ -322,7 +324,7 @@ class Cage(BaseStruct):
             build_heteroleptic_cage(self, max_cost)
 
         if self.reasonable_geometry:
-            if len(self.xyzs) != self.arch.n_metals + np.sum(np.array([linker.n_atoms for linker in self.linkers])):
+            if self.n_atoms != self.arch.n_metals + np.sum(np.array([linker.n_atoms for linker in self.linkers])):
                 logger.error('Failed to build a cage')
                 self.reasonable_geometry = False
                 return None
@@ -350,7 +352,7 @@ class Cage(BaseStruct):
         :param mult: (int) Total spin multiplicity of the cage
         :param max_cost: (float) Acceptable ligand-ligand repulsion to accommodate in metallocage construction
         """
-        super(Cage, self).__init__(name=name, charge=0, mult=mult, xyzs=None, solvent=solvent)
+        super(Cage, self).__init__(name=name, charge=0, mult=mult, filename=None, solvent=solvent)
 
         logger.info(f'Initialising a Cage object')
 

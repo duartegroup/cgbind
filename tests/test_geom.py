@@ -1,11 +1,13 @@
 from cgbind import geom
 import numpy as np
+from cgbind.atoms import Atom
+from cgbind.molecule import Molecule
 
-xyz_list = [['H', 0.0, 0.0, 0.0], ['H', 1.0, 0.0, 0.0]]
+h2_atoms = [Atom('H', 0.0, 0.0, 0.0), Atom('H', 1.0, 0.0, 0.0)]
 
 
 def test_com():
-    com = geom.calc_com(xyzs=xyz_list)
+    com = geom.calc_com(atoms=h2_atoms)
     ideal_com = np.array([0.5, 0.0, 0.0])
     assert np.abs(np.average(com - ideal_com)) < 1E-5
 
@@ -19,21 +21,6 @@ def test_normed_vector():
     normed_vector = geom.calc_normalised_vector(coord1, coord2)
 
     assert np.abs(np.average(ideal_normed_vector - normed_vector)) < 1E-5
-
-
-def test_xyz2coord():
-
-    coord_list = geom.xyz2coord(xyz_list)
-
-    assert type(coord_list) == np.ndarray
-    assert type(coord_list[0]) == np.ndarray
-    assert 0.99 < np.linalg.norm(coord_list[0] - coord_list[1]) < 1.001
-
-    xyz_line = ['H', 0.0, 0.0, 0.0]
-    coord = geom.xyz2coord(xyz_line)
-
-    assert type(coord) == np.ndarray
-    assert len(coord) == 3
 
 
 def test_rot_matix():
@@ -58,12 +45,13 @@ def test_rot_matix():
 
 def test_reasonable_geom():
 
-    short_xyzs = [['H', 0.0, 0.0, 0.0], ['H', 0.1, 0.0, 0.0]]
-    long_xyzs = [['H', 0.0, 0.0, 0.0], ['H', 1001.0, 0.0, 0.0]]
-
-    assert geom.is_geom_reasonable(xyzs=short_xyzs) is False
-    assert geom.is_geom_reasonable(xyzs=xyz_list) is True
-    assert geom.is_geom_reasonable(xyzs=long_xyzs) is False
+    tmp = Molecule()
+    tmp.set_atoms([Atom('H', 0.0, 0.0, 0.0), Atom('H', 0.1, 0.0, 0.0)])
+    assert geom.is_geom_reasonable(tmp) is False
+    tmp.set_atoms([Atom('H', 0.0, 0.0, 0.0), Atom('H', 1.0, 0.0, 0.0)])
+    assert geom.is_geom_reasonable(tmp) is True
+    tmp.set_atoms([Atom('H', 0.0, 0.0, 0.0), Atom('H', 1001, 0.0, 0.0)])
+    assert geom.is_geom_reasonable(tmp) is False
 
 
 def test_rot_kabsch():

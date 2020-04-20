@@ -8,7 +8,6 @@ from scipy.spatial import distance_matrix
 from cgbind import geom
 from cgbind.atoms import get_vdw_radii
 from cgbind.geom import rotation_matrix
-from cgbind.geom import xyz2coord
 from cgbind.geom import calc_com
 from cgbind.utils import copy_func
 
@@ -99,8 +98,8 @@ def add_substrate_com(cagesubt):
     best_coords = None
 
     c, s = cagesubt.cage, cagesubt.substrate
-    cage_coords = get_centered_cage_coords(c.xyzs, c.m_ids)
-    c.vdw_radii = [get_vdw_radii(atom_label=xyz[0]) for xyz in c.xyzs]
+    cage_coords = get_centered_cage_coords(c)
+    c.vdw_radii = [get_vdw_radii(atom) for atom in c.atoms]
 
     if cagesubt.n_subst_confs > 1:
         try:
@@ -109,9 +108,9 @@ def add_substrate_com(cagesubt):
             logger.error('Could not generate substrate conformers')
             return None
 
-    for i, substrate_xyzs in enumerate(s.conf_xyzs):
-        subst_coords = get_centered_substrate_coords(substrate_xyzs)
-        s.vdw_radii = [get_vdw_radii(atom_label=xyz[0]) for xyz in s.xyzs]
+    for i, substrate in enumerate(s.conformers):
+        subst_coords = get_centered_substrate_coords(substrate)
+        s.vdw_radii = [get_vdw_radii(atom) for atom in s.atoms]
         s.volume = AllChem.ComputeMolVolume(s.mol_obj, confId=i)
 
         for _ in range(cagesubt.n_init_geom):
@@ -133,28 +132,29 @@ def add_substrate_com(cagesubt):
     cagesubt.binding_energy_kcal = min_energy
 
     if best_coords is not None:
-        return cat_cage_subst_coords(c, s, cage_coords, best_coords)
+        s.set_atoms(coords=best_coords)
+        c.set_atoms(coords=cage_coords)
+
+        return c.atoms + s.atoms
 
     else:
         return None
 
 
-def get_centered_cage_coords(cage_xyzs, cage_m_ids):
+def get_centered_cage_coords(cage):
     """Get the cage coordinates that had been translated to the cage centroid"""
 
-    cage_coords = xyz2coord(cage_xyzs)
-    metal_coords = np.array([cage_coords[i] for i in cage_m_ids])
-    centroid = np.average(metal_coords, axis=0)
+    cage_coords = cage.get_coords()
+    centroid = cage.get_centroid()
 
-    return [coord - centroid for coord in cage_coords]
+    return np.array([coord - centroid for coord in cage_coords])
 
 
-def get_centered_substrate_coords(substrate_xyzs):
+def get_centered_substrate_coords(substrate):
     """Get the substrate coordinates that have been translated to its center of mass"""
 
-    subst_coords = xyz2coord(substrate_xyzs)
-    subst_com = calc_com(substrate_xyzs)
-    return [coord - subst_com for coord in subst_coords]
+    substrate.centre()
+    return substrate.get_coords()
 
 
 def cat_cage_subst_coords(cage, substrate, cage_coords, substrate_coords):
@@ -186,7 +186,7 @@ def get_rotated_subst_coords(x, subst_coords):
     rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=geom.j, theta=y_rot))
     rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=geom.k, theta=z_rot))
 
-    return [np.matmul(rot_matrix, coord) for coord in deepcopy(subst_coords)]
+    return np.array([np.matmul(rot_matrix, coord) for coord in deepcopy(subst_coords)])
 
 
 def get_energy(x, cage, substrate, energy_func, cage_coords, subst_coords):

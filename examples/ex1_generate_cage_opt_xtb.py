@@ -10,7 +10,7 @@ linker.optimise(method=XTB,
 
 # From the optimsied linker build the M2L4 cage with Pd(II) ions
 cage = Cage(linker, metal='Pd', metal_charge='2')
-cage.print_xyzfile()
+cage.print_xyz_file()
 
 """
 To optimise either the linker or the full cage at the DFT level see ex2

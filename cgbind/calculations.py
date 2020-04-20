@@ -1,13 +1,11 @@
 from autode.calculation import Calculation
-from autode.methods import XTB, ORCA
+from autode.wrappers.XTB import xtb
+from autode.wrappers.ORCA import orca
 from cgbind.defaults import *
 from cgbind.log import logger
-import os
-import tempfile
-import shutil
 
 
-def optimise(molecule, method, keywords, n_cores=1, max_core_mb=1000, cartesian_constraints=None):
+def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
     """
     Optimise a molecule
 
@@ -15,19 +13,18 @@ def optimise(molecule, method, keywords, n_cores=1, max_core_mb=1000, cartesian_
     :param method: (autode.ElectronicStructureMethod)
     :param keywords: (list(str)) Keywords to use for the electronic structure calculation e.g. ['Opt', 'PBE', 'def2-SVP']
     :param n_cores: (int) Number of cores to use
-    :param max_core_mb: (float)
     :param cartesian_constraints: (list(int)) List of atom ids to constrain
     :return:
     """
     logger.info('Running an optimisation calculation')
 
     if keywords is None:
-        if method == ORCA:
+        if method == orca:
             logger.warning('No keywords were set for the optimisation but an ORCA calculation was requested.\n'
                            'Using defaults.orca_low_opt_keywords..')
             keywords = orca_low_opt_keywords
 
-        elif method == XTB:
+        elif method == xtb:
             # No keywords are required for XTB
             pass
 
@@ -35,16 +32,16 @@ def optimise(molecule, method, keywords, n_cores=1, max_core_mb=1000, cartesian_
             logger.critical('No keywords were set for the optimisation calculation')
             exit()
 
-    opt = Calculation(name=molecule.name + '_opt', molecule=molecule, method=method, keywords=keywords,
-                      n_cores=n_cores, max_core_mb=max_core_mb, cartesian_constraints=cartesian_constraints, opt=True)
+    opt = Calculation(name=molecule.name + '_opt', molecule=molecule, method=method, keywords_list=keywords,
+                      n_cores=n_cores, cartesian_constraints=cartesian_constraints, opt=True)
     opt.run()
     molecule.energy = opt.get_energy()
-    molecule.xyzs = opt.get_final_xyzs()
+    molecule.set_atoms(atoms=opt.get_final_atoms())
 
     return None
 
 
-def singlepoint(molecule, method, keywords, n_cores=1, max_core_mb=1000):
+def singlepoint(molecule, method, keywords, n_cores=1):
     """
     Run a single point energy evaluation on a molecule
 
@@ -52,18 +49,17 @@ def singlepoint(molecule, method, keywords, n_cores=1, max_core_mb=1000):
     :param method: (autode.ElectronicStructureMethod)
     :param keywords: (list(str)) Keywords to use for the electronic structure calculation e.g. ['Opt', 'PBE', 'def2-SVP']
     :param n_cores: (int) Number of cores to use
-    :param max_core_mb: (float)
     :return:
     """
     logger.info('Running single point calculation')
 
     if keywords is None:
-        if method == ORCA:
+        if method == orca:
             logger.warning('No keywords were set for the single point but an ORCA calculation was requested.\n'
                            'Using defaults.orca_sp_keywords..')
             keywords = orca_sp_keywords
 
-        elif method == XTB:
+        elif method == xtb:
             # No keywords are required for XTB
             pass
 
@@ -71,8 +67,8 @@ def singlepoint(molecule, method, keywords, n_cores=1, max_core_mb=1000):
             logger.critical('No keywords were set for the single-point calculation')
             exit()
 
-    sp = Calculation(name=molecule.name + '_sp', molecule=molecule, method=method, keywords=keywords,
-                     n_cores=n_cores, max_core_mb=max_core_mb)
+    sp = Calculation(name=molecule.name + '_sp', molecule=molecule, method=method, keywords_list=keywords,
+                     n_cores=n_cores)
     sp.run()
     molecule.energy = sp.get_energy()
 
@@ -87,29 +83,16 @@ def get_charges(molecule):
     """
     logger.info('Getting charges')
 
-    if not XTB.available:
+    if not xtb.available:
         logger.error('Could not calculate without an XTB install')
         return None
 
-    # Make a temporary directory
-    here = os.getcwd()
-    tmp_dirpath = tempfile.mkdtemp()
-    os.chdir(tmp_dirpath)
-
     # Run the calculation
-    xtb_sp = Calculation(name=molecule.name + '_xtb_sp', molecule=molecule, method=XTB, n_cores=1)
+    xtb_sp = Calculation(name=molecule.name + '_xtb_sp', molecule=molecule, method=xtb, n_cores=1)
     xtb_sp.run()
 
-    if not os.path.exists('charges'):
-        logger.error('Could not get the charges from the XTB file')
-        return []
-
     # Charges file from XTB is one value per line
-    charges = [float(line.split()[0]) for line in open('charges', 'r').readlines()]
-
-    # Remove the temporary directory
-    os.chdir(here)
-    shutil.rmtree(tmp_dirpath)
+    charges = xtb_sp.get_atomic_charges()
 
     if len(charges) == molecule.n_atoms:
         return charges

@@ -14,5 +14,9 @@ class CgbindCritical(Exception):
         super().__init__(message)
 
 
+class CannotBuildCSComplex(Exception):
+    pass
+
+
 class FileMalformatted(Exception):
-    """Exception for a file in the wrong format """
+    """Exception for a file in the wrong format"""
