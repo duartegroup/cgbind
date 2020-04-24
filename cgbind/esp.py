@@ -3,7 +3,7 @@ from time import time
 from cgbind.atoms import get_atomic_number
 from cgbind.log import logger
 from cgbind.constants import Constants
-from esp_gen import get_cube_lines
+from cgbind.exceptions import CgbindCritical
 
 
 def get_esp_cube_lines(charges, atoms):
@@ -17,6 +17,12 @@ def get_esp_cube_lines(charges, atoms):
     """
     logger.info('Calculating the ESP and generating a .cube file')
     start_time = time()
+
+    try:
+        from esp_gen import get_cube_lines
+
+    except ModuleNotFoundError:
+        raise CgbindCritical(message='esp_gen not available. cgbind must be installed with the --esp_gen flag')
 
     if charges is None:
         logger.error('Could not generate an .cube file, charges were None')

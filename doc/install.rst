@@ -40,3 +40,5 @@ extracting it. Then, open an anaconda command prompt and ``cd`` to the directory
     $ conda config --append channels conda-forge
     $ conda install --file requirements.txt
     $ python setup.py install
+
+The above commands assume you have extracted the zip to ``C:\Users\yourusername\Downloads``.
