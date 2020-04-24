@@ -20,7 +20,7 @@ def test_cage_subst_gen():
     assert cs.reasonable_geometry is True
     assert cs.charge == 4
 
-    cs.print_xyz_file()
+    cs.print_xyzfile()
     assert os.path.exists('cage_tmp_methane.xyz')
     os.remove('cage_tmp_methane.xyz')
 

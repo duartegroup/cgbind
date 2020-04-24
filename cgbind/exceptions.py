@@ -18,5 +18,9 @@ class CannotBuildCSComplex(Exception):
     pass
 
 
+class RequiresAutodE(Exception):
+    pass
+
+
 class FileMalformatted(Exception):
     """Exception for a file in the wrong format"""

@@ -7,4 +7,4 @@ linker2 = Linker(name='L-2', smiles='C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=N2)=CC=CN=C1
 
 # Construct a metallocage from those linkers
 cage = Cage(linkers=[linker1, linker2, linker1, linker2], metal='Pd', metal_charge=2)
-cage.print_xyz_file()
+cage.print_xyzfile()

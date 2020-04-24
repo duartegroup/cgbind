@@ -24,7 +24,7 @@ def get_log_level():
     if log_level_str == 'INFO':
         return logging.INFO
 
-    return logging.CRITICAL
+    return logging.ERROR
 
 
 logging.basicConfig(level=get_log_level(),

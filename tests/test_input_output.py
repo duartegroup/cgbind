@@ -13,7 +13,7 @@ def test_xyz_file():
 
 def test_mol_file():
 
-    atoms = input_output.molfile_to_xyzs(filename='methane.mol')
+    atoms = input_output.molfile_to_atoms(filename='methane.mol')
     assert len(atoms) == 5
 
 

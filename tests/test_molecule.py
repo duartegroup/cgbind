@@ -1,7 +1,7 @@
 from cgbind.molecule import Molecule
+from cgbind.exceptions import RequiresAutodE
 import numpy as np
 import os
-from cgbind import xtb
 
 here = os.path.abspath(os.path.dirname(__file__))
 cwd = os.getcwd()
@@ -30,7 +30,7 @@ def test_molecule():
     methane.set_atoms(coords=coords)
     assert all(methane.atoms[0].coord == np.ones(3))
 
-    methane.print_xyz_file()
+    methane.print_xyzfile()
     assert os.path.exists('methane.xyz')
 
 
@@ -39,11 +39,17 @@ def test_molecule_sp_opt():
 
     methane = Molecule(name='methane', smiles='C')
 
-    methane.singlepoint(method=xtb)
-    assert methane.energy == -4.173842879099
+    try:
+        from cgbind import xtb
 
-    methane.optimise(method=xtb)
-    assert methane.energy == -4.175218496669
+        methane.singlepoint(method=xtb)
+        assert methane.energy == -4.173842879099
+
+        methane.optimise(method=xtb)
+        assert methane.energy == -4.175218496669
+
+    except ImportError:
+        pass
 
     os.chdir(cwd)
 
@@ -65,9 +71,13 @@ def test_rdkit_props():
     # Should be no large charges in methane
     assert all(-1.0 < c < 1.0 for c in charges)
 
-    # Run an XTB calculation to get the charges
-    charges = methane.get_charges()
-    assert len(charges) == methane.n_atoms
+    try:
+        # Run an XTB calculation to get the charges
+        charges = methane.get_charges()
+        assert len(charges) == methane.n_atoms
+    except RequiresAutodE:
+        pass
+
     os.chdir(cwd)
 
 

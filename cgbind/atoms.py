@@ -1,6 +1,14 @@
 from cgbind.log import logger
-from autode.atoms import Atom
 import numpy as np
+
+
+class Atom:
+
+    def __init__(self, atomic_symbol, x, y, z):
+
+        self.label = atomic_symbol
+        self.coord = np.array([float(x), float(y), float(z)])
+
 
 heteroatoms = ['O', 'N', 'S', 'P', 'F', 'Cl']
 
@@ -180,7 +188,7 @@ def get_atomic_mass(atom):
     if atom.label in atomic_masses.keys():
         atom_mass = atomic_masses[atom.label]
     else:
-        logger.error(f"Couldn't find the atomic mass for {atom.label}. Guessing at 10")
+        logger.warning(f"Couldn't find the atomic mass for {atom.label}. Guessing at 10")
         atom_mass = 10
 
     return atom_mass

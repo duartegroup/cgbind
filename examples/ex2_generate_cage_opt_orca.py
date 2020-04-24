@@ -10,7 +10,7 @@ linker.optimise(method=ORCA,
 
 # From the optimsied linker build the M2L4 cage with Pd(II) ions
 cage = Cage(linker, metal='Pd', metal_charge='2')
-cage.print_xyz_file()
+cage.print_xyzfile()
 
 """
 To generate multiple cages in parallel see ex3
