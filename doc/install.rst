@@ -6,8 +6,8 @@ cgbind is built in Python 3 and has been tested with v. 3.7. An `anaconda <https
 dependencies.
 
 .. note::
-    The `autode <https://duartegroup.github.io/autodE/install.html>`_ package is an optional dependency and must be
-    installed prior to ``cgbind``, to perform semi-emprical, DFT and ab initio calculations.
+    The `autode <https://duartegroup.github.io/autodE/install.html>`_ package is an optional dependency to perform
+    semi-emprical, DFT and ab initio calculations.
 
 Mac OSX / Linux
 ---------------
@@ -42,3 +42,8 @@ extracting it. Then, open an anaconda command prompt and ``cd`` to the directory
     $ python setup.py install
 
 The above commands assume you have extracted the zip to ``C:\Users\yourusername\Downloads``.
+
+.. note::
+    By default Windows doesn't have a C++ compiler required to build the extension to generate electrostatic potentials,
+    as such this feature is not enabled by default. If a C++ compiler is available install with ``python setup.py install --esp_gen`` to build the ESP extension.
+
