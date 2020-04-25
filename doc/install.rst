@@ -6,21 +6,39 @@ cgbind is built in Python 3 and has been tested with v. 3.7. An `anaconda <https
 dependencies.
 
 .. note::
-    The `autode <https://duartegroup.github.io/autodE/install.html>`_ package is a dependency and must be installed
-    prior to ``cgbind``, but does not require any electronic structure theory packages to also be installed.
+    The `autode <https://duartegroup.github.io/autodE/install.html>`_ package is an optional dependency and must be
+    installed prior to ``cgbind``, to perform semi-emprical, DFT and ab initio calculations.
 
-To install ``cgbind`` inside a conda environment first close the repository and ``cd`` there::
+Mac OSX / Linux
+---------------
+
+To install ``cgbind`` inside a conda environment first clone the repository and ``cd`` there::
 
     $ git clone https://github.com/duartegroup/cgbind.git
     $ cd cgbind
 
-then create and activate a virtual environment with the appropriate dependencies::
+
+then install the appropriate dependencies (you may want to create a new virtual environment)::
 
     $ conda config --append channels conda-forge
-    $ conda create -n cgbind_env --file requirements.txt
-    $ conda activate cgbind_env
+    $ conda install --file requirements.txt
 
 finally::
 
     $ python setup.py install
 
+
+
+Windows
+--------
+
+On Windows without a ``git`` installation ``cgbind`` can be installed with `anaconda <https://www.anaconda.com/distribution>`_
+by, on the GitHub `page <https://github.com/duartegroup/cgbind>`_ using Clone or download → Download ZIP then
+extracting it. Then, open an anaconda command prompt and ``cd`` to the directory and proceed as above e.g.::
+
+    $ cd Downloads/cgbind-master/
+    $ conda config --append channels conda-forge
+    $ conda install --file requirements.txt
+    $ python setup.py install
+
+The above commands assume you have extracted the zip to ``C:\Users\yourusername\Downloads``.

@@ -4,11 +4,11 @@ from scipy.spatial import distance_matrix
 from cgbind.atoms import get_atomic_mass
 
 
-def calc_com(xyzs):
+def calc_com(atoms):
     """
     Calculate the centre of mass for a list of xyzs
 
-    :param xyzs: (list(list)) shape: Nx3
+    :param atoms: (list(cgbind.atoms.Atom))
     :return: (np.ndarray) shape: 3
     """
     logger.info('Calculating centre of mass ')
@@ -16,11 +16,11 @@ def calc_com(xyzs):
     com = np.zeros(3)
     total_mass = 0.0
 
-    for n in range(len(xyzs)):
-        atom_mass = get_atomic_mass(atom_label=xyzs[n][0])
+    for atom in atoms:
+        atom_mass = get_atomic_mass(atom)
         total_mass += atom_mass
 
-        com += atom_mass * xyz2coord(xyzs[n])
+        com += atom_mass * atom.coord
 
     return com / total_mass
 
@@ -31,33 +31,17 @@ def calc_normalised_vector(coord1, coord2):
     return vec / np.linalg.norm(vec)
 
 
-def xyz2coord(xyzs):
-    """
-    For a set of xyzs in the form e.g [[C, 0.0, 0.0, 0.0], ...] convert to a np array of coordinates, containing just
-    just the x, y, z coordinates
-
-    :param xyzs: (list(list)) shape: Nx3 or 3
-    :return: {np.ndarray) shape: Nx3 or 3
-    """
-    if len(xyzs) == 0:
-        return np.zeros(1)
-    if isinstance(xyzs[0], list):
-        return np.array([np.array(line[1:4]) for line in xyzs])
-    else:
-        return np.array(xyzs[1:4])
-
-
-def is_geom_reasonable(xyzs):
+def is_geom_reasonable(molecule):
     """
     For an xyz list check to ensure the geometry is sensible, before an optimisation is carried out. There should be
     no distances smaller than 0.7 Å
 
-    :param xyzs: list(list))
+    :param molecule: (cgbind.molecule.BaseStruct)
     :return: (bool)
     """
     logger.info('Checking to see whether the geometry is reasonable')
 
-    coords = xyz2coord(xyzs)
+    coords = molecule.get_coords()
 
     # Compute the distance matrix with all i,j pairs, thus add 1 to the diagonals to remove the d(ii) = 0
     # components that would otherwise result in an unreasonable geometry
@@ -128,7 +112,7 @@ def spherical_to_cart(r, theta, phi):
 
     return np.array([r * np.cos(theta) * np.sin(phi),
                      r * np.sin(theta) * np.sin(phi),
-                     r * np.cos(theta)])
+                     r * np.cos(phi)])
 
 
 i = np.array([1.0, 0.0, 0.0])

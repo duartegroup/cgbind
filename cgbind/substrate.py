@@ -1,7 +1,7 @@
 from cgbind.log import logger
 from cgbind.molecule import Molecule
 from rdkit.Chem import AllChem
-from cgbind.confomers import extract_xyzs_from_rdkit_mol_object
+from cgbind.molecule import extract_conformers_from_rdkit_mol_object
 
 
 class Substrate(Molecule):
@@ -18,11 +18,11 @@ class Substrate(Molecule):
             return None
 
         conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=n_confs, params=AllChem.ETKDG()))
-        self.conf_xyzs = extract_xyzs_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=conf_ids)
+        self.conformers = extract_conformers_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=conf_ids)
 
         return None
 
-    def __init__(self, smiles=None, name='substrate', n_confs=1, charge=0, mult=1, xyzs=None, solvent=None):
+    def __init__(self, smiles=None, name='substrate', n_confs=1, charge=0, mult=1, filename=None, solvent=None):
         """
         Substrate. Inherits from cgbind.molecule.Molecule
 
@@ -31,12 +31,9 @@ class Substrate(Molecule):
         :param n_confs: (int) Number of conformers to initialise with
         :param charge: (int) Charge on the molecule
         :param mult: (int) Spin multiplicity on the molecule
-        :param xyzs: (list(list))
+        :param filename: (str)
         """
 
         logger.info('Initialising a Substrate object for {}'.format(name))
         super(Substrate, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs,
-                                        mult=mult, xyzs=xyzs, solvent=solvent)
-
-        if self.n_atoms is None:
-            logger.error('Substrate had no atoms')
+                                        mult=mult, filename=filename, solvent=solvent)

@@ -8,10 +8,11 @@
 Overview
 ========
 
-cgbind is a Python toolkit designed for the construction, analysis and property prediction of metallocages. Examples on
-how to use the Python API are avalible here, as well as a full reference for the main objects and methods. A web app
-interface is available at `cgbind.com <http://cgbind.chem.ox.ac.uk>`_ and provides most of the functionality within the
-toolkit with improvements planned!
+`cgbind <https://github.com/duartegroup/cgbind>`_ is a Python toolkit designed for the construction, analysis and
+property prediction of metallocages. Examples on how to use the Python API are avalible here, as well as a full reference
+for the main objects and methods. A web app interface is available at
+`cgbind.chem.ox.ac.uk <http://cgbind.chem.ox.ac.uk>`_ and provides most of the functionality within the toolkit with
+improvements planned!
 
 
 Licence

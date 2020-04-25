@@ -8,8 +8,6 @@ Geometry Utilities
 
 .. autofunction::  cgbind.geom.calc_normalised_vector
 
-.. autofunction::  cgbind.geom.xyz2coord
-
 .. autofunction::  cgbind.geom.is_geom_reasonable
 
 .. autofunction::  cgbind.geom.rotation_matrix

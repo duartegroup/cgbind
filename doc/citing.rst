@@ -6,4 +6,4 @@ To cite ``cgbind`` please use
 .. note::
     T. A. Young and R. Gheorghe. cgbind v. |version|. http://doi.org/10.5281/zenodo.3550545
 
-A manuscript is currently in preparation.
+A manuscript is available on ChemRxiv (https://doi.org/10.26434/chemrxiv.12146106.v1)

@@ -1,78 +1,115 @@
 import os
-from datetime import date
+from cgbind.atoms import Atom
 from cgbind.log import logger
-from cgbind.exceptions import FileMalformatted
+from cgbind.exceptions import FileMalformatted, CgbindCritical
 
 
-def xyzs2xyzfile(xyzs, filename=None, basename=None, title_line=''):
+def xyz_file_to_atoms(filename):
+    """/
+    From an .xyz file get a list of atoms
+
+    Arguments:
+        filename (str): .xyz filename
+
+    Returns:
+        (list(autode.atoms.Atom)):
     """
-    For a list of xyzs in the form e.g [[C, 0.0, 0.0, 0.0], ...] convert create a standard .xyz file
+    logger.info(f'Getting atoms from {filename}')
 
-    :param xyzs: (list(list))
-    :param filename: (str) Name of the generated xyz file
-    :param basename: (str) Name of the generated xyz file without the file extension
-    :param title_line: (str) String to print on the title line of an xyz file
-    :return: (str) xyz filename
-    """
-
-    if basename is not None:
-        filename = basename + '.xyz'
-
-    if filename is None:
-        logger.error('Could not print an .xyz. Filename was None')
-        return None
-
-    if xyzs is None:
-        logger.error('No xyzs to print')
-        return None
+    atoms = []
 
     if not filename.endswith('.xyz'):
-        logger.error('Filename does not end with .xyz, adding')
-        filename += '.xyz'
+        raise FileMalformatted
 
-    if filename is None:
-        logger.error('Filename was None')
-        return filename
+    # Open the file that exists and should(!) be in the correct format
+    with open(filename, 'r') as xyz_file:
+
+        try:
+            n_atoms = int(xyz_file.readline().split()[0])       # First item in an xyz file is the number of atoms
+
+        except IndexError:
+            raise FileMalformatted
+
+        xyz_lines = xyz_file.readlines()[1:n_atoms+1]       # XYZ lines should be the following 2 + n_atoms lines
+
+        for line in xyz_lines:
+
+            try:
+                atom_label, x, y, z = line.split()[:4]
+                atoms.append(Atom(atomic_symbol=atom_label, x=float(x), y=float(y), z=float(z)))
+
+            except (IndexError, TypeError, ValueError):
+                raise FileMalformatted
+
+    return atoms
+
+
+def atoms_to_xyz_file(atoms, filename, title_line=''):
+    """
+    Print a standard .xyz file from a set of atoms
+
+    Arguments:
+        atoms (list(autode.atoms.Atom)): 
+        filename (str): 
+        title_line (str): 
+    """""
 
     with open(filename, 'w') as xyz_file:
-        print(len(xyzs), '\n', title_line, sep='', file=xyz_file)
-        [print('{:<3}{:^10.5f}{:^10.5f}{:^10.5f}'.format(*line), file=xyz_file) for line in xyzs]
+        print(len(atoms), title_line, sep='\n', file=xyz_file)
+        for atom in atoms:
+            x, y, z = atom.coord
+            print(f'{atom.label:<3} {x:^10.5f} {y:^10.5f} {z:^10.5f}', file=xyz_file)
 
-    return filename
+    return None
 
 
-def xyzfile2xyzs(filename):
-    """
-    Convert a standard xyz file into a list of xyzs
+def get_atoms_from_file(filename):
+    """Get a list of atoms from a structure file"""
 
-    :param filename: (str)
-    :return: (list(list))
-    """
-    logger.info(f'Converting {filename} to list of xyzs')
+    if filename.endswith('.xyz'):
+        return xyzfile_to_atoms(filename)
 
-    xyzs = []
+    elif filename.endswith('.mol'):
+        return molfile_to_atoms(filename)
 
-    if os.path.exists(filename) and filename.endswith('.xyz'):
-        with open(filename, 'r') as xyz_file:
-            xyz_lines = xyz_file.readlines()[2:]
-            for line in xyz_lines:
-                atom_label, x, y, z = line.split()
-                xyzs.append([atom_label, float(x), float(y), float(z)])
+    elif filename.endswith('.mol2'):
+        return mol2file_to_atoms(filename)
 
     else:
-        logger.error('Could not read .xyz file')
-        return None
+        raise CgbindCritical(message='Unsupported file format')
 
-    if len(xyzs) == 0:
+
+def xyzfile_to_atoms(filename):
+    """
+    Convert a standard xyz file into a list of atoms
+
+    :param filename: (str)
+    :return: (list(cgbind.atoms.Atom))
+    """
+    logger.info(f'Converting {filename} to list of atoms')
+
+    if not (os.path.exists(filename) and filename.endswith('.xyz')):
+        logger.error('Could not read .xyz file')
+        raise FileMalformatted
+
+    atoms = []
+
+    with open(filename, 'r') as xyz_file:
+        xyz_lines = xyz_file.readlines()[2:]
+        for line in xyz_lines:
+            atom_label, x, y, z = line.split()
+            atoms.append(Atom(atom_label, float(x), float(y), float(z)))
+
+    if len(atoms) == 0:
         logger.error(f'Could not read xyz lines in {filename}')
         raise FileMalformatted
 
-    return xyzs
+    return atoms
 
 
-def molfile2xyzs(filename):
+def molfile_to_atoms(filename):
     """
-    Convert a .mol file to a list of xyzs
+    Convert a .mol file to a list of atoms
 
     e.g. for methane:
     _____________________
@@ -95,7 +132,7 @@ def molfile2xyzs(filename):
     :param filename: (str)
     :return: (list(list))
     """
-    xyzs = []
+    atoms = []
 
     if not (os.path.exists(filename) and filename.endswith('.mol')):
         logger.error('Could not read .mol file')
@@ -111,23 +148,23 @@ def molfile2xyzs(filename):
 
         for line in mol_lines[1:n_atoms+1]:
             x, y, z, atom_label = line.split()[:4]
-            xyzs.append([atom_label, float(x), float(y), float(z)])
+            atoms.append(Atom(atom_label, float(x), float(y), float(z)))
 
-    if len(xyzs) == 0:
+    if len(atoms) == 0:
         logger.error(f'Could not read xyz lines in {filename}')
         raise FileMalformatted
 
-    return xyzs
+    return atoms
 
 
-def mol2file2xyzs(filename):
+def mol2file_to_atoms(filename):
     """
-    Convert a .mol file into a standard set of xyzs in the form e.g [[C, 0.0, 0.0, 0.0], ...]
+    Convert a .mol file into a standard set of atoms in the form e.g [[C, 0.0, 0.0, 0.0], ...]
 
     :param filename: (str) name of the .mol file
-    :return: (lis(list)) xyzs
+    :return: (lis(list)) atoms
     """
-    logger.info('Converting .mol2 file to xyzs')
+    logger.info('Converting .mol2 file to atoms')
 
     if not (os.path.exists(filename) and filename.endswith('.mol2')):
         logger.error('Could not read .mol2 file')
@@ -135,8 +172,8 @@ def mol2file2xyzs(filename):
 
     mol_file_lines = open(filename, 'r').readlines()
 
-    # Get the unformatted xyzs from the .mol2 file. The atom labels will not be standard
-    unformat_xyzs, xyz_block = [], False
+    # Get the unformatted atoms from the .mol2 file. The atom labels will not be standard
+    atoms, xyz_block = [], False
     for n_line, line in enumerate(mol_file_lines):
 
         if '@' in line and xyz_block:
@@ -146,7 +183,7 @@ def mol2file2xyzs(filename):
             try:
                 atom_label, x, y, z = line.split()[1:5]
                 try:
-                    unformat_xyzs.append([atom_label, float(x), float(y), float(z)])
+                    atoms.append(Atom(atom_label, float(x), float(y), float(z)))
                 except TypeError:
                     logger.error('There was a problem with the .mol2 file')
                     raise FileMalformatted
@@ -160,23 +197,22 @@ def mol2file2xyzs(filename):
         if '@' in line and 'ATOM' in line and len(mol_file_lines[n_line+1].split()) == 9:
             xyz_block = True
 
-    xyzs = []
-    for xyz_line in unformat_xyzs:
-        atom_label = xyz_line[0]
+    # Fix any atom labels
+    for atom in atoms:
 
-        if len(atom_label) == 1:
-            xyzs.append([atom_label] + xyz_line[1:])
+        if len(atom.label) == 1:
+            continue
 
         # e.g. Pd1 or C58
-        elif atom_label[0].isalpha() and not atom_label[1].isalpha():
-            xyzs.append([atom_label[0]] + xyz_line[1:])
+        elif atom.label[0].isalpha() and not atom.label[1].isalpha():
+            atom.label = atom.label[0]
 
         # e.g. Pd10
-        elif atom_label[0].isalpha() and atom_label[1].isalpha():
-            xyzs.append([atom_label[:2]] + xyz_line[1:])
+        elif atom.label[0].isalpha() and atom.label[1].isalpha():
+            atom.label = atom.label[:2]
 
         else:
             logger.error('Unrecognised atom type')
-            return
+            raise FileMalformatted
 
-    return xyzs
+    return atoms

@@ -1,29 +1,34 @@
 import numpy as np
 from time import time
-from cgbind.geom import xyz2coord
 from cgbind.atoms import get_atomic_number
 from cgbind.log import logger
 from cgbind.constants import Constants
-from esp_gen import get_cube_lines
+from cgbind.exceptions import CgbindCritical
 
 
-def get_esp_cube_lines(charges, xyzs):
+def get_esp_cube_lines(charges, atoms):
     """
     From a list of charges and a set of xyzs create the electrostatic potential map grid-ed uniformly between the most
     negative x, y, z values -5 Å and the largest x, y, z +5 Å
 
     :param charges: (list(float))
-    :param xyzs: (list(list))
+    :param atoms: (list(autode.atoms.Atom))
     :return: (list(str)), (min ESP value, max ESP value)
     """
     logger.info('Calculating the ESP and generating a .cube file')
     start_time = time()
 
+    try:
+        from esp_gen import get_cube_lines
+
+    except ModuleNotFoundError:
+        raise CgbindCritical(message='esp_gen not available. cgbind must be installed with the --esp_gen flag')
+
     if charges is None:
         logger.error('Could not generate an .cube file, charges were None')
         return [], (None, None)
 
-    coords = xyz2coord(xyzs)
+    coords = np.array([atom.coord for atom in atoms])
     charges = np.array(charges)
 
     # Get the max and min points from the coordinates
@@ -54,9 +59,9 @@ def get_esp_cube_lines(charges, xyzs):
     cube_file_lines.append(f'{ny:>5d}{0.0:>12f}{ry:>12f}{0.0:>12f}\n')
     cube_file_lines.append(f'{nz:>5d}{0.0:>12f}{0.0:>12f}{rz:>12f}\n')
 
-    for xyz_line in xyzs:
-        atom_label, x, y, z = xyz_line
-        cube_file_lines.append(f'{get_atomic_number(atom_label):>5d}{0.0:>12f}'
+    for atom in atoms:
+        x, y, z = atom.coord
+        cube_file_lines.append(f'{get_atomic_number(atom):>5d}{0.0:>12f}'
                                f'{Constants.ang2a0*x:>12f}{Constants.ang2a0*y:>12f}{Constants.ang2a0*z:>12f}\n')
 
     # Looping over x, y, z is slow in python so use Cython extension

@@ -9,7 +9,7 @@ A few examples for generating and analysing metallocages. The full examples are 
 Generating a Metallocage
 ------------------------
 
-To generate a simple  Pd\ :sub:`2` L\ :sub:`4` metallocage
+To generate an archetype  Pd\ :sub:`2`\L\ :sub:`4` metallocage (`EZEVAI <https://dx.doi.org/10.5517/ccdc.csd.cc1m3h4c>`_).
 
 .. code-block:: python
 
@@ -46,3 +46,21 @@ To check all the current methods available
 
     >>> methods = [method for method in dir(cgbind.Cage) if callable(getattr(cgbind.Cage, method))]
     >>> print(methods)
+
+
+M4L6 Metallocages
+------------------
+
+Two M\ :sub:`4`\L\ :sub:`6` templates are available in cgbind the first suitable for catechol derived linkers
+(`arch_name='m4l6'`), for example the cage published by `Raymond <http://dx.doi.org/10.1021/ja411631v>`_ . Also
+available is a template suitable for bipyridyl based linkers (`arch_name='m4l6n'`, also referred to as M4L6'),
+for example published by `Nitchke <https://doi.org/10.1021/ja402084x>`_. To generate a bipyridyl-based
+Fe(II)\ :sub:`4`\L\ :sub:`6` metallocage over two cores:
+
+.. code-block:: python
+
+    >>> from cgbind import Linker, Cage, Config
+    >>> Config.n_cores = 2
+    >>> linker = Linker(smiles='C1(C2=CC=C(C#CC3=CN=C(C4=NC=CC=C4)C=C3)C=N2)=NC=CC=C1', arch_name='m4l6n')
+    >>> cage = Cage(linker=linker, metal='Fe', metal_charge=2)
+

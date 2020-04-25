@@ -44,11 +44,10 @@ class Linker(Molecule):
         """
         donor_atom_ids = []
 
-        for atom_id in range(self.n_atoms):
-            atom_label, _, _, _ = self.xyzs[atom_id]
+        for atom_id, atom in enumerate(self.atoms):
 
-            if atom_label in heteroatoms:
-                max_valency = get_max_valency(atom_label=atom_label)
+            if atom.label in heteroatoms:
+                max_valency = get_max_valency(atom=atom)
                 n_bonds = 0
 
                 for bond in self.bonds:
@@ -89,8 +88,8 @@ class Linker(Molecule):
         return None
 
     def _check_structure(self):
-        if self.xyzs is None:
-            logger.error('Could get xyzs for linker')
+        if self.n_atoms == 0:
+            logger.error('Could get atoms for linker')
             raise NoXYZs
 
         return None
@@ -108,12 +107,13 @@ class Linker(Molecule):
             logger.error('Could not calculate planarity of the linker. Only implemented for ')
             return True
 
-        x_coords = [self.coords[atom_id] for motif in self.x_motifs for atom_id in motif.atom_ids]
+        coords = self.get_coords()
+        x_coords = [coords[atom_id] for motif in self.x_motifs for atom_id in motif.atom_ids]
         x_motifs_centroid = np.average(x_coords, axis=0)
 
         # Calculate the plane containing the centroid and two atoms in the x motifs
-        v1 = self.coords[self.x_motifs[0].atom_ids[0]] - x_motifs_centroid        # First atom in the first x motif
-        v2 = self.coords[self.x_motifs[1].atom_ids[-1]] - x_motifs_centroid       # Last atom in the second x motif
+        v1 = coords[self.x_motifs[0].atom_ids[0]] - x_motifs_centroid        # First atom in the first x motif
+        v2 = coords[self.x_motifs[1].atom_ids[-1]] - x_motifs_centroid       # Last atom in the second x motif
 
         norm = np.cross(v1, v2)
         a, b, c = norm
@@ -123,7 +123,7 @@ class Linker(Molecule):
 
         # Calculate the sum of signed distances, which will be 0 if the linker is flat
         sum_dist = 0
-        for coord in self.coords:
+        for coord in coords:
             dist = (np.dot(coord, norm) + d) / np.linalg.norm(norm)
             sum_dist += dist
 
@@ -146,6 +146,7 @@ class Linker(Molecule):
         the best fit
 
         :param metal: (str) Atomic symbol of the metal
+        :param n: (int) linker number in the template
         :return: (list(Linker))
         """
         logger.info('Getting linkers ranked by cost')
@@ -162,7 +163,7 @@ class Linker(Molecule):
         # Sort the list of x_motifs in the linker by the most favourable M––X interaction
         x_motifs_list = sort_x_motifs(x_motifs_list, linker=self, metal=metal)
 
-        logger.info(f'Have {len(x_motifs_list)*len(self.conf_xyzs)} iterations to do')
+        logger.info(f'Have {len(x_motifs_list)*len(self.conformers)} iterations to do')
         for i, x_motifs in enumerate(x_motifs_list):
 
             # Execute calculation to get cost of adding a particular conformation to the template in parallel
@@ -170,8 +171,8 @@ class Linker(Molecule):
             logger.disabled = True
 
             with Pool(processes=Config.n_cores) as pool:
-                results = [pool.apply_async(get_new_linker_and_cost, (xyzs, self, x_motifs, template_linker))
-                           for xyzs in self.conf_xyzs]
+                results = [pool.apply_async(get_new_linker_and_cost, (conf.atoms, self, x_motifs, template_linker))
+                           for conf in self.conformers]
 
                 linkers_and_cost_tuples = [res.get(timeout=None) for res in results]
 
@@ -188,7 +189,7 @@ class Linker(Molecule):
 
         return linkers
 
-    def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=300, xyzs=None, use_etdg_confs=False):
+    def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=300, filename=None, use_etdg_confs=False):
         """
         Metallocage Linker. Inherits from cgbind.molecule.Molecule
 
@@ -197,16 +198,16 @@ class Linker(Molecule):
         :param name: (str) Linker name
         :param charge: (int)
         :param n_confs: (int) Number of initial conformers to search through
-        :param xyzs: (list(list))
+        :param filename: (str)
         :param use_etdg_confs: (bool) Use a different, sometimes better, conformer generation algorithm
         """
         logger.info(f'Initialising a Linker object for {name}')
-        initalised_with_xyzs = True if xyzs is not None else False
 
         self.arch = None                                                      #: (Arch object) Metallocage architecture
         self._set_arch(arch_name)
 
-        super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, xyzs=xyzs,
+        # May exit here if the specified architecture is not found
+        super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, filename=filename,
                                      use_etdg_confs=use_etdg_confs)
 
         self._check_structure()
@@ -217,7 +218,3 @@ class Linker(Molecule):
         check_x_motifs(self, linker_template=self.cage_template.linkers[0])
         self._strip_possible_x_motifs_on_connectivity()
         self.dr = None                                                        #: (float) Template shift distance
-
-        # If the linker has been initialised from xyzs then set conf_xyzs as a list containing only the xyzs
-        if initalised_with_xyzs:
-            self.conf_xyzs = [self.xyzs]

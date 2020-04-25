@@ -3,21 +3,20 @@ import networkx as nx
 import numpy as np
 import pickle
 import os
-from cgbind.input_output import mol2file2xyzs
-from autode.bond_lengths import get_xyz_bond_list
+from cgbind.input_output import mol2file_to_atoms
+from cgbind.bonds import get_bond_list_from_atoms
 from cgbind.geom import calc_com
 from cgbind.atoms import metals
-from cgbind.geom import xyz2coord
 from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import get_maximally_connected_x_motifs
 from cgbind.x_motifs import check_x_motifs
 
 
-def find_mols_in_xyzs(xyzs, allow_same=False):
+def find_mols_in_xyzs(atoms, allow_same=False):
     """
     From a list of xyzs determine the bonds in the system, thus the distinct molecules in the system
 
-    :param xyzs: (list(list)) standard xyzs
+    :param atoms: (list(cgbind.atoms.Atom))
     :param allow_same: (bool) add only the unique molecules (False) or add every molecule (True)
     :return: (list(xyzs))
     """
@@ -25,8 +24,8 @@ def find_mols_in_xyzs(xyzs, allow_same=False):
     logger.info('Finding the distinct molecules in the system')
     # Get the 'molecules' for which each atom is contained in
     full_graph = nx.Graph()
-    [full_graph.add_node(n, atom_label=xyzs[n][0]) for n in range(len(xyzs))]
-    bond_list = get_xyz_bond_list(xyzs=xyzs)
+    [full_graph.add_node(n, atom_label=atoms[n].label) for n in range(len(atoms))]
+    bond_list = get_bond_list_from_atoms(atoms)
 
     for (u, v) in bond_list:
         full_graph.add_edge(u, v)
@@ -35,15 +34,15 @@ def find_mols_in_xyzs(xyzs, allow_same=False):
     connected_molecules = [list(mol) for mol in nx.connected_components(full_graph)]
 
     for molecule in connected_molecules:
-        mol_atom_labels = sorted([xyzs[n][0] for n in molecule])
+        mol_atom_labels = sorted([atoms[n].label for n in molecule])
         if mol_atom_labels not in unique_mols or allow_same:
             unique_mols.append(mol_atom_labels)
             unique_mol_ids.append(molecule)
 
-    unique_mol_xyzs = [[xyzs[n] for n in mol_ids] for mol_ids in unique_mol_ids]
-    logger.info(f'Found {len(unique_mol_xyzs)} molecule(s)')
+    unique_mol_atoms = [[atoms[n] for n in mol_ids] for mol_ids in unique_mol_ids]
+    logger.info(f'Found {len(unique_mol_atoms)} molecule(s)')
 
-    return unique_mol_xyzs
+    return unique_mol_atoms
 
 
 def get_template(arch_name='m2l4', folder_path=None):
@@ -88,19 +87,19 @@ class Metal:
 
 class Linker:
 
-    def __init__(self, xyzs, x_atoms):
+    def __init__(self, atoms, x_atoms):
         """
         Make a template linker object from the corresponding xyzs and the donor atoms which were bonded to the metals
         which form the basis of the cage
 
-        :param xyzs: (list(list))
+        :param atoms: (list(list))
         :param x_atoms: (list(int)) Donor atom ids in the xyzs
         """
-        self.xyzs = xyzs                                       #: (list(list))
-        self.x_atoms = x_atoms                                 #: (list(int)) List of donor atoms in the linker
-        self.coords = xyz2coord(xyzs)                          #: (list(np.ndarray)) Linker coordinates
-        self.bonds = get_xyz_bond_list(xyzs=self.xyzs)         #: (list(tuple))
-        self.com = calc_com(xyzs=xyzs)                         #: (np.ndarray)
+        self.atoms = atoms                                      #: (list(list))
+        self.x_atoms = x_atoms                                  #: (list(int)) List of donor atoms in the linker
+        self.coords = np.array([atom.coord for atom in atoms])  #: (list(np.ndarray)) Linker coordinates
+        self.bonds = get_bond_list_from_atoms(self.atoms)       #: (list(Atom))
+        self.com = calc_com(atoms)                              #: (np.ndarray)
 
         self.x_motifs = find_x_motifs(self)                    #: (list(Xmotif objects)
         self.x_motifs = get_maximally_connected_x_motifs(self.x_motifs, x_atoms=x_atoms)
@@ -114,16 +113,16 @@ class Template:
         From a list of distinct molecules find the metallocage. This is assumed to be the molecule with the highest
         frequency of metal_label atoms
 
-        :return: xyzs, metal_label label
+        :return: atoms, metal_label label
         """
         mol_metals_and_freqs, metal = [], None
 
-        for xyzs in self.mols_xyzs:
+        for atoms in self.mols_atoms:
             metals_and_freq = dict.fromkeys(metals, 0)
 
-            for atom_label, _, _, _ in xyzs:
-                if atom_label in metals:
-                    metals_and_freq[atom_label] += 1
+            for atom in atoms:
+                if atom.label in metals:
+                    metals_and_freq[atom.label] += 1
 
             # Add the maximum frequency that any metal_label arises in the structure
             metal = max(metals_and_freq, key=metals_and_freq.get)
@@ -140,19 +139,19 @@ class Template:
                 max_metal = metal
 
         logger.info(f'Found metal_label {max_metal}')
-        return self.mols_xyzs[mol_id_with_max_metals], max_metal
+        return self.mols_atoms[mol_id_with_max_metals], max_metal
 
     def _find_linkers(self):
         logger.info('Stripping the metals from the structure')
-        xyzs_no_metals = [xyz for xyz in self.xyzs if self.metal_label not in xyz]
+        atoms_no_metals = [atom for atom in self.atoms if self.metal_label != atom.label]
 
         logger.info('Finding the distinct linker molecules ')
-        linkers_xyzs = find_mols_in_xyzs(xyzs=xyzs_no_metals, allow_same=True)
+        linkers_atoms = find_mols_in_xyzs(atoms=atoms_no_metals, allow_same=True)
 
         linkers = []
         # Add the x_atoms which are contained within each linker, that were found bonded to each metal_label
-        for xyzs in linkers_xyzs:
-            coords = xyz2coord(xyzs)
+        for atoms in linkers_atoms:
+            coords = np.array([atom.coord for atom in atoms])
             linker_x_atoms = []
 
             # Iterate through the coordinates until one matches that of the full template
@@ -162,22 +161,22 @@ class Template:
                         linker_x_atoms.append(i)
                         break
 
-            linkers.append(Linker(xyzs=xyzs, x_atoms=linker_x_atoms))
+            linkers.append(Linker(atoms=atoms, x_atoms=linker_x_atoms))
 
-        logger.info(f'Found {len(linkers_xyzs)} linkers each with {len(linker_x_atoms)} donor atoms')
+        logger.info(f'Found {len(linkers_atoms)} linkers each with {len(linker_x_atoms)} donor atoms')
         return linkers
 
     def _find_metals(self):
         logger.info(f'Getting metals with label {self.metal_label}')
         metals = []
         try:
-            for i in range(len(self.xyzs)):
-                if self.xyzs[i][0] == self.metal_label:
-                    metals.append(Metal(label=self.metal_label, atom_id=i, coord=xyz2coord(self.xyzs[i])))
+            for i in range(len(self.atoms)):
+                if self.atoms[i].label == self.metal_label:
+                    metals.append(Metal(label=self.metal_label, atom_id=i, coord=self.atoms[i].coord))
 
             return metals
 
-        except TypeError or IndexError or AttributeError:
+        except (TypeError, IndexError, AttributeError):
             logger.error('Could not get metal_label atom ids. Returning None')
 
         return None
@@ -204,7 +203,7 @@ class Template:
 
     def _find_centroid(self):
 
-        metal_coords = [xyz2coord(xyz) for xyz in self.xyzs if self.metal_label in xyz]
+        metal_coords = [atom.coord for atom in self.atoms if self.metal_label == atom.label]
         return np.average(metal_coords, axis=0)
 
     def _set_shift_vectors(self):
@@ -268,18 +267,18 @@ class Template:
 
         self.arch_name = arch_name
 
-        all_xyzs = mol2file2xyzs(filename=mol2_filename)
-        self.mols_xyzs = find_mols_in_xyzs(xyzs=all_xyzs)
-        self.xyzs, self.metal_label = self._find_metallocage_mol()
+        all_atoms = mol2file_to_atoms(filename=mol2_filename)
+        self.mols_atoms = find_mols_in_xyzs(atoms=all_atoms)
+        self.atoms, self.metal_label = self._find_metallocage_mol()
 
         self.metals = self._find_metals()
         self.n_metals = len(self.metals)
         logger.info(f'Found {self.n_metals} metals')
 
-        self.bonds = get_xyz_bond_list(xyzs=self.xyzs)
+        self.bonds = get_bond_list_from_atoms(self.atoms)
         self.x_atoms = self._find_donor_atoms()                # donor atom ids
 
-        self.coords = xyz2coord(xyzs=self.xyzs)
+        self.coords = np.array([atom.coord for atom in self.atoms])
         self.centroid = self._find_centroid()                  # centroid of the cage ~ average metal_label coordinate
 
         self.linkers = self._find_linkers()
