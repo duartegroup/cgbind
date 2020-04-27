@@ -216,9 +216,9 @@ def build_homoleptic_cage(cage, max_cost):
     cage.dr = best_linker.dr
     atoms = []
     for i, template_linker in enumerate(cage.cage_template.linkers):
-        linker_xyzs, _ = get_linker_atoms_to_add_and_cost(best_linker, template_linker,
-                                                          curr_coords=[atom.coord for atom in atoms])
-        atoms += linker_xyzs
+        linker_atoms, _ = get_linker_atoms_to_add_and_cost(best_linker, template_linker,
+                                                           curr_coords=[atom.coord for atom in atoms])
+        atoms += linker_atoms
 
     # Add the metals from the template shifted by dr
     for metal in cage.cage_template.metals:
@@ -233,20 +233,20 @@ def build_heteroleptic_cage(cage, max_cost):
     logger.info('Building a heteroleptic cage')
     logger.warning('Due to the very large space that needs to be minimised only the *best* linker conformer is used')
 
-    added_linkers, xyzs = [], []
+    added_linkers, atoms = [], []
 
     for i, linker in enumerate(cage.linkers):
 
         ranked_linkers = linker.get_ranked_linker_conformers(metal=cage.metal)
 
         for ranked_linker in ranked_linkers:
-            linker_xyzs, cost = get_linker_atoms_to_add_and_cost(ranked_linker, cage.cage_template.linkers[i],
-                                                                 curr_coords=xyzs)
+            linker_atoms, cost = get_linker_atoms_to_add_and_cost(ranked_linker, cage.cage_template.linkers[i],
+                                                                  curr_coords=[atom.coord for atom in atoms])
 
             if cost < max_cost:
                 logger.info(f'L-L repulsion + fit to template in building cage is {cost:.2f}')
                 cage.linkers[i] = ranked_linker
-                xyzs += linker_xyzs
+                atoms += linker_atoms
                 break
 
     logger.warning('Heteroleptic cages will have the average dr of all linkers - using the average')
@@ -255,7 +255,7 @@ def build_heteroleptic_cage(cage, max_cost):
     # Add the metals from the template shifted by dr
     for metal in cage.cage_template.metals:
         metal_coord = cage.dr * metal.shift_vec / np.linalg.norm(metal.shift_vec) + metal.coord
-        xyzs.append([cage.metal] + metal_coord.tolist())
+        atoms.append(Atom(cage.metal, x=metal_coord[0], y=metal_coord[1], z=metal_coord[2]))
 
-    cage.set_atoms(xyzs)
+    cage.set_atoms(atoms)
     return None

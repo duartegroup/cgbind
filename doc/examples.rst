@@ -29,6 +29,10 @@ the cage needs multple linkers, for example
 
 To generate a standard .xyz file that can be visualised with `Avogadro <https://avogadro.cc>`_ use
 
+    >>> cage.print_xyz_file()
+
+    >>> cage.print_xyz_file()
+
     >>> cage.print_xyzfile()
 
 

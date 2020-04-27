@@ -16,7 +16,7 @@ def test_init_cage():
 
     assert np.abs(np.sum(c.get_centroid() - np.array([0.25825, 17.5488,  12.52415]))) < 0.001
 
-    c.print_xyzfile()
+    c.print_xyz_file()
     assert os.path.exists('cage_tmp.xyz')
     os.remove('cage_tmp.xyz')
 

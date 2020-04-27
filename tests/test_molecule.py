@@ -30,7 +30,7 @@ def test_molecule():
     methane.set_atoms(coords=coords)
     assert all(methane.atoms[0].coord == np.ones(3))
 
-    methane.print_xyzfile()
+    methane.print_xyz_file()
     assert os.path.exists('methane.xyz')
 
 
