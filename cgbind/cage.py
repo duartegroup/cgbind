@@ -78,7 +78,7 @@ class Cage(BaseStruct):
 
         return None
 
-    def get_charges(self, estimate=False, guess=False):
+    def get_charges(self, estimate=False):
         """
         Get the partial atomic charges on the cage either using XTB or estimate using no polarisation i.e. the metals
         retain their full charge and the linker charges are estimated using the Gasteiger scheme in RDKit
@@ -87,11 +87,11 @@ class Cage(BaseStruct):
         :param guess: (bool) Guess the charges based on the electronegativity
         :return: (function) calculations.get_charges(self)
         """
-        if estimate or guess:
+        if estimate:
 
             charges = []
             for linker in self.linkers:
-                linker_charges = linker.get_charges(estimate=estimate, guess=guess)
+                linker_charges = linker.get_charges(estimate=estimate)
                 charges += linker_charges
 
             # Metals are added last
