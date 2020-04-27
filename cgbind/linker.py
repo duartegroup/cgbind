@@ -2,7 +2,6 @@ from cgbind.log import logger
 import numpy as np
 import itertools
 from cgbind.config import Config
-from multiprocessing import Pool
 from cgbind.molecule import Molecule
 from cgbind.architectures import archs
 from cgbind.exceptions import *
@@ -170,11 +169,8 @@ class Linker(Molecule):
             logger.info(f'Running with {Config.n_cores} cores. Iteration {i+1}/{len(x_motifs_list)}')
             logger.disabled = True
 
-            with Pool(processes=Config.n_cores) as pool:
-                results = [pool.apply_async(get_new_linker_and_cost, (conf.atoms, self, x_motifs, template_linker))
-                           for conf in self.conformers]
-
-                linkers_and_cost_tuples = [res.get(timeout=None) for res in results]
+            linkers_and_cost_tuples = [get_new_linker_and_cost(conf.atoms, self, x_motifs, template_linker)
+                                       for conf in self.conformers]
 
             # Renable the logging that would otherwise dominate with lots of conformers and/or Xmotifs
             logger.disabled = False
