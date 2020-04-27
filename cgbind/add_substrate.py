@@ -111,7 +111,8 @@ def add_substrate_com(cagesubt):
     for i, substrate in enumerate(s.conformers):
         subst_coords = get_centered_substrate_coords(substrate)
         s.vdw_radii = [get_vdw_radii(atom) for atom in s.atoms]
-        s.volume = AllChem.ComputeMolVolume(s.mol_obj, confId=i)
+        if s.mol_obj is not None:
+            s.volume = AllChem.ComputeMolVolume(s.mol_obj, confId=i)
 
         for _ in range(cagesubt.n_init_geom):
             rot_angles = 2.0 * np.pi * np.random.rand(3)        # rand generates in [0, 1] so multiply with
