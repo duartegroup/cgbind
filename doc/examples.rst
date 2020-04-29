@@ -68,3 +68,10 @@ Fe(II)\ :sub:`4`\L\ :sub:`6` metallocage over two cores:
     >>> linker = Linker(smiles='C1(C2=CC=C(C#CC3=CN=C(C4=NC=CC=C4)C=C3)C=N2)=NC=CC=C1', arch_name='m4l6n')
     >>> cage = Cage(linker=linker, metal='Fe', metal_charge=2)
 
+
+Due to the conformational flexibility of some linkers a larger number of conformers may be required to find one
+with the correct geometry. To request more than the default 300 conformers initialise a linker with
+`Linker(..., n_confs=300)`. Also possible is the ETKDGv2 algorithm in RDKit does not generate a conformer that affords a
+sensible structure, to use an earlier version `Linker(..., use_etdg_confs=True)`.
+
+
