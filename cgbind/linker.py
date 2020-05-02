@@ -12,6 +12,7 @@ from cgbind.templates import get_template
 from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import check_x_motifs
 from cgbind.x_motifs import sort_x_motifs
+from multiprocessing import Pool
 
 
 class Linker(Molecule):
@@ -127,7 +128,12 @@ class Linker(Molecule):
 
             # Sort this block of linkers the cost function. Not sorted the full list to retain the block structure with
             # X motifs
-            chunk = [calc_conformer_cost(conf, self, x_motifs, template_linker) for conf in self.conformers]
+            with Pool(processes=Config.n_cores) as pool:
+                results = [pool.apply_async(calc_conformer_cost, (conf, self, x_motifs, template_linker))
+                           for conf in self.conformers]
+
+                chunk = [res.get(timeout=None) for res in results]
+
             conformers += sorted(chunk, key=lambda conf: conf.cost)
 
             # Renable the logging that would otherwise dominate with lots of conformers and/or Xmotifs
