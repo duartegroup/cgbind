@@ -2,13 +2,12 @@ from cgbind.log import logger
 import numpy as np
 import itertools
 from cgbind.config import Config
-from multiprocessing import Pool
 from cgbind.molecule import Molecule
 from cgbind.architectures import archs
 from cgbind.exceptions import *
 from cgbind.atoms import heteroatoms
 from cgbind.atoms import get_max_valency
-from cgbind.build import get_new_linker_and_cost
+from cgbind.build import calc_conformer_cost
 from cgbind.templates import get_template
 from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import check_x_motifs
@@ -94,51 +93,7 @@ class Linker(Molecule):
 
         return None
 
-    def is_planar(self, ssd_threshold=1):
-        """
-        Determine if the linker is planar
-
-        :return: (bool)
-        """
-
-        logger.info('Determining if the linker is planar')
-
-        if len(self.x_motifs) != 2:
-            logger.error('Could not calculate planarity of the linker. Only implemented for ')
-            return True
-
-        coords = self.get_coords()
-        x_coords = [coords[atom_id] for motif in self.x_motifs for atom_id in motif.atom_ids]
-        x_motifs_centroid = np.average(x_coords, axis=0)
-
-        # Calculate the plane containing the centroid and two atoms in the x motifs
-        v1 = coords[self.x_motifs[0].atom_ids[0]] - x_motifs_centroid        # First atom in the first x motif
-        v2 = coords[self.x_motifs[1].atom_ids[-1]] - x_motifs_centroid       # Last atom in the second x motif
-
-        norm = np.cross(v1, v2)
-        a, b, c = norm
-        d = np.dot(norm, x_motifs_centroid)
-
-        logger.info(f'Equation of the plane is {a}x + {b}y + {c}z + d')
-
-        # Calculate the sum of signed distances, which will be 0 if the linker is flat
-        sum_dist = 0
-        for coord in coords:
-            dist = (np.dot(coord, norm) + d) / np.linalg.norm(norm)
-            sum_dist += dist
-
-        rel_sum_dist = sum_dist / self.n_atoms
-        logger.info(f'Relative sum of distances was {rel_sum_dist}')
-
-        if np.abs(rel_sum_dist) > ssd_threshold:
-            logger.info('Sum of signed plane-coord distances was highly != 0. Linker is probably not planar')
-            return False
-
-        else:
-            logger.info('Linker is planar')
-            return True
-
-    def get_ranked_linker_conformers(self, metal=None, n=0):
+    def set_ranked_linker_conformers(self, metal=None, n=0):
         """
         For this linker, return a list of Linker objects with appropriate .xyzs, .dr and .x_motifs attributes ordered
         by their cost function low -> high i.e. good to bad. This will loop through all the conformers and the possible
@@ -151,8 +106,6 @@ class Linker(Molecule):
         """
         logger.info('Getting linkers ranked by cost')
 
-        linkers = []
-
         template_linker = self.cage_template.linkers[n]
         n_x_motifs_in_linker = len(template_linker.x_motifs)
 
@@ -164,30 +117,27 @@ class Linker(Molecule):
         x_motifs_list = sort_x_motifs(x_motifs_list, linker=self, metal=metal)
 
         logger.info(f'Have {len(x_motifs_list)*len(self.conformers)} iterations to do')
+
+        conformers = []
         for i, x_motifs in enumerate(x_motifs_list):
 
             # Execute calculation to get cost of adding a particular conformation to the template in parallel
             logger.info(f'Running with {Config.n_cores} cores. Iteration {i+1}/{len(x_motifs_list)}')
             logger.disabled = True
 
-            with Pool(processes=Config.n_cores) as pool:
-                results = [pool.apply_async(get_new_linker_and_cost, (conf.atoms, self, x_motifs, template_linker))
-                           for conf in self.conformers]
-
-                linkers_and_cost_tuples = [res.get(timeout=None) for res in results]
+            # Sort this block of linkers the cost function. Not sorted the full list to retain the block structure with
+            # X motifs
+            chunk = [calc_conformer_cost(conf, self, x_motifs, template_linker) for conf in self.conformers]
+            conformers += sorted(chunk, key=lambda conf: conf.cost)
 
             # Renable the logging that would otherwise dominate with lots of conformers and/or Xmotifs
             logger.disabled = False
 
-            linkers_and_cost = {}
-            for (linker, cost) in linkers_and_cost_tuples:
-                linkers_and_cost[linker] = cost
+        # Reset the conformers as those with both different Xmotifs and geometry i.e.
+        # len(conformers) = len(x_motifs_list)*len(self.conformers)
+        self.conformers = conformers
 
-            # Sort this block of linkers the cost function. Not sorted the full list to retain the block structure with
-            # X motifs
-            linkers += sorted(linkers_and_cost, key=linkers_and_cost.get)
-
-        return linkers
+        return None
 
     def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=300, filename=None, use_etdg_confs=False):
         """
