@@ -14,7 +14,7 @@ SMILES. A graphical user interface (GUI) is available at
 ## Requirements
 0. Python v. 3.7
 1. All Python packages listed in requirements.txt 
-2. [autode](https://github.com/duartegroup/autodE) latest
+2. [autode](https://github.com/duartegroup/autodE) latest (optional)
 3. [ORCA](https://sites.google.com/site/orcainputlibrary/home) v. 4.1 (optional)
 4. [XTB](https://github.com/grimme-lab/xtb) v. 6.2 (optional)
 

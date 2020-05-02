@@ -1,14 +1,10 @@
 from cgbind.molecule import Molecule
 from cgbind.exceptions import RequiresAutodE
-from autode.config import Config
 import numpy as np
 import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 cwd = os.getcwd()
-
-# Set a path that exists so xtb looks like it's available
-Config.XTB.path = here
 
 
 def test_molecule():
