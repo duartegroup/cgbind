@@ -47,3 +47,26 @@ The above commands assume you have extracted the zip to ``C:\Users\yourusername\
     By default Windows doesn't have a C++ compiler required to build the extension to generate electrostatic potentials,
     as such this feature is not enabled by default. If a C++ compiler is available install with ``python setup.py install --esp_gen`` to build the ESP extension.
 
+
+Common Problems
+---------------
+
+Conda is not found::
+
+    $ conda config --append channels conda-forge
+    conda command not found
+
+First, make sure either miniconda or anaconda installed then ensure you've closed and reopened your terminal after
+installation.
+
+A required module is not found (setuptools, rdkit, Cython)::
+
+    $ python setup.py install
+    Traceback (most recent call last):
+      File "setup.py", line 2, in <module>
+        from Cython.Build import cythonize
+    ImportError: No module named Cython.Build
+
+Check that you've run ``conda install --file requirements.txt`` and that you're using the conda version of python (i.e.
+running ``which python`` returns /some/path/(ana/mini)conda/bin/python). If ``which python`` returns /usr/bin/python or
+another non-conda version of python then you may need to activate the base conda environment with ``conda activate base``.

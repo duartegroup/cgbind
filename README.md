@@ -18,11 +18,20 @@ SMILES. A graphical user interface (GUI) is available at
 3. [ORCA](https://sites.google.com/site/orcainputlibrary/home) v. 4.1 (optional)
 4. [XTB](https://github.com/grimme-lab/xtb) v. 6.2 (optional)
 
+The Python dependencies are most easily satisfied using a conda
+([anaconda](https://www.anaconda.com/distribution)/[miniconda](https://docs.conda.io/en/latest/miniconda.html))
+installation by running
+
+```
+conda config --append channels conda-forge
+conda install --file requirements.txt
+```
+
 ***
 
 ## Installation
 
-For installation instructions see the [docs](https://duartegroup.github.io/cgbind/install.html).
+For installation instructions see the [installation instructions](https://duartegroup.github.io/cgbind/install.html).
 If the requirements are already satisfied
 ```
 python setup.py install
