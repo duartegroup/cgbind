@@ -102,21 +102,22 @@ def get_charges(molecule):
     try:
         from autode.calculation import Calculation
         from autode.wrappers.XTB import xtb
+        from autode.exceptions import MethodUnavailable
 
     except ModuleNotFoundError:
         logger.error('autode not found. Calculations not available')
         raise RequiresAutodE
 
-    if not xtb.available:
+    # Run the calculation
+    try:
+        xtb_sp = Calculation(name=molecule.name + '_xtb_sp', molecule=molecule, method=xtb, n_cores=1)
+        xtb_sp.run()
+
+        charges = xtb_sp.get_atomic_charges()
+
+    except MethodUnavailable:
         logger.error('Could not calculate without an XTB install')
         return None
-
-    # Run the calculation
-    xtb_sp = Calculation(name=molecule.name + '_xtb_sp', molecule=molecule, method=xtb, n_cores=1)
-    xtb_sp.run()
-
-    # Charges file from XTB is one value per line
-    charges = xtb_sp.get_atomic_charges()
 
     if len(charges) == molecule.n_atoms:
         return charges
