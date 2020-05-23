@@ -28,6 +28,7 @@ finally::
     $ python setup.py install
 
 
+The whole process including installing miniconda is shown `here <https://youtu.be/R-J6vJeydAE>`_.
 
 Windows
 --------

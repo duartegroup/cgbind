@@ -7,11 +7,11 @@ from cgbind.architectures import archs
 from cgbind.exceptions import *
 from cgbind.atoms import heteroatoms
 from cgbind.atoms import get_max_valency
-from cgbind.build import calc_conformer_cost
+from cgbind.build import calc_linker_cost
 from cgbind.templates import get_template
 from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import check_x_motifs
-from cgbind.x_motifs import sort_x_motifs
+from cgbind.x_motifs import get_cost_metal_x_atom_interaction
 from multiprocessing import Pool
 
 
@@ -94,10 +94,10 @@ class Linker(Molecule):
 
         return None
 
-    def set_ranked_linker_conformers(self, metal=None, n=0):
+    def set_ranked_linker_possibilities(self, metal=None, n=0):
         """
         For this linker, return a list of Linker objects with appropriate .xyzs, .dr and .x_motifs attributes ordered
-        by their cost function low -> high i.e. good to bad. This will loop through all the conformers and the possible
+        by their cost function low -> high i.e. good to bad. This will loop through all the possibilities and the possible
         combinations of x motifs in the linker. Linker.dr controls how large the template needs to be to make
         the best fit
 
@@ -114,12 +114,9 @@ class Linker(Molecule):
         # x_motifs. The template needs to be modified to accommodate longer linkers with the same architecture
         x_motifs_list = list(itertools.combinations(self.x_motifs, n_x_motifs_in_linker))
 
-        # Sort the list of x_motifs in the linker by the most favourable M––X interaction
-        x_motifs_list = sort_x_motifs(x_motifs_list, linker=self, metal=metal)
-
         logger.info(f'Have {len(x_motifs_list)*len(self.conformers)} iterations to do')
+        possibilities = []
 
-        conformers = []
         for i, x_motifs in enumerate(x_motifs_list):
 
             # Execute calculation to get cost of adding a particular conformation to the template in parallel
@@ -129,19 +126,25 @@ class Linker(Molecule):
             # Sort this block of linkers the cost function. Not sorted the full list to retain the block structure with
             # X motifs
             with Pool(processes=Config.n_cores) as pool:
-                results = [pool.apply_async(calc_conformer_cost, (conf, self, x_motifs, template_linker))
+                results = [pool.apply_async(calc_linker_cost, (conf, self, x_motifs, template_linker))
                            for conf in self.conformers]
 
                 chunk = [res.get(timeout=None) for res in results]
 
-            conformers += sorted(chunk, key=lambda conf: conf.cost)
+            # Add a penalty to all the possibilities in this chunk based on the metal-donor atom favorability
+            penalty = get_cost_metal_x_atom_interaction(x_motifs, self, metal=metal)
+            for conf in chunk:
+                conf.cost += penalty
 
-            # Renable the logging that would otherwise dominate with lots of conformers and/or Xmotifs
+            # Add the possibilities in this chunk to the full list
+            possibilities += chunk
+
+            # Renable the logging that would otherwise dominate with lots of possibilities and/or Xmotifs
             logger.disabled = False
 
-        # Reset the conformers as those with both different Xmotifs and geometry i.e.
-        # len(conformers) = len(x_motifs_list)*len(self.conformers)
-        self.conformers = conformers
+        # Reset the possibilities as those with both different Xmotifs and geometry i.e. now
+        # len(possibilities) = len(x_motifs_list)*len(self.possibilities) where they are sorted by their cost
+        self.possibilities = sorted(possibilities, key=lambda conf: conf.cost)
 
         return None
 
@@ -174,3 +177,5 @@ class Linker(Molecule):
         check_x_motifs(self, linker_template=self.cage_template.linkers[0])
         self._strip_possible_x_motifs_on_connectivity()
         self.dr = None                                                        #: (float) Template shift distance
+
+        self.possibilities = []

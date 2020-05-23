@@ -27,13 +27,10 @@ the cage needs multple linkers, for example
     >>> heteroleptic_cage = cgbind.Cage(linkers=[linker, linker, alt_linker, alt_linker],
     >>>                                 metal='Pd')
 
-To generate a standard .xyz file that can be visualised with `Avogadro <https://avogadro.cc>`_ use
+To generate a standard .xyz file that can be visualised with e.g. `Avogadro <https://avogadro.cc>`_ use
 
     >>> cage.print_xyz_file()
 
-    >>> cage.print_xyz_file()
-
-    >>> cage.print_xyzfile()
 
 
 Obtaining Metallocage Properties

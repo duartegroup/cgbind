@@ -39,7 +39,7 @@ def get_fitted_linker_coords_and_cost(linker, template_x_coords, coords_to_fit, 
             min_cost = repulsion + cost
 
     if best_linker_coords is None:
-        logger.error('Fitted linker coords could not be found')
+        logger.warning('Fitted linker coords could not be found')
 
     return best_linker_coords, min_cost
 
@@ -111,7 +111,7 @@ def get_linker_atoms_to_add_and_cost(linker, template_linker, curr_coords):
     logger.info(f'Repulsive + fitting cost for adding the linker is {cost:.5f}')
 
     if linker_coords is None:
-        logger.error('Linker coords were None')
+        logger.warning('Linker coords were None')
         return None, cost
 
     new_linker.set_atoms(coords=linker_coords)
@@ -136,7 +136,7 @@ def cost_fitted_x_motifs(dr, linker, linker_template, x_coords):
     return cost
 
 
-def calc_conformer_cost(init_conformer, linker, x_motifs, template_linker):
+def calc_linker_cost(init_conformer, linker, x_motifs, template_linker):
     """
     For a set of linker xyzs e.g. one conformer and a linker object together with a list of x motifs in the
     structure return cost function associated with fitting the X motifs to the template
@@ -176,17 +176,17 @@ def build_homoleptic_cage(cage, max_cost):
     """
 
     # Get the list of Linkers ordered by the best fit to the template
-    cage.linkers[0].set_ranked_linker_conformers(metal=cage.metal)
-    logger.info(f'Have {len(cage.linkers[0].conformers)} conformers to fit')
+    cage.linkers[0].set_ranked_linker_possibilities(metal=cage.metal)
+    logger.info(f'Have {len(cage.linkers[0].possibilities)} linkers to fit')
 
     min_cost, best_linker = 99999999.9, None
     atoms = []
 
-    for linker_conf in cage.linkers[0].conformers:
+    for linker in cage.linkers[0].possibilities:
         cage_cost = 0.0
 
         for i, template_linker in enumerate(cage.cage_template.linkers):
-            linker_atoms, cost = get_linker_atoms_to_add_and_cost(linker_conf, template_linker,
+            linker_atoms, cost = get_linker_atoms_to_add_and_cost(linker, template_linker,
                                                                   curr_coords=[atom.coord for atom in atoms])
             cage_cost += cost
 
@@ -198,7 +198,7 @@ def build_homoleptic_cage(cage, max_cost):
 
         if cage_cost < min_cost:
             min_cost = cage_cost
-            best_linker = deepcopy(linker_conf)
+            best_linker = deepcopy(linker)
 
         if cage_cost < max_cost:
             logger.info(f'Total L-L repulsion + fit to template in building cage is {cage_cost:.2f}')
@@ -238,13 +238,14 @@ def build_heteroleptic_cage(cage, max_cost):
 
     for i, linker in enumerate(cage.linkers):
 
-        linker.set_ranked_linker_conformers(metal=cage.metal)
+        linker.set_ranked_linker_possibilities(metal=cage.metal)
 
-        linker_atoms, cost = get_linker_atoms_to_add_and_cost(linker.conforers[0], cage.cage_template.linkers[i],
+        linker_atoms, cost = get_linker_atoms_to_add_and_cost(linker.possibilities[0], cage.cage_template.linkers[i],
                                                               curr_coords=[atom.coord for atom in atoms])
 
         logger.info(f'L-L repulsion + fit to template in building cage is {cost:.2f}')
         atoms += linker_atoms
+        linker.dr = linker.possibilities[0].dr
 
     logger.warning('Heteroleptic cages will have the average dr of all linkers - using the average')
     cage.dr = np.average(np.array([linker.dr for linker in cage.linkers]))
