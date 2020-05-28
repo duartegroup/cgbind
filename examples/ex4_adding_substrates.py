@@ -8,9 +8,11 @@ cage = Cage(linker, metal_charge=2, metal='Pd')
 substrate = Substrate(name='benzoquione', smiles='O=C1C=CC(C=C1)=O')
 
 # Build the cage.substrate complex from the cage and substrate objects
-cs_complex = CageSubstrateComplex(cage=cage, substrate=substrate)
-cs_complex.print_xyzfile()
+cs_complex = CageSubstrateComplex(cage=cage, substrate=substrate, energy_method='repulsion')
+cs_complex.print_xyz_file()
 
 """
+For a better binding mode use energy_method='electrostatic_fast'
+
 To calculate binding affinities see ex5
 """

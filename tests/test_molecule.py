@@ -30,7 +30,7 @@ def test_molecule():
     methane.set_atoms(coords=coords)
     assert all(methane.atoms[0].coord == np.ones(3))
 
-    methane.print_xyzfile()
+    methane.print_xyz_file()
     assert os.path.exists('methane.xyz')
 
 
@@ -41,6 +41,7 @@ def test_molecule_sp_opt():
 
     try:
         from cgbind import xtb
+        xtb.path = here
 
         methane.singlepoint(method=xtb)
         assert methane.energy == -4.173842879099
@@ -75,6 +76,7 @@ def test_rdkit_props():
         # Run an XTB calculation to get the charges
         charges = methane.get_charges()
         assert len(charges) == methane.n_atoms
+
     except RequiresAutodE:
         pass
 

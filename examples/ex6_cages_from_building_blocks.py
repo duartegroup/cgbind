@@ -7,7 +7,7 @@ def gen_cage(linker_name, linker_smiles):
 
     linker = Linker(name=linker_name, smiles=linker_smiles, arch_name='m2l4')
     cage = Cage(linker, metal_charge=2, metal='Pd')
-    cage.print_xyzfile()
+    cage.print_xyz_file()
 
     return cage
 
@@ -30,7 +30,6 @@ top_link_names_smiles = {'alkyne': '.C%99#C%98.'}
 
 centre_names_smiles = {'2-6-pyridine'         : 'C1%98=NC%97=CC=C1',
                        'carbonate'            : 'O=C(O%98)O%97',
-                       '2-7-napthaly'         : 'C1%98=CC=C(C=CC%97=C2)C2=C1',
                        '1-8-anthracene'       : 'C1%98=CC=CC2=C1C=C3C(C=CC=C3%97)=C2',
                        '1-3-phenyl'           : 'C1%98=CC=CC%97=C1',
                        '1-3-phenyl-2-methyl'  : 'C1%98=CC=CC%97=C1C',

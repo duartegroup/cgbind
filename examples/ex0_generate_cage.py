@@ -8,7 +8,7 @@ linker = Linker(name='linker', smiles='C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=
 cage = Cage(linker, metal='Pd', metal_charge='2')
 
 # Print a .xyz file from the cage's xyzs
-cage.print_xyzfile()
+cage.print_xyz_file()
 
 
 """

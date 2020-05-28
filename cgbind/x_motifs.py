@@ -6,36 +6,30 @@ from cgbind.log import logger
 from cgbind.atoms import get_metal_favoured_heteroatoms
 
 
-def sort_x_motifs(x_motifs_list, linker, metal):
+def get_cost_metal_x_atom_interaction(x_motifs, linker, metal):
     """
-    Sort a list of X motifs by the favourability of the M--X interaction
+    Calculate a cost based on the favourability of the M--X interaction
 
-    :param x_motifs_list: (list((list(Xmotif)))
+    :param x_motifs: ((list(Xmotif))
     :param linker: (Linker)
     :param metal: (str)
     :return:
     """
-    logger.info('Sorting the X motif list by the best M--X interactions')
 
     if metal is None:
         logger.warning('Could not sort x motifs list. Metal was not specified')
-        return x_motifs_list
+        return 0
 
     fav_x_atoms = get_metal_favoured_heteroatoms(metal=metal)
-    x_motifs_list_and_cost = {}
+    cost = 0
 
-    for x_motifs in x_motifs_list:
-        cost = 0
+    for x_motif in x_motifs:
+        for atom_id in x_motif.atom_ids:
+            atom_label = linker.atoms[atom_id].label
+            if atom_label in fav_x_atoms:
+                cost += 10 * fav_x_atoms.index(atom_label)
 
-        for x_motif in x_motifs:
-            for atom_id in x_motif.atom_ids:
-                atom_label = linker.atoms[atom_id].label
-                if atom_label in fav_x_atoms:
-                    cost += fav_x_atoms.index(atom_label)
-
-        x_motifs_list_and_cost[x_motifs] = cost
-
-    return sorted(x_motifs_list_and_cost, key=x_motifs_list_and_cost.get)
+    return cost
 
 
 def get_shifted_template_x_motif_coords(linker_template, dr):

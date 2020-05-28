@@ -1,31 +1,8 @@
 from cgbind.defaults import *
 from cgbind.log import logger
 from cgbind.exceptions import RequiresAutodE
-from functools import wraps
 
 
-def requires_autode():
-    """A function requiring an autode install"""
-
-    def func_decorator(func):
-        @wraps(func)
-        def wrapped_function(*args, **kwargs):
-            try:
-                from autode.calculation import Calculation
-                from autode.wrappers.XTB import xtb
-                from autode.wrappers.ORCA import orca
-
-            except ModuleNotFoundError:
-                logger.error('autode not found. Calculations not available')
-                raise RequiresAutodE
-
-            return func(*args, **kwargs)
-
-        return wrapped_function
-    return func_decorator
-
-
-@requires_autode()
 def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
     """
     Optimise a molecule
@@ -38,6 +15,15 @@ def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
     :return:
     """
     logger.info('Running an optimisation calculation')
+
+    try:
+        from autode.calculation import Calculation
+        from autode.wrappers.XTB import xtb
+        from autode.wrappers.ORCA import orca
+
+    except ModuleNotFoundError:
+        logger.error('autode not found. Calculations not available')
+        raise RequiresAutodE
 
     if keywords is None:
         if method == orca:
@@ -62,7 +48,6 @@ def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
     return None
 
 
-@requires_autode()
 def singlepoint(molecule, method, keywords, n_cores=1):
     """
     Run a single point energy evaluation on a molecule
@@ -74,6 +59,15 @@ def singlepoint(molecule, method, keywords, n_cores=1):
     :return:
     """
     logger.info('Running single point calculation')
+
+    try:
+        from autode.calculation import Calculation
+        from autode.wrappers.XTB import xtb
+        from autode.wrappers.ORCA import orca
+
+    except ModuleNotFoundError:
+        logger.error('autode not found. Calculations not available')
+        raise RequiresAutodE
 
     if keywords is None:
         if method == orca:
@@ -97,7 +91,6 @@ def singlepoint(molecule, method, keywords, n_cores=1):
     return None
 
 
-@requires_autode()
 def get_charges(molecule):
     """
     Get the partial atomic charges with XTB (tested with v. 6.2) will generate then trash a temporary directory
@@ -106,16 +99,25 @@ def get_charges(molecule):
     """
     logger.info('Getting charges')
 
-    if not xtb.available:
-        logger.error('Could not calculate without an XTB install')
-        return None
+    try:
+        from autode.calculation import Calculation
+        from autode.wrappers.XTB import xtb
+        from autode.exceptions import MethodUnavailable
+
+    except ModuleNotFoundError:
+        logger.error('autode not found. Calculations not available')
+        raise RequiresAutodE
 
     # Run the calculation
-    xtb_sp = Calculation(name=molecule.name + '_xtb_sp', molecule=molecule, method=xtb, n_cores=1)
-    xtb_sp.run()
+    try:
+        xtb_sp = Calculation(name=molecule.name + '_xtb_sp', molecule=molecule, method=xtb, n_cores=1)
+        xtb_sp.run()
 
-    # Charges file from XTB is one value per line
-    charges = xtb_sp.get_atomic_charges()
+        charges = xtb_sp.get_atomic_charges()
+
+    except MethodUnavailable:
+        logger.error('Could not calculate without an XTB install')
+        return None
 
     if len(charges) == molecule.n_atoms:
         return charges

@@ -48,7 +48,7 @@ def extract_conformers_from_rdkit_mol_object(mol_obj, conf_ids):
 
 class BaseStruct:
 
-    def print_xyzfile(self, filename=None):
+    def print_xyz_file(self, filename=None):
         """
         Print a .xyz file from self.xyzs provided self.reasonable_geometry is True
 
@@ -121,7 +121,9 @@ class BaseStruct:
         if atoms is not None:
             assert type(atoms) == list
             assert len(atoms) > 0
-            assert type(atoms[0]) == Atom
+            assert hasattr(atoms[0], 'label')
+            assert hasattr(atoms[0], 'coord')
+            assert len(atoms[0].coord) == 3
 
             self.atoms = atoms
             self.n_atoms = len(atoms)

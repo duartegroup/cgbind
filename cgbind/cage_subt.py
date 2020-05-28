@@ -41,8 +41,8 @@ class CageSubstrateComplex(BaseStruct):
             logger.error(f'Cannot build a cage-substrate complex for {self.name} either cage or substrate was None')
             raise CannotBuildCSComplex
 
-        attrs = [cage.charge, substrate.charge, substrate.mol_obj, cage.atoms, substrate.atoms, cage.m_ids, cage.n_atoms]
-        if not all([attr is not None for attr in attrs]):
+        attrs = [cage.charge, substrate.charge, cage.atoms, substrate.atoms, cage.m_ids, cage.n_atoms]
+        if not all([attr is not None for attr in attrs]) or (substrate.mol_obj is None and self.n_subst_confs > 1):
             logger.error(f'Cannot build a cage-substrate complex for {self.name} a required attribute was None')
             raise CannotBuildCSComplex
 

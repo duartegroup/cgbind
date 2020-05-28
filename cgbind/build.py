@@ -7,6 +7,7 @@ from cgbind.atoms import Atom
 from cgbind.geom import get_centered_matrix
 from cgbind.geom import get_rot_mat_kabsch
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
+from cgbind.molecule import BaseStruct
 
 
 def get_fitted_linker_coords_and_cost(linker, template_x_coords, coords_to_fit, curr_coords):
@@ -38,7 +39,7 @@ def get_fitted_linker_coords_and_cost(linker, template_x_coords, coords_to_fit, 
             min_cost = repulsion + cost
 
     if best_linker_coords is None:
-        logger.error('Fitted linker coords could not be found')
+        logger.warning('Fitted linker coords could not be found')
 
     return best_linker_coords, min_cost
 
@@ -110,7 +111,7 @@ def get_linker_atoms_to_add_and_cost(linker, template_linker, curr_coords):
     logger.info(f'Repulsive + fitting cost for adding the linker is {cost:.5f}')
 
     if linker_coords is None:
-        logger.error('Linker coords were None')
+        logger.warning('Linker coords were None')
         return None, cost
 
     new_linker.set_atoms(coords=linker_coords)
@@ -135,34 +136,34 @@ def cost_fitted_x_motifs(dr, linker, linker_template, x_coords):
     return cost
 
 
-def get_new_linker_and_cost(linker_atoms, linker, x_motifs, template_linker):
+def calc_linker_cost(init_conformer, linker, x_motifs, template_linker):
     """
     For a set of linker xyzs e.g. one conformer and a linker object together with a list of x motifs in the
     structure return cost function associated with fitting the X motifs to the template
 
-    :param linker_atoms: (list(Atom))
+    :param conformer: (cgbind.molecule.BaseStruct)
     :param linker: (Linker)
     :param x_motifs: (list(Xmotif))
     :param template_linker: (Template.Linker)
     :return: (tuple(Linker, float)) New linker and cost
     """
-    coords = np.array([atom.coord for atom in linker_atoms])
+    coords = init_conformer.get_coords()
     x_coords = [coords[atom_id] for motif in x_motifs for atom_id in motif.atom_ids]
 
     # Minimise the cost function as a function of dr in Å
     min_result = minimize(cost_fitted_x_motifs, x0=np.array([1.0]), args=(linker, template_linker, x_coords),
                           method='L-BFGS-B', tol=1e-3, bounds=Bounds(-100.0, 10.0))
 
-    # Set attributes of the new linker
-    new_linker = deepcopy(linker)
-    new_linker.dr = min_result.x[0]
-    new_linker.set_atoms(linker_atoms)
-    new_linker.x_motifs = x_motifs
+    conformer = BaseStruct()
+    conformer.dr = min_result.x[0]
+    conformer.x_motifs = x_motifs
+    conformer.set_atoms(init_conformer.atoms)
 
     x_motif_atoms = [atom_id for motif in x_motifs for atom_id in motif.atom_ids]
-    new_linker.x_atoms = [atom_id for atom_id in linker.x_atoms if atom_id in x_motif_atoms]
+    conformer.x_atoms = [atom_id for atom_id in linker.x_atoms if atom_id in x_motif_atoms]
+    conformer.cost = min_result.fun
 
-    return new_linker, min_result.fun
+    return conformer
 
 
 def build_homoleptic_cage(cage, max_cost):
@@ -175,13 +176,13 @@ def build_homoleptic_cage(cage, max_cost):
     """
 
     # Get the list of Linkers ordered by the best fit to the template
-    ranked_linkers = cage.linkers[0].get_ranked_linker_conformers(metal=cage.metal)
-    logger.info(f'Have {len(ranked_linkers)} conformers to fit')
+    cage.linkers[0].set_ranked_linker_possibilities(metal=cage.metal)
+    logger.info(f'Have {len(cage.linkers[0].possibilities)} linkers to fit')
 
     min_cost, best_linker = 99999999.9, None
     atoms = []
 
-    for linker in ranked_linkers:
+    for linker in cage.linkers[0].possibilities:
         cage_cost = 0.0
 
         for i, template_linker in enumerate(cage.cage_template.linkers):
@@ -216,9 +217,9 @@ def build_homoleptic_cage(cage, max_cost):
     cage.dr = best_linker.dr
     atoms = []
     for i, template_linker in enumerate(cage.cage_template.linkers):
-        linker_xyzs, _ = get_linker_atoms_to_add_and_cost(best_linker, template_linker,
-                                                          curr_coords=[atom.coord for atom in atoms])
-        atoms += linker_xyzs
+        linker_atoms, _ = get_linker_atoms_to_add_and_cost(best_linker, template_linker,
+                                                           curr_coords=[atom.coord for atom in atoms])
+        atoms += linker_atoms
 
     # Add the metals from the template shifted by dr
     for metal in cage.cage_template.metals:
@@ -233,21 +234,18 @@ def build_heteroleptic_cage(cage, max_cost):
     logger.info('Building a heteroleptic cage')
     logger.warning('Due to the very large space that needs to be minimised only the *best* linker conformer is used')
 
-    added_linkers, xyzs = [], []
+    added_linkers, atoms = [], []
 
     for i, linker in enumerate(cage.linkers):
 
-        ranked_linkers = linker.get_ranked_linker_conformers(metal=cage.metal)
+        linker.set_ranked_linker_possibilities(metal=cage.metal)
 
-        for ranked_linker in ranked_linkers:
-            linker_xyzs, cost = get_linker_atoms_to_add_and_cost(ranked_linker, cage.cage_template.linkers[i],
-                                                                 curr_coords=xyzs)
+        linker_atoms, cost = get_linker_atoms_to_add_and_cost(linker.possibilities[0], cage.cage_template.linkers[i],
+                                                              curr_coords=[atom.coord for atom in atoms])
 
-            if cost < max_cost:
-                logger.info(f'L-L repulsion + fit to template in building cage is {cost:.2f}')
-                cage.linkers[i] = ranked_linker
-                xyzs += linker_xyzs
-                break
+        logger.info(f'L-L repulsion + fit to template in building cage is {cost:.2f}')
+        atoms += linker_atoms
+        linker.dr = linker.possibilities[0].dr
 
     logger.warning('Heteroleptic cages will have the average dr of all linkers - using the average')
     cage.dr = np.average(np.array([linker.dr for linker in cage.linkers]))
@@ -255,7 +253,7 @@ def build_heteroleptic_cage(cage, max_cost):
     # Add the metals from the template shifted by dr
     for metal in cage.cage_template.metals:
         metal_coord = cage.dr * metal.shift_vec / np.linalg.norm(metal.shift_vec) + metal.coord
-        xyzs.append([cage.metal] + metal_coord.tolist())
+        atoms.append(Atom(cage.metal, x=metal_coord[0], y=metal_coord[1], z=metal_coord[2]))
 
-    cage.set_atoms(xyzs)
+    cage.set_atoms(atoms)
     return None

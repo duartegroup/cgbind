@@ -8,11 +8,8 @@ def xyz_file_to_atoms(filename):
     """/
     From an .xyz file get a list of atoms
 
-    Arguments:
-        filename (str): .xyz filename
-
-    Returns:
-        (list(autode.atoms.Atom)):
+    :param filename: (str) .xyz filename
+    :return: (list(Atom))
     """
     logger.info(f'Getting atoms from {filename}')
 
@@ -48,11 +45,10 @@ def atoms_to_xyz_file(atoms, filename, title_line=''):
     """
     Print a standard .xyz file from a set of atoms
 
-    Arguments:
-        atoms (list(autode.atoms.Atom)): 
-        filename (str): 
-        title_line (str): 
-    """""
+    :param atoms: (list(Atom))
+    :param filename: (str)
+    :param title_line: (str)
+    """
 
     with open(filename, 'w') as xyz_file:
         print(len(atoms), title_line, sep='\n', file=xyz_file)
@@ -111,6 +107,10 @@ def molfile_to_atoms(filename):
     """
     Convert a .mol file to a list of atoms
 
+    :param filename: (str)
+    :return: (list(Atom))
+    """
+    """
     e.g. for methane:
     _____________________
 
@@ -128,10 +128,8 @@ def molfile_to_atoms(filename):
       1  5  1  0  0  0  0
     M  END
     _____________________
-
-    :param filename: (str)
-    :return: (list(list))
     """
+
     atoms = []
 
     if not (os.path.exists(filename) and filename.endswith('.mol')):
@@ -159,10 +157,10 @@ def molfile_to_atoms(filename):
 
 def mol2file_to_atoms(filename):
     """
-    Convert a .mol file into a standard set of atoms in the form e.g [[C, 0.0, 0.0, 0.0], ...]
+    Convert a .mol file into a standard set of atoms
 
-    :param filename: (str) name of the .mol file
-    :return: (lis(list)) atoms
+    :param filename: (str)
+    :return: (lis(Atom))
     """
     logger.info('Converting .mol2 file to atoms')
 
