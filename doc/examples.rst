@@ -72,3 +72,28 @@ with the correct geometry. To request more than the default 300 conformers initi
 sensible structure, to use an earlier version `Linker(..., use_etdg_confs=True)`.
 
 
+Adding Architectures
+--------------------
+
+Extending *cgbind* to other architectures is possible using the add_template.py
+`script <https://github.com/duartegroup/cgbind/blob/master/scripts/add_template.py>`_.
+For example, the M24L48 metallocage from `Fujita <https://doi.org/10.1126/science.1188605>`_ can
+be added as a template by downloading the crystal structure deposited in the
+`CCDC <https://www.ccdc.cam.ac.uk/structures/Search?Ccdcid=765717&DatabaseToSearch=Published>`_
+using Open → CSD entry in external viewer to download the structure as a .mol2. Then::
+
+    $ python /path/to/cgbind/scripts/add_template.py WUQROQ.mol2 --name m24l48
+
+Creating a M24L48 cage is then as easy as:
+
+.. code-block:: python
+
+    >>> from cgbind import Linker, Cage
+    >>> linker = Linker(smiles='n1ccc(cc1)-c2sc(cc2)-c3ccncc3', arch_name='m24l48')
+    >>> cage = Cage(linker=linker, metal='Pd')
+    >>> cage.print_xyz_file()
+
+
+
+
+
