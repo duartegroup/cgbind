@@ -1,4 +1,3 @@
-from cgbind.defaults import *
 from cgbind.log import logger
 from cgbind.exceptions import RequiresAutodE
 
@@ -9,7 +8,8 @@ def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
 
     :param molecule: (object)
     :param method: (autode.ElectronicStructureMethod)
-    :param keywords: (list(str)) Keywords to use for the electronic structure calculation e.g. ['Opt', 'PBE', 'def2-SVP']
+    :param keywords: (list(str)) Keywords to use for the electronic structure c
+                                 alculation e.g. ['Opt', 'PBE', 'def2-SVP']
     :param n_cores: (int) Number of cores to use
     :param cartesian_constraints: (list(int)) List of atom ids to constrain
     :return:
@@ -20,6 +20,7 @@ def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
         from autode.calculation import Calculation
         from autode.wrappers.XTB import xtb
         from autode.wrappers.ORCA import orca
+        from autode.wrappers.keywords import OptKeywords
 
     except ModuleNotFoundError:
         logger.error('autode not found. Calculations not available')
@@ -27,20 +28,31 @@ def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
 
     if keywords is None:
         if method == orca:
-            logger.warning('No keywords were set for the optimisation but an ORCA calculation was requested.\n'
-                           'Using defaults.orca_low_opt_keywords..')
-            keywords = orca_low_opt_keywords
+
+            keywords = OptKeywords(['LooseOpt', 'PBE', 'D3BJ', 'def2-SVP'])
+            logger.warning(f'No keywords were set for the optimisation but an'
+                           f' ORCA calculation was requested. '
+                           f'Using {str(keywords)}')
 
         elif method == xtb:
-            # No keywords are required for XTB
-            pass
+            keywords = OptKeywords(keyword_list=[])
 
         else:
-            logger.critical('No keywords were set for the optimisation calculation')
+            logger.critical('No keywords were set for the optimisation '
+                            'calculation')
             exit()
 
-    opt = Calculation(name=molecule.name + '_opt', molecule=molecule, method=method, keywords_list=keywords,
-                      n_cores=n_cores, cartesian_constraints=cartesian_constraints, opt=True)
+    else:
+        # If the keywords are specified as a list convert them to a set of
+        # OptKeywords, required for autodE
+        if type(keywords) is list:
+            keywords = OptKeywords(keywords)
+
+    opt = Calculation(name=molecule.name + '_opt', molecule=molecule,
+                      method=method,
+                      keywords=keywords,
+                      n_cores=n_cores,
+                      cartesian_constraints=cartesian_constraints)
     opt.run()
     molecule.energy = opt.get_energy()
     molecule.set_atoms(atoms=opt.get_final_atoms())
@@ -54,7 +66,8 @@ def singlepoint(molecule, method, keywords, n_cores=1):
 
     :param molecule: (object)
     :param method: (autode.ElectronicStructureMethod)
-    :param keywords: (list(str)) Keywords to use for the electronic structure calculation e.g. ['Opt', 'PBE', 'def2-SVP']
+    :param keywords: (list(str)) Keywords to use for the electronic structure
+    calculation e.g. ['Opt', 'PBE', 'def2-SVP']
     :param n_cores: (int) Number of cores to use
     :return:
     """
@@ -64,6 +77,7 @@ def singlepoint(molecule, method, keywords, n_cores=1):
         from autode.calculation import Calculation
         from autode.wrappers.XTB import xtb
         from autode.wrappers.ORCA import orca
+        from autode.wrappers.keywords import SinglePointKeywords
 
     except ModuleNotFoundError:
         logger.error('autode not found. Calculations not available')
@@ -71,19 +85,30 @@ def singlepoint(molecule, method, keywords, n_cores=1):
 
     if keywords is None:
         if method == orca:
-            logger.warning('No keywords were set for the single point but an ORCA calculation was requested.\n'
-                           'Using defaults.orca_sp_keywords..')
-            keywords = orca_sp_keywords
+            keywords = SinglePointKeywords(['SP', 'M062X', 'def2-TZVP',
+                                            'RIJCOSX', 'def2/J', 'SlowConv'])
+
+            logger.warning('No keywords were set for the single point but an '
+                           'ORCA calculation was requested. '
+                           f'Using {str(keywords)}')
 
         elif method == xtb:
-            # No keywords are required for XTB
-            pass
+            keywords = SinglePointKeywords(keyword_list=[])
 
         else:
-            logger.critical('No keywords were set for the single-point calculation')
+            logger.critical('No keywords were set for the single-point '
+                            'calculation')
             exit()
 
-    sp = Calculation(name=molecule.name + '_sp', molecule=molecule, method=method, keywords_list=keywords,
+    else:
+        # If the keywords are specified as a list convert them to a set of
+        # OptKeywords, required for autodE
+        if type(keywords) is list:
+            keywords = SinglePointKeywords(keywords)
+
+    sp = Calculation(name=molecule.name + '_sp', molecule=molecule,
+                     method=method,
+                     keywords=keywords,
                      n_cores=n_cores)
     sp.run()
     molecule.energy = sp.get_energy()
@@ -93,7 +118,8 @@ def singlepoint(molecule, method, keywords, n_cores=1):
 
 def get_charges(molecule):
     """
-    Get the partial atomic charges with XTB (tested with v. 6.2) will generate then trash a temporary directory
+    Get the partial atomic charges with XTB (tested with v. 6.2) will generate
+    then trash a temporary directory
 
     :return:
     """
@@ -103,6 +129,7 @@ def get_charges(molecule):
         from autode.calculation import Calculation
         from autode.wrappers.XTB import xtb
         from autode.exceptions import MethodUnavailable
+        from autode.wrappers.keywords import SinglePointKeywords
 
     except ModuleNotFoundError:
         logger.error('autode not found. Calculations not available')
@@ -110,7 +137,10 @@ def get_charges(molecule):
 
     # Run the calculation
     try:
-        xtb_sp = Calculation(name=molecule.name + '_xtb_sp', molecule=molecule, method=xtb, n_cores=1)
+        xtb_sp = Calculation(name=molecule.name + '_xtb_sp', molecule=molecule,
+                             method=xtb,
+                             n_cores=1,
+                             keywords=SinglePointKeywords(keyword_list=[]))
         xtb_sp.run()
 
         charges = xtb_sp.get_atomic_charges()

@@ -37,7 +37,7 @@ centre_names_smiles = {'2-6-pyridine'         : 'C1%98=NC%97=CC=C1',
 
 bottom_link_names_smiles = {'alkyne': '.C%97#C%96.'}
 
-bottom_end_names_smiles = {'3-pyridine' : 'C1%96=CC=CN=C1'}
+bottom_end_names_smiles = {'3-pyridine': 'C1%96=CC=CN=C1'}
 
 # Empty dictionary to store the linker names and SMILES strings
 all_linkers = {}
