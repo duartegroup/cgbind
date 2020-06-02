@@ -54,6 +54,8 @@ def get_kfitted_coords_and_cost(linker, template_x_coords, coords_to_fit, return
     :param return_cost: (bool) return just the cost function, which is the sum of squares of ∆dists
     :return: (np.ndarray) n_atoms x 3
     """
+    assert len(template_x_coords) == len(coords_to_fit)
+
     # Construct the P matrix in the Kabsch algorithm
     p_mat = deepcopy(coords_to_fit)
     p_centroid = np.average(p_mat, axis=0)

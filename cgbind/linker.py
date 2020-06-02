@@ -125,11 +125,15 @@ class Linker(Molecule):
 
             # Sort this block of linkers the cost function. Not sorted the full list to retain the block structure with
             # X motifs
-            with Pool(processes=Config.n_cores) as pool:
-                results = [pool.apply_async(calc_linker_cost, (conf, self, x_motifs, template_linker))
-                           for conf in self.conformers]
+            if Config.n_cores > 1:
+                with Pool(processes=Config.n_cores) as pool:
+                    results = [pool.apply_async(calc_linker_cost, (conf, self, x_motifs, template_linker))
+                               for conf in self.conformers]
 
-                chunk = [res.get(timeout=None) for res in results]
+                    chunk = [res.get(timeout=None) for res in results]
+            else:
+                # Skip multiprocessing so this function can be called by mp 
+                chunk = [calc_linker_cost(conf, self, x_motifs, template_linker) for conf in self.conformers]
 
             # Add a penalty to all the possibilities in this chunk based on the metal-donor atom favorability
             penalty = get_cost_metal_x_atom_interaction(x_motifs, self, metal=metal)

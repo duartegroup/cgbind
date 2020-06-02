@@ -95,6 +95,7 @@ class Linker:
         :param atoms: (list(list))
         :param x_atoms: (list(int)) Donor atom ids in the xyzs
         """
+        logger.info('Generating a template linker...')
         self.atoms = atoms                                      #: (list(list))
         self.x_atoms = x_atoms                                  #: (list(int)) List of donor atoms in the linker
         self.coords = np.array([atom.coord for atom in atoms])  #: (list(np.ndarray)) Linker coordinates
@@ -103,6 +104,7 @@ class Linker:
 
         self.x_motifs = find_x_motifs(self)                    #: (list(Xmotif objects)
         self.x_motifs = get_maximally_connected_x_motifs(self.x_motifs, x_atoms=x_atoms)
+
         check_x_motifs(linker_template=self)            # check that the x_motifs are the same length
 
 
@@ -162,6 +164,7 @@ class Template:
                         break
 
             linkers.append(Linker(atoms=atoms, x_atoms=linker_x_atoms))
+            logger.info(f'Linker has {len(linker_x_atoms)} donor atoms')
 
         logger.info(f'Found {len(linkers_atoms)} linkers each with {len(linker_x_atoms)} donor atoms')
         return linkers
@@ -273,6 +276,7 @@ class Template:
 
         self.metals = self._find_metals()
         self.n_metals = len(self.metals)
+        assert self.n_metals > 0
         logger.info(f'Found {self.n_metals} metals')
 
         self.bonds = get_bond_list_from_atoms(self.atoms)
