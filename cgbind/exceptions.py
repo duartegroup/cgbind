@@ -10,7 +10,7 @@ class NoXYZs(Exception):
 
 class CgbindCritical(Exception):
     """Non recoverable error"""
-    def __init__(self, message):
+    def __init__(self, message=''):
         super().__init__(message)
 
 

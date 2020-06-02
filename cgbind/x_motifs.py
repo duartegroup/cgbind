@@ -1,5 +1,6 @@
 import numpy as np
 import itertools
+import networkx as nx
 from copy import deepcopy
 from cgbind.exceptions import CgbindCritical
 from cgbind.log import logger
@@ -89,10 +90,30 @@ def powerset(s):
     return itertools.chain.from_iterable(itertools.combinations(s, r) for r in range(2, len(s)+1))
 
 
+def is_fully_connected(atom_indexes, bonds):
+    """
+    Determine if a set of atoms is fully connected given a list of bonds
+
+    :param atom_indexes: (list(int))
+    :param bonds: (list(tuple))
+    :return: (bool)
+    """
+    graph = nx.Graph()
+
+    for atom_index in atom_indexes:
+        graph.add_node(atom_index)
+
+    for (i, j) in bonds:
+        if i in atom_indexes and j in atom_indexes:
+            graph.add_edge(i, j)
+
+    return nx.is_connected(graph)
+
+
 def find_x_motifs(linker):
     """
-    Find the X motifs in a structure which correspond to the X atoms and their nearest neighbours. These may be joined
-    if they are bonded
+    Find the X motifs in a structure which correspond to the X atoms and their
+    nearest neighbours. These may be joined if they are bonded
 
     :return: (list(list(int)))
     """
@@ -116,44 +137,29 @@ def find_x_motifs(linker):
         x_motif.append(donor_atom)
         x_motifs.append(x_motif)
 
-    # Get all the combinations of x motifs with length > 2 up to the total number of x_motifs
+    # Get all the combinations of x motifs with length > 2 up to the total
+    # number of x_motifs
     x_motif_combinations = powerset(s=deepcopy(x_motifs))
 
-    logger.info(f'Have {len(list(powerset(s=deepcopy(x_motifs))))} groups of X motifs to determine if they are bonded')
+    logger.info(f'Have {len(list(powerset(s=deepcopy(x_motifs))))} groups of X'
+                f' motifs to determine if they are bonded')
     for i, x_motif_group in enumerate(x_motif_combinations):
-        logger.info(f'Determining if all {len(x_motif_group)} x motifs in this group are bonded')
+        logger.info(f'Determining if all {len(x_motif_group)} x motifs in this'
+                    f' group are bonded')
 
-        inter_x_motif_bonds = 0
-        bonded = False
+        x_motif_group_atom_indexes = []
+        for x_motif in x_motif_group:
+            x_motif_group_atom_indexes += list(x_motif)
 
-        for (x_motif_i, x_motif_j) in itertools.combinations(x_motif_group, 2):
-            for atom_index_i in x_motif_i:
-                for atom_index_j in x_motif_j:
-                    if (atom_index_i, atom_index_j) in linker.bonds or (atom_index_j, atom_index_i) in linker.bonds:
+        if is_fully_connected(x_motif_group_atom_indexes, bonds=linker.bonds):
+            logger.info(f'X-motifs are bonded')
+            x_motifs.append(list(set(x_motif_group_atom_indexes)))
 
-                        # If atoms i and j are bonded then we can have this x motif
-                        bonded = True
-                        break
+    logger.info(f'Found {len(x_motifs)} X motifs in the linker, '
+                f'with {set([len(x) for x in x_motifs])} atoms')
 
-                if bonded:
-                    break
-
-            if bonded:
-                inter_x_motif_bonds += 1
-
-        # All x motifs in the group need to be bonded to each other, with the n. bonds -1 e.g. 3 Xmotifs need 2 bonds
-        if inter_x_motif_bonds == len(x_motif_group) - 1:
-
-            # Construct the set of all atoms in the bonded Xmotif (set so no repeated atoms)
-            bonded_x_motif = []
-            for x_motif in x_motif_group:
-                bonded_x_motif += list(x_motif)
-
-            x_motifs.append(list(set(bonded_x_motif)))
-
-    logger.info(f'Found {len(x_motifs)} X motifs in the linker, with {set([len(x) for x in x_motifs])} atoms')
-
-    # Order the x_motifs according to the centroid – coord distance: smallest -> largest
+    # Order the x_motifs according to the centroid – coord
+    # distance: smallest -> largest
     sorted_x_motifs_ids = [sorted(list(x_motif), key=centroid_atom_distance)
                            for x_motif in x_motifs]
 
@@ -185,7 +191,8 @@ def get_maximally_connected_x_motifs(x_motifs, x_atoms):
             logger.info(f'Returning {len(new_x_motifs)} Xmotifs each with {len(new_x_motifs[0])} atoms')
             return new_x_motifs
 
-    logger.critical('Could not find a set of x motifs of the same length with all the donor atoms')
+    logger.critical('Could not find a set of x motifs of the same length with'
+                    ' all the donor atoms')
     raise CgbindCritical
 
 

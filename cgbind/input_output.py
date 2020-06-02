@@ -201,13 +201,13 @@ def mol2file_to_atoms(filename):
         if len(atom.label) == 1:
             continue
 
-        # e.g. Pd1 or C58
+        # e.g. P1 or C58
         elif atom.label[0].isalpha() and not atom.label[1].isalpha():
             atom.label = atom.label[0]
 
         # e.g. Pd10
         elif atom.label[0].isalpha() and atom.label[1].isalpha():
-            atom.label = atom.label[:2]
+            atom.label = atom.label[:2].title()
 
         else:
             logger.error('Unrecognised atom type')

@@ -287,7 +287,10 @@ class Cage(BaseStruct):
             logger.error('Linker was not reasonable')
             return
 
-        self.name = 'cage_' + linker.name
+        if self.name == 'cage':
+            # Only override the default name
+            self.name = 'cage_' + linker.name
+
         self.arch = linker.arch
         self.linkers = [linker for _ in range(linker.arch.n_linkers)]
         self.cage_template = linker.cage_template
@@ -306,7 +309,10 @@ class Cage(BaseStruct):
             logger.error('Linkers had different architectures, not building a cage')
             return
 
-        self.name = 'cage_' + '_'.join([linker.name for linker in linkers])
+        if self.name == 'cage':
+            # Only override the default name
+            self.name = 'cage_' + '_'.join([linker.name for linker in linkers])
+
         self.arch = linkers[0].arch
         self.linkers = linkers
         self.cage_template = linkers[0].cage_template
