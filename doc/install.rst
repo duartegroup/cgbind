@@ -9,6 +9,17 @@ dependencies.
     The `autode <https://duartegroup.github.io/autodE/install.html>`_ package is an optional dependency to perform
     semi-emprical, DFT and ab initio calculations.
 
+
+PIP
+---
+
+If the requirements (rdkit, numpy, scipy, networkx, Cython) are already available ``cgbind`` can be install with
+`pip <https://pypi.org/project/pip/>`_::
+
+    $ pip install cgbind
+
+
+
 Mac OSX / Linux
 ---------------
 

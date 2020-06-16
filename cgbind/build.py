@@ -4,6 +4,7 @@ from scipy.optimize import minimize, Bounds
 from scipy.spatial import distance_matrix
 from cgbind.log import logger
 from cgbind.atoms import Atom
+from cgbind.config import Config
 from cgbind.geom import get_centered_matrix
 from cgbind.geom import get_rot_mat_kabsch
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
@@ -24,7 +25,13 @@ def get_fitted_linker_coords_and_cost(linker, template_x_coords, coords_to_fit, 
     """
     min_cost, best_linker_coords = 99999999999.9, None
 
-    for coords in [coords_to_fit, list(reversed(coords_to_fit))]:
+    coord_set = [coords_to_fit]
+
+    if Config.allow_permutations:
+        logger.info('Allowing permutations of coords - only reverse')
+        coord_set.append(list(reversed(coords_to_fit)))
+
+    for coords in coord_set:
         new_linker_coords, cost = get_kfitted_coords_and_cost(linker=linker,
                                                               template_x_coords=template_x_coords,
                                                               coords_to_fit=coords)

@@ -164,7 +164,7 @@ class Linker(Molecule):
         :param filename: (str)
         :param use_etdg_confs: (bool) Use a different, sometimes better, conformer generation algorithm
         """
-        logger.info(f'Initialising a Linker object for {name}')
+        logger.info(f'Initialising a Linker object for {name} with {n_confs} conformers')
 
         self.arch = None                                                      #: (Arch object) Metallocage architecture
         self._set_arch(arch_name)
