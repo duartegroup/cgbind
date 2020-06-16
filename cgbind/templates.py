@@ -3,6 +3,7 @@ import networkx as nx
 import numpy as np
 import pickle
 import os
+from cgbind.exceptions import CgbindCritical
 from cgbind.input_output import mol2file_to_atoms
 from cgbind.bonds import get_bond_list_from_atoms
 from cgbind.geom import calc_com
@@ -64,8 +65,7 @@ def get_template(arch_name='m2l4', folder_path=None):
             return pickle.load(pickled_file)
 
     except IOError:
-        logger.critical('Could not retrieve template')
-        exit()
+        raise CgbindCritical(message='Could not retrieve template')
 
 
 class Metal:
