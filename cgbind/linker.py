@@ -5,14 +5,49 @@ from cgbind.config import Config
 from cgbind.molecule import Molecule
 from cgbind.architectures import archs
 from cgbind.exceptions import *
+from scipy.optimize import minimize, Bounds
+from cgbind.build import cost_fitted_x_motifs
 from cgbind.atoms import heteroatoms
 from cgbind.atoms import get_max_valency
-from cgbind.build import calc_linker_cost
 from cgbind.templates import get_template
 from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import check_x_motifs
 from cgbind.x_motifs import get_cost_metal_x_atom_interaction
 from multiprocessing import Pool
+
+
+def get_linker_conformer(init_conformer, linker, x_motifs, template_linker):
+    """
+    For a set of linker xyzs e.g. one conformer and a linker object together
+    with a list of x motifs in the structure return cost function associated
+    with fitting the X motifs to the template
+
+    :param init_conformer: (cgbind.molecule.BaseStruct)
+    :param linker: (Linker)
+    :param x_motifs: (list(Xmotif))
+    :param template_linker: (Template.Linker)
+    :return: (tuple(Linker, float)) New linker and cost
+    """
+    coords = init_conformer.get_coords()
+    x_coords = [coords[atom_id] for motif in x_motifs for atom_id in motif.atom_ids]
+
+    # Minimise the cost function as a function of dr in Å
+    min_result = minimize(cost_fitted_x_motifs, x0=np.array([1.0]),
+                          args=(linker, template_linker, x_coords),
+                          method='L-BFGS-B', tol=1e-3,
+                          bounds=Bounds(-100.0, 10.0))
+
+    # Create a linker conformer from the minimisation
+    conformer = Linker(arch_name=linker.arch.name)
+    conformer.dr = min_result.x[0]
+    conformer.x_motifs = x_motifs
+    conformer.set_atoms(init_conformer.atoms)
+
+    x_motif_atoms = [atom_id for motif in x_motifs for atom_id in motif.atom_ids]
+    conformer.x_atoms = [atom_id for atom_id in linker.x_atoms if atom_id in x_motif_atoms]
+    conformer.cost = min_result.fun
+
+    return conformer
 
 
 class Linker(Molecule):
@@ -77,14 +112,15 @@ class Linker(Molecule):
         return None
 
     def _set_arch(self, arch_name):
+        """Set the cage architecture which will be built from this linker"""
 
         for arch in archs:
             if arch_name.lower() == arch.name.lower():
                 self.arch = arch
 
         if self.arch is None:
-            raise ArchitectureNotFound(message=f'\nAvailable architecture names are {[arch.name for arch in archs]}')
-
+            raise ArchitectureNotFound(f'\nAvailable architecture names are '
+                                       f'{[arch.name for arch in archs]}')
         return None
 
     def _check_structure(self):
@@ -127,13 +163,13 @@ class Linker(Molecule):
             # X motifs
             if Config.n_cores > 1:
                 with Pool(processes=Config.n_cores) as pool:
-                    results = [pool.apply_async(calc_linker_cost, (conf, self, x_motifs, template_linker))
+                    results = [pool.apply_async(get_linker_conformer, (conf, self, x_motifs, template_linker))
                                for conf in self.conformers]
 
                     chunk = [res.get(timeout=None) for res in results]
             else:
                 # Skip multiprocessing so this function can be called by mp 
-                chunk = [calc_linker_cost(conf, self, x_motifs, template_linker) for conf in self.conformers]
+                chunk = [get_linker_conformer(conf, self, x_motifs, template_linker) for conf in self.conformers]
 
             # Add a penalty to all the possibilities in this chunk based on the metal-donor atom favorability
             penalty = get_cost_metal_x_atom_interaction(x_motifs, self, metal=metal)
@@ -150,9 +186,19 @@ class Linker(Molecule):
         # len(possibilities) = len(x_motifs_list)*len(self.possibilities) where they are sorted by their cost
         self.possibilities = sorted(possibilities, key=lambda conf: conf.cost)
 
+        assert len(self.possibilities) > 0
         return None
 
-    def __init__(self, arch_name, smiles=None, name='linker', charge=0, n_confs=300, filename=None, use_etdg_confs=False):
+    def get_xmotif_coordinates(self):
+        """Return a numpy array of all the coordinates in the Xmotifs"""
+
+        coords = [self.atoms[atom_id].coord for motif in self.x_motifs for
+                  atom_id in motif.atom_ids]
+
+        return np.array(coords)
+
+    def __init__(self, arch_name, smiles=None, name='linker', charge=0,
+                 n_confs=300, filename=None, use_etdg_confs=False):
         """
         Metallocage Linker. Inherits from cgbind.molecule.Molecule
 
@@ -170,8 +216,13 @@ class Linker(Molecule):
         self._set_arch(arch_name)
 
         # May exit here if the specified architecture is not found
-        super(Linker, self).__init__(smiles=smiles, name=name, charge=charge, n_confs=n_confs, filename=filename,
+        super(Linker, self).__init__(smiles=smiles, name=name, charge=charge,
+                                     n_confs=n_confs, filename=filename,
                                      use_etdg_confs=use_etdg_confs)
+
+        # Allow linker construction with no atoms
+        if self.n_atoms == 0:
+            return
 
         self._check_structure()
         self.cage_template = get_template(arch_name=arch_name)                #: (Template object) Metallocage template

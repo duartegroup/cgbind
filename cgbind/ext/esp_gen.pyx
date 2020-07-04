@@ -60,7 +60,6 @@ cdef list get_esp_vals(int nx, int ny, int nz, double[:, :] coords, double[:] mi
     return results
 
 
-
 def get_cube_lines(py_nx, py_ny, py_nz, py_coords, py_min_carts, py_charges, py_vox_size):
     """
     Generate the value part of the electrostatic potential .cube file
