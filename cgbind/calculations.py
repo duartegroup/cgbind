@@ -35,7 +35,7 @@ def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
                            f'Using {str(keywords)}')
 
         elif method == xtb:
-            keywords = OptKeywords(keyword_list=[])
+            keywords = xtb.keywords.opt
 
         else:
             logger.critical('No keywords were set for the optimisation '
@@ -93,7 +93,7 @@ def singlepoint(molecule, method, keywords, n_cores=1):
                            f'Using {str(keywords)}')
 
         elif method == xtb:
-            keywords = SinglePointKeywords(keyword_list=[])
+            keywords = xtb.keywords.sp
 
         else:
             logger.critical('No keywords were set for the single-point '
@@ -140,7 +140,7 @@ def get_charges(molecule):
         xtb_sp = Calculation(name=molecule.name + '_xtb_sp', molecule=molecule,
                              method=xtb,
                              n_cores=1,
-                             keywords=SinglePointKeywords(keyword_list=[]))
+                             keywords=xtb.keywords.sp)
         xtb_sp.run()
 
         charges = xtb_sp.get_atomic_charges()

@@ -1,10 +1,11 @@
 from cgbind import Cage, Linker, Config
 
-# Use two cores. Both the RDKit conformer generation and components in the code are parallelised
+# Use two cores. Both the RDKit conformer generation and components in the
+# code are parallelised
 Config.n_cores = 2
 
 
-# Define a function which will be called in parallel
+# Define a function to generate a cage
 def gen_cage(linker_name, linker_smiles):
 
     linker = Linker(name=linker_name, smiles=linker_smiles, arch_name='m2l4')

@@ -44,13 +44,16 @@ def test_molecule_sp_opt():
         xtb.path = here
 
         methane.singlepoint(method=xtb)
-        assert methane.energy == -4.173842879099
+        assert -4.1739 < methane.energy < -4.1737
 
         methane.optimise(method=xtb)
-        assert methane.energy == -4.175218496669
+        assert -4.1753 < methane.energy < -4.1751
 
     except ImportError:
         pass
+
+    if os.path.exists('.autode_calculations'):
+        os.remove('.autode_calculations')
 
     os.chdir(cwd)
 
@@ -79,6 +82,9 @@ def test_rdkit_props():
 
     except RequiresAutodE:
         pass
+
+    if os.path.exists('.autode_calculations'):
+        os.remove('.autode_calculations')
 
     os.chdir(cwd)
 

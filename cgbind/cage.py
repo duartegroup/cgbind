@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.spatial.distance import cdist
 from scipy.optimize import basinhopping, minimize
 from cgbind.molecule import BaseStruct
 from cgbind.calculations import get_charges
@@ -7,28 +6,9 @@ from cgbind.build import build_homoleptic_cage
 from cgbind.build import build_heteroleptic_cage
 from cgbind.log import logger
 from cgbind.atoms import get_vdw_radii
+from cgbind.geom import get_max_sphere_negative_radius
 from cgbind.geom import spherical_to_cart
 from cgbind.esp import get_esp_cube_lines
-
-
-def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
-    """
-    Get the maximum sphere radius that is possible at a point defined by the spherical polar coordinates theta, phi and
-    r. This amounts to finding the minimum pairwise distance between the point and the rest of the cage. The negative
-    radius is returned as it will be fed into scipy.optmize.minimise
-
-    :param theta_and_phi: (list(float))
-    :param r: (float)
-    :param cage_coords: (np.ndarray) n_atoms x 3
-    :return: (float)
-    """
-
-    theta, phi = theta_and_phi
-    # Convert the point in spherical polars to Cartesian so the distances to the rest of the cage can be calculated
-    # nneds to be a 1 x 3 matrix to use cdist
-    point = np.array([spherical_to_cart(r=r, theta=theta, phi=phi)])
-
-    return -np.min(cdist(point, cage_coords))
 
 
 class Cage(BaseStruct):
@@ -228,7 +208,8 @@ class Cage(BaseStruct):
                                              search for the maximum escape sphere
         :return: (float) Volume of the maximum escape sphere in Å^3
         """
-        logger.info('Getting the volume of the largest sphere that can escape from the cavity')
+        logger.info('Getting the volume of the largest sphere that can escape '
+                    'from the cavity')
 
         max_sphere_escape_r = 99999999999999.9
         avg_m_m_dist = self.get_m_m_dist()
@@ -237,7 +218,8 @@ class Cage(BaseStruct):
         cage_coords = self.get_coords()
         cage_coords = np.array([coord - centroid for coord in cage_coords])
 
-        # For a distance from the origin (the cage centroid) calculate the largest sphere possible without hitting atoms
+        # For a distance from the origin (the cage centroid) calculate the
+        # largest sphere possible without hitting atoms
         opt_theta_phi, opt_r = np.zeros(2), 0.0
         for r in np.linspace(0.0, avg_m_m_dist + max_dist_from_metals, 30):
             if basinh:
@@ -258,7 +240,8 @@ class Cage(BaseStruct):
         atom_id = np.argmin([np.linalg.norm(coord - sphere_point) for coord in cage_coords])
 
         radius = max_sphere_escape_r - get_vdw_radii(atom=self.atoms[atom_id])
-        logger.info(f'Radius of largest sphere that can escape from the cavity = {radius}')
+        logger.info(f'Radius of largest sphere that can escape from the '
+                    f'cavity = {radius}')
 
         return (4.0 / 3.0) * np.pi * radius**3
 
@@ -337,7 +320,8 @@ class Cage(BaseStruct):
 
         return None
 
-    def __init__(self, linker=None, metal='M', metal_charge=0, linkers=None, solvent=None, mult=1, name='cage', max_cost=5):
+    def __init__(self, linker=None, metal='M', metal_charge=0, linkers=None,
+                 solvent=None, mult=1, name='cage', max_cost=5):
         """
         Metallocage object. Inherits from cgbind.molecule.BaseStruct
 
@@ -381,7 +365,8 @@ class Cage(BaseStruct):
             self._init_heteroleptic_cage(linkers)
 
         else:
-            logger.error('Could not generate a cage object without either a linker or set of linkers')
+            logger.error('Could not generate a cage object without either a '
+                         'linker or set of linkers')
             return
 
         if self.linkers is None:
@@ -394,4 +379,5 @@ class Cage(BaseStruct):
         self._build(max_cost=max_cost)
 
         self.m_ids = self.get_metal_atom_ids()
-        logger.info(f'Generated cage successfully. Geometry is reasonable: {self.reasonable_geometry}')
+        logger.info(f'Generated cage successfully. '
+                    f'Geometry is reasonable: {self.reasonable_geometry}')

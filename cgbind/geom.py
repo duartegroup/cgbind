@@ -1,5 +1,6 @@
 import numpy as np
 from cgbind.log import logger
+from scipy.spatial.distance import cdist
 from scipy.spatial import distance_matrix
 from cgbind.atoms import get_atomic_mass
 
@@ -113,6 +114,28 @@ def spherical_to_cart(r, theta, phi):
     return np.array([r * np.cos(theta) * np.sin(phi),
                      r * np.sin(theta) * np.sin(phi),
                      r * np.cos(phi)])
+
+
+def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
+    """
+    Get the maximum sphere radius that is possible at a point defined by the
+    spherical polar coordinates theta, phi and r. This amounts to finding the
+    minimum pairwise distance between the point and the rest of the cage. The
+    negative radius is returned as it will be fed into scipy.optmize.minimise
+
+    :param theta_and_phi: (list(float))
+    :param r: (float)
+    :param cage_coords: (np.ndarray) n_atoms x 3
+    :return: (float)
+    """
+
+    theta, phi = theta_and_phi
+    # Convert the point in spherical polars to Cartesian so the distances to
+    # the rest of the cage can be calculated
+    # needs to be a 1 x 3 matrix to use cdist
+    point = np.array([spherical_to_cart(r=r, theta=theta, phi=phi)])
+
+    return -np.min(cdist(point, cage_coords))
 
 
 i = np.array([1.0, 0.0, 0.0])
