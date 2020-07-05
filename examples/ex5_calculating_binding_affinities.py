@@ -1,8 +1,7 @@
 from cgbind import Linker, Cage, CageSubstrateComplex, Substrate, xtb, Constants
 
-#
-# Calculate two binding affinities using XTB single points on generated structures. This will not be accurate!
-#
+# Calculate two binding affinities using XTB single points on generated
+# structures. This will not be very accurate!
 
 substrate = Substrate(name='quinone', smiles='O=C1C=CC(C=C1)=O')
 substrate.singlepoint(method=xtb, n_cores=2)
@@ -19,7 +18,8 @@ for linker in linkers:
     cage.singlepoint(method=xtb, n_cores=2)
 
     # Construct the cage substrate complex
-    cage_subt = CageSubstrateComplex(cage, substrate)
+    cage_subt = CageSubstrateComplex(cage, substrate,
+                                     energy_method='electrostatic_fast')
     # Perform a single point energy evaluation at GFN-XTB
     cage_subt.singlepoint(method=xtb, n_cores=2)
 
