@@ -24,7 +24,7 @@ if '--esp_gen' in sys.argv:
 
 
 setup(name='cgbind',
-      version='1.0.0a',
+      version='1.0.1',
       description='Metallocage construction and binding affinity calculations',
       packages=['cgbind'],
       package_data={'': ['lib/*']},

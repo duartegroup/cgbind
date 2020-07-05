@@ -31,10 +31,10 @@ conda install --file requirements.txt
 
 ## Installation
 
-For installation instructions see the [installation instructions](https://duartegroup.github.io/cgbind/install.html).
+For detailed instructions see the [installation instructions](https://duartegroup.github.io/cgbind/install.html).
 If the requirements are already satisfied
 ```
-python setup.py install
+pip install cgbind
 ```
 
 ***
