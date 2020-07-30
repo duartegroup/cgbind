@@ -1,17 +1,14 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3550545.svg)](https://doi.org/10.5281/zenodo.3550545) [![Build Status](https://travis-ci.org/duartegroup/cgbind.svg?branch=master)](https://travis-ci.org/duartegroup/cgbind)
 ![alt text](cgbind/common/llogo.png)
-### *C*a*g*e*Bind*ing: A tool to for automated metallocage binding affinity calculations
 ***
 
 **cgbind** automates the process of generating and analysing metallocage structures
 from just SMILES strings of the corresponding linkers. Binding affinity
-calculations can be performed by input of both linker and substrate
-SMILES. A graphical user interface (GUI) is available at
+calculations can be performed with only SMILES of linker(s) and the substrate. 
+A graphical user interface (GUI) is available at
 [cgbind.chem.ox.ac.uk](http://cgbind.chem.ox.ac.uk).
 
-***
-
-## Requirements
+### Requirements
 0. Python v. 3.7
 1. All Python packages listed in requirements.txt 
 2. [autode](https://github.com/duartegroup/autodE) latest (optional)
@@ -27,9 +24,7 @@ conda config --append channels conda-forge
 conda install --file requirements.txt
 ```
 
-***
-
-## Installation
+### Installation
 
 For detailed instructions see the [installation instructions](https://duartegroup.github.io/cgbind/install.html).
 If the requirements are already satisfied
@@ -39,7 +34,7 @@ pip install cgbind
 
 ***
 
-## Usage
+### Usage
 
 **cgbind** constructs cages from [SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system)
 strings, which can be generated directly from ChemDraw, as
@@ -59,3 +54,12 @@ cage.print_xyz_file()
 
 See _examples/_ and the [docs](https://duartegroup.github.io/cgbind/examples.html)
 for further examples.
+
+
+### Citation
+
+If you find **cgbind** useful in your research please consider citing the paper:
+
+T. A. Young, R. Gheorghe and F. Duarte, 
+*cgbind: A Python Module and Web App for Automated Metallocage Construction and Host–Guest Characterization*.
+ Chem. Inf. Model. 2020, **60**, 7, 3546–3557. [DOI](https://doi.org/10.1021/acs.jcim.0c00519)
