@@ -1,12 +1,19 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3550545.svg)](https://doi.org/10.5281/zenodo.3550545) [![Build Status](https://travis-ci.org/duartegroup/cgbind.svg?branch=master)](https://travis-ci.org/duartegroup/cgbind)
-![alt text](cgbind/common/llogo.png)
-***
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3930811.svg)](https://doi.org/10.5281/zenodo.3930811) [![Build Status](https://travis-ci.org/duartegroup/cgbind.svg?branch=master)](https://travis-ci.org/duartegroup/cgbind) [![PyPI version](https://badge.fury.io/py/cgbind.svg)](https://badge.fury.io/py/cgbind)
+![alt text](cgbind/common/llogo.png) 
 
 **cgbind** automates the process of generating and analysing metallocage structures
 from just SMILES strings of the corresponding linkers. Binding affinity
-calculations can be performed with only SMILES of linker(s) and the substrate. 
-A graphical user interface (GUI) is available at
+calculations can be performed with SMILES or 3D structures of linkers and the 
+guest(s). A graphical user interface (GUI) is available at
 [cgbind.chem.ox.ac.uk](http://cgbind.chem.ox.ac.uk).
+
+## Installation
+
+For detailed instructions see the [installation instructions](https://duartegroup.github.io/cgbind/install.html).
+If the requirements are already satisfied
+```
+pip install cgbind
+```
 
 ### Requirements
 0. Python v. 3.7
@@ -24,17 +31,8 @@ conda config --append channels conda-forge
 conda install --file requirements.txt
 ```
 
-### Installation
 
-For detailed instructions see the [installation instructions](https://duartegroup.github.io/cgbind/install.html).
-If the requirements are already satisfied
-```
-pip install cgbind
-```
-
-***
-
-### Usage
+## Usage
 
 **cgbind** constructs cages from [SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system)
 strings, which can be generated directly from ChemDraw, as
@@ -56,7 +54,7 @@ See _examples/_ and the [docs](https://duartegroup.github.io/cgbind/examples.htm
 for further examples.
 
 
-### Citation
+## Citation
 
 If you find **cgbind** useful in your research please consider citing the paper:
 
