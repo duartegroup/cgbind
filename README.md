@@ -60,4 +60,4 @@ If you find **cgbind** useful in your research please consider citing the paper:
 
 T. A. Young, R. Gheorghe and F. Duarte, 
 *cgbind: A Python Module and Web App for Automated Metallocage Construction and Host–Guest Characterization*.
- Chem. Inf. Model. 2020, **60**, 7, 3546–3557. [DOI](https://doi.org/10.1021/acs.jcim.0c00519)
+J. Chem. Inf. Model. 2020, **60**, 7, 3546–3557. [DOI](https://doi.org/10.1021/acs.jcim.0c00519)

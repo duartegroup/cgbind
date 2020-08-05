@@ -1,8 +1,9 @@
 from cgbind.log import logger
+from cgbind.config import Config
 from cgbind.exceptions import RequiresAutodE
 
 
-def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
+def optimise(molecule, method, keywords, n_cores=None, cartesian_constraints=None):
     """
     Optimise a molecule
 
@@ -15,6 +16,8 @@ def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
     :return:
     """
     logger.info('Running an optimisation calculation')
+
+    n_cores = Config.n_cores if n_cores is None else int(n_cores)
 
     try:
         from autode.calculation import Calculation
@@ -40,7 +43,7 @@ def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
         else:
             logger.critical('No keywords were set for the optimisation '
                             'calculation')
-            exit()
+            raise Exception
 
     else:
         # If the keywords are specified as a list convert them to a set of
@@ -60,7 +63,7 @@ def optimise(molecule, method, keywords, n_cores=1, cartesian_constraints=None):
     return None
 
 
-def singlepoint(molecule, method, keywords, n_cores=1):
+def singlepoint(molecule, method, keywords, n_cores=None):
     """
     Run a single point energy evaluation on a molecule
 
@@ -72,6 +75,8 @@ def singlepoint(molecule, method, keywords, n_cores=1):
     :return:
     """
     logger.info('Running single point calculation')
+
+    n_cores = Config.n_cores if n_cores is None else int(n_cores)
 
     try:
         from autode.calculation import Calculation
@@ -98,7 +103,7 @@ def singlepoint(molecule, method, keywords, n_cores=1):
         else:
             logger.critical('No keywords were set for the single-point '
                             'calculation')
-            exit()
+            raise Exception
 
     else:
         # If the keywords are specified as a list convert them to a set of

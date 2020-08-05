@@ -4,6 +4,6 @@ Citing
 To cite ``cgbind`` please use
 
 .. note::
-    T. A. Young and R. Gheorghe. cgbind v. |version|. http://doi.org/10.5281/zenodo.3550545
+    T. A. Young, R. Gheorghe and F. Duarte,
+    *cgbind: A Python Module and Web App for Automated Metallocage Construction and Host–Guest Characterization*. J. Chem. Inf. Model. 2020, **60**, 7, 3546–3557. https://doi.org/10.1021/acs.jcim.0c00519
 
-A manuscript is available on ChemRxiv (https://doi.org/10.26434/chemrxiv.12146106.v1)
