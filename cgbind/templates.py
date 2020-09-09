@@ -1,4 +1,5 @@
 from cgbind.log import logger
+from scipy.spatial import distance_matrix
 import networkx as nx
 import numpy as np
 import pickle
@@ -211,7 +212,8 @@ class Template:
 
     def _set_shift_vectors(self):
         """
-        For the linkers set the shift vectors for the x motifs. These are the centroid -> closest metal_label atom
+        For the linkers set the shift vectors for the x motifs. These are the
+        centroid -> closest metal_label atom
         vector
 
         :return: None
@@ -242,6 +244,25 @@ class Template:
                 x_motif.r = np.linalg.norm(x_motif.shift_vec)
                 x_motif.norm_shift_vec = x_motif.shift_vec / x_motif.r
 
+        metal_coords = np.array([metal.coord for metal in self.metals])
+        metals_dists = distance_matrix(metal_coords, metal_coords)
+
+        # Ensure that all the metals have shift vectors
+        for i, metal in enumerate(self.metals):
+            if metal.shift_vec is not None:
+                continue
+
+            logger.warning('Unassigned shift vector – setting the same'
+                           'as the closest metal to this one')
+            closest_metals = np.argsort(np.min(metals_dists, axis=0))
+
+            # Set the shift vector of this metal as the one closest
+            # that is not itself
+            for metal_idx in closest_metals[1:]:
+                if self.metals[metal_idx].shift_vec is not None:
+                    metal.shift_vec = self.metals[metal_idx].shift_vec
+                    break
+
         return None
 
     def save_template(self):
@@ -251,6 +272,8 @@ class Template:
         :return: None
         """
         logger.info('Saving metallocage template')
+        assert self.n_metals > 0
+        assert all(metal.shift_vec is not None for metal in self.metals)
 
         # Templates will be saved to here/lib/
         folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib')

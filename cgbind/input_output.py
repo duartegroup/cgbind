@@ -84,7 +84,7 @@ def xyzfile_to_atoms(filename):
     """
     logger.info(f'Converting {filename} to list of atoms')
 
-    if not (os.path.exists(filename) and filename.endswith('.xyz')):
+    if not filename.endswith('.xyz'):
         logger.error('Could not read .xyz file')
         raise FileMalformatted
 
@@ -164,13 +164,14 @@ def mol2file_to_atoms(filename):
     """
     logger.info('Converting .mol2 file to atoms')
 
-    if not (os.path.exists(filename) and filename.endswith('.mol2')):
+    if not filename.endswith('.mol2'):
         logger.error('Could not read .mol2 file')
         raise FileMalformatted
 
     mol_file_lines = open(filename, 'r').readlines()
 
-    # Get the unformatted atoms from the .mol2 file. The atom labels will not be standard
+    # Get the unformatted atoms from the .mol2 file. The atom labels will not
+    # be standard
     atoms, xyz_block = [], False
     for n_line, line in enumerate(mol_file_lines):
 
