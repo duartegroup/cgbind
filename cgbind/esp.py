@@ -8,8 +8,9 @@ from cgbind.exceptions import CgbindCritical
 
 def get_esp_cube_lines(charges, atoms):
     """
-    From a list of charges and a set of xyzs create the electrostatic potential map grid-ed uniformly between the most
-    negative x, y, z values -5 Å and the largest x, y, z +5 Å
+    From a list of charges and a set of xyzs create the electrostatic potential
+    map grid-ed uniformly between the most negative x, y, z values -5 Å
+    and the largest x, y, z +5 Å
 
     :param charges: (list(float))
     :param atoms: (list(autode.atoms.Atom))
@@ -22,7 +23,8 @@ def get_esp_cube_lines(charges, atoms):
         from esp_gen import get_cube_lines
 
     except ModuleNotFoundError:
-        raise CgbindCritical(message='esp_gen not available. cgbind must be installed with the --esp_gen flag')
+        raise CgbindCritical('esp_gen not available. cgbind must be '
+                             'installed with the --esp_gen flag')
 
     if charges is None:
         logger.error('Could not generate an .cube file, charges were None')
@@ -35,7 +37,8 @@ def get_esp_cube_lines(charges, atoms):
     max_cart_values = np.max(coords, axis=0)
     min_cat_values = np.min(coords, axis=0)
 
-    # The grid needs to be slightly larger than the smallest/largest Cartesian coordinate
+    # The grid needs to be slightly larger than the smallest/largest Cartesian
+    # coordinate
     # NOTE: All distances from here are in Bohr (a0) i.e. atomic units
     min_carts = Constants.ang2a0 * (min_cat_values - 5 * np.ones(3))
     max_carts = Constants.ang2a0 * (max_cart_values + 5 * np.ones(3))

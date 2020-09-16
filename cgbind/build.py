@@ -1,6 +1,5 @@
 from copy import deepcopy
 import numpy as np
-from scipy.optimize import minimize, Bounds
 from scipy.spatial import distance_matrix
 from cgbind.log import logger
 from cgbind.atoms import Atom
@@ -8,14 +7,16 @@ from cgbind.config import Config
 from cgbind.geom import get_centered_matrix
 from cgbind.geom import get_rot_mat_kabsch
 from cgbind.x_motifs import get_shifted_template_x_motif_coords
-from cgbind.molecule import BaseStruct
+from cgbind.exceptions import CannotBuildCage
 
 
 def get_fitted_linker_coords_and_cost(linker, template_x_coords, coords_to_fit, curr_coords):
     """
-    For a linker get the best mapping onto a list of template X coords (e.g. NCN motifs in a pyridyl donor) these will
-    this can be achieved in normal or reverse order of the coordinates as to maximise the distance to the rest of the
-    metallocage structure. Also returns a measure of the repulsion to the rest of the cage structure
+    For a linker get the best mapping onto a list of template X coords
+    (e.g. NCN motifs in a pyridyl donor) these will this can be achieved in
+    normal or reverse order of the coordinates as to maximise the distance to
+    the rest of the metallocage structure. Also returns a measure of the
+    repulsion to the rest of the cage structure
 
     :param linker: (Linker object)
     :param template_x_coords: (list(np.ndarray))
@@ -59,7 +60,8 @@ def get_kfitted_coords_and_cost(linker, template_x_coords, coords_to_fit, return
     :param linker: (Linker object)
     :param template_x_coords: (list(np.ndarray))
     :param coords_to_fit: (list(np.ndarray)) must have len() = len(linker_template.x_xyzs)
-    :param return_cost: (bool) return just the cost function, which is the sum of squares of ∆dists
+    :param return_cost: (bool) return just the cost function, which is the sum
+                        of squares of ∆dists
     :return: (np.ndarray) n_atoms x 3
     """
     assert len(template_x_coords) == len(coords_to_fit)
@@ -95,8 +97,9 @@ def get_kfitted_coords_and_cost(linker, template_x_coords, coords_to_fit, return
 
 def get_linker_atoms_and_cost(linker, template_linker, current_atoms, x_coords=None):
     """
-    Get the xyzs of a linker that is fitted to a template_linker object and the associated cost function – i.e. the
-    repulsion to the current cage structure
+    Get the xyzs of a linker that is fitted to a template_linker object and
+    the associated cost function – i.e. the repulsion to the current cage
+    structure
 
     :param linker: (Linker)
     :param template_linker: (Template.Linker)
@@ -130,8 +133,9 @@ def get_linker_atoms_and_cost(linker, template_linker, current_atoms, x_coords=N
 
 def cost_fitted_x_motifs(dr, linker, linker_template, x_coords):
     """
-    For a linker compute the cost function (RMSD) for fitting all the coordinates in the x motifs to a template which
-    which be shifted by dr in the corresponding shift_vec
+    For a linker compute the cost function (RMSD) for fitting all the
+    coordinates in the x motifs to a template which which be shifted by dr in
+    the corresponding shift_vec
 
     :param linker: (object)
     :param linker_template: (object)
@@ -160,6 +164,7 @@ def build_homoleptic_cage(cage, max_cost):
     logger.info(f'Have {len(cage.linkers[0].possibilities)} linkers to fit')
 
     min_cost, best_linker = 99999999.9, None
+    atoms, cage_cost = [], 99999999.9
 
     # For all the possible linker conformer / Xmotif set possibilities
     for linker in cage.linkers[0].possibilities:
@@ -209,6 +214,13 @@ def build_homoleptic_cage(cage, max_cost):
 
     # Add the metals from the template shifted by dr
     for metal in cage.cage_template.metals:
+
+        if cage.dr is None:
+            raise CannotBuildCage('Cage had no shift distance (∆r)')
+
+        if metal.shift_vec is None:
+            raise CannotBuildCage('Template shift vector not defined')
+
         metal_coord = cage.dr * metal.shift_vec / np.linalg.norm(metal.shift_vec) + metal.coord
         atoms.append(Atom(cage.metal, coord=metal_coord))
 

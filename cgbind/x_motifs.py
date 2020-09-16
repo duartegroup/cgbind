@@ -1,5 +1,5 @@
 import numpy as np
-import itertools
+from itertools import chain, combinations
 import networkx as nx
 from copy import deepcopy
 from cgbind.exceptions import CgbindCritical
@@ -35,7 +35,8 @@ def get_cost_metal_x_atom_interaction(x_motifs, linker, metal):
 
 def get_shifted_template_x_motif_coords(linker_template, dr):
     """
-    For a linker template modify the x motif coordinates by a particular distance (dr) along the shift vector
+    For a linker template modify the x motif coordinates by a particular
+    distance (dr) along the shift vector
 
     e.g. for M2L4
 
@@ -65,29 +66,33 @@ def get_shifted_template_x_motif_coords(linker_template, dr):
 def check_x_motifs(linker=None, linker_template=None):
     if linker is None and linker_template is not None:
         if not all([motif.n_atoms == linker_template.x_motifs[0].n_atoms for motif in linker_template.x_motifs]):
-            logger.critical('Found x motifs in the structure that have different number of atoms')
-            exit()
+            logger.critical('Found x motifs in the structure that have '
+                            'different number of atoms')
+            raise CgbindCritical
         else:
             return None
 
     if not all([motif.n_atoms == linker_template.x_motifs[0].n_atoms for motif in linker.x_motifs]):
-        logger.warning('Found x motifs in the structure that have different number of atoms')
+        logger.warning('Found x motifs in the structure that have different '
+                       'number of atoms')
         logger.info('Stripping the motifs with the wrong number of atoms')
 
         linker.x_motifs = [motif for motif in linker.x_motifs if motif.n_atoms == linker_template.x_motifs[0].n_atoms]
         logger.info(f'Now have {len(linker.x_motifs)} motifs in the linker')
 
     if len(linker.x_motifs) == 0:
-        raise CgbindCritical(message='Have 0 Xmotifs – cannot build a cage. Is the template correct?')
+        raise CgbindCritical('Have 0 Xmotifs – cannot build a cage. '
+                             'Is the template correct?')
 
     if len(linker.x_motifs) > 0:
-        logger.info(f'Number of atoms in the x motifs is {linker.x_motifs[0].n_atoms}')
+        logger.info(f'Number of atoms in the x motifs is '
+                    f'{linker.x_motifs[0].n_atoms}')
     return None
 
 
 def powerset(s):
     """[0, 1, 2] -> [(0, 1), (1, 2) (0, 2), (0, 1 2)]"""
-    return itertools.chain.from_iterable(itertools.combinations(s, r) for r in range(2, len(s)+1))
+    return chain.from_iterable(combinations(s, r) for r in range(2, len(s)+1))
 
 
 def is_fully_connected(atom_indexes, bonds):
@@ -133,7 +138,8 @@ def find_x_motifs(linker):
             if donor_atom == j not in x_motif:
                 x_motif.append(i)
 
-        logger.info(f'X atom {donor_atom} had {len(x_motif)} nearest neighbours')
+        logger.info(f'X atom {donor_atom} had {len(x_motif)} '
+                    f'nearest neighbours')
         x_motif.append(donor_atom)
         x_motifs.append(x_motif)
 
@@ -168,8 +174,8 @@ def find_x_motifs(linker):
 
 def get_maximally_connected_x_motifs(x_motifs, x_atoms):
     """
-    Given a list of Xmotifs find those that are maximally connected, i.e. the ones that contain all the donor atoms
-    but also are the largest in size
+    Given a list of Xmotifs find those that are maximally connected, i.e.
+    the ones that contain all the donor atoms but also are the largest in size
 
     :param x_motifs: (list(cgbind.x_motifs.Xmotif)
     :param x_atoms: (list(int))
@@ -188,7 +194,8 @@ def get_maximally_connected_x_motifs(x_motifs, x_atoms):
 
         # All the donor (X) atoms need to be in the full list
         if all(x_atom in x_motifs_atoms for x_atom in x_atoms):
-            logger.info(f'Returning {len(new_x_motifs)} Xmotifs each with {len(new_x_motifs[0])} atoms')
+            logger.info(f'Returning {len(new_x_motifs)} Xmotifs each with '
+                        f'{len(new_x_motifs[0])} atoms')
             return new_x_motifs
 
     logger.critical('Could not find a set of x motifs of the same length with'

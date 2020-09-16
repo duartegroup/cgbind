@@ -14,18 +14,21 @@ from cgbind.utils import copy_func
 
 def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords, with_attraction=True):
     """
-    Determine the energy using two-body atom-atom repulsion derived from noble gas dimers where
+    Determine the energy using two-body atom-atom repulsion derived from noble
+    gas dimers where
 
     V_rep(r) = exp(- r/b + a)
 
-    where a and b are parameters determined by the atom pairs. Parameters are suitable to generate V_rep in kcal mol-1
+    where a and b are parameters determined by the atom pairs. Parameters are
+    suitable to generate V_rep in kcal mol-1
 
     :param cage: (Cage object)
     :param substrate: (Substrate object)
     :param cage_coords: (list(np.ndarray)) Cage coordinates
     :param subst_coords: (list(np.ndarray)) Substrate coordinates
-    :param with_attraction: (bool) do or don't return the energy with a constant attractive term based on the number of
-                                   substrate atoms in the structure
+    :param with_attraction: (bool) do or don't return the energy with a
+                            constant attractive term based on the number of
+                            substrate atoms in the structure
 
     :return: energy: (float) Potential energy (V_rep) in kcal mol-1
     """
@@ -36,7 +39,8 @@ def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords, with_a
     sum_vdw_radii = np.add.outer(np.array(cage.vdw_radii),
                                  np.array(substrate.vdw_radii))
 
-    # Magic numbers derived from fitting potentials to noble gas dimers and plotting against the sum of vdw radii
+    # Magic numbers derived from fitting potentials to noble gas dimers and
+    #  plotting against the sum of vdw radii
     b_mat = 0.083214 * sum_vdw_radii - 0.003768
     a_mat = 11.576415 * (0.175541 * sum_vdw_radii + 0.316642)
     exponent_mat = -(dist_mat / b_mat) + a_mat
@@ -44,8 +48,9 @@ def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords, with_a
     energy_mat = np.exp(exponent_mat)
     energy = np.sum(energy_mat)
 
-    #      E is negative for favourable binding but this is a purely repulsive function so subtract a number..
-    #      which is determined from the best classifier for 102 binding affinities (see cgbind paper) 0.4 kcal mol-1
+    # E is negative for favourable binding but this is a purely repulsive
+    # function so subtract a number.. which is determined from the best
+    # classifier for 102 binding affinities (see cgbind paper) 0.4 kcal mol-1
     if with_attraction:
         return energy - 0.4 * substrate.n_atoms
 
@@ -54,9 +59,10 @@ def cage_subst_repulsion_func(cage, substrate, cage_coords, subst_coords, with_a
 
 def cage_subst_repulsion_and_electrostatic_func(cage, substrate, cage_coords, subst_coords):
     """
-    Determine the energy of adding a substrate to a cage based on V_rep + V_att where the attractive term
-    is electrostatic and uses the sum of q_i q_j / r_ij interaction energies where q_i is the partial atomic
-    charge on atom i.
+    Determine the energy of adding a substrate to a cage based on V_rep + V_att
+    where the attractive term is electrostatic and uses the sum of
+    q_i q_j / r_ij interaction energies where q_i is the partial atomic charge
+     on atom i.
 
     :param cage: (Cage object)
     :param substrate: (Substrate object)
@@ -81,17 +87,20 @@ def cage_subst_repulsion_and_electrostatic_func(cage, substrate, cage_coords, su
 
 def add_substrate_com(cagesubt):
     """
-    Add a substrate the centre of a cage defined by its centre of mass (com) will minimise the energy with respect to
-    rotation of the substrate and the substrate conformer using cagesubt.energy_func. Will rotate cagesubt.n_init_geom
+    Add a substrate the centre of a cage defined by its centre of mass (com)
+    will minimise the energy with respect to rotation of the substrate and the
+    substrate conformer using cagesubt.energy_func. Will rotate cagesubt.n_init_geom
     times and use cagesubt.n_subst_confs number of substrate conformers
 
     :param cagesubt: (CageSubstrateComplex object)
 
     :return: xyzs: (list(list))
     """
-    logger.info(f'Adding substrate to the cage COM and minimising the energy with {cagesubt.energy_func.__name__}')
+    logger.info(f'Adding substrate to the cage COM and minimising the energy '
+                f'with {cagesubt.energy_func.__name__}')
 
-    # Minimum energy initialisation and the x parameter array (angles to rotate about the x, y, z axes)
+    # Minimum energy initialisation and the x parameter array (angles to
+    # rotate about the x, y, z axes)
     min_energy, curr_x = 9999999999.9, np.zeros(3)
 
     # Optimum (minimum energy) conformer
@@ -117,9 +126,11 @@ def add_substrate_com(cagesubt):
         for _ in range(cagesubt.n_init_geom):
             rot_angles = 2.0 * np.pi * np.random.rand(3)        # rand generates in [0, 1] so multiply with
 
-            # Minimise the energy with a BFGS minimiser supporting bounds on the values (rotation is periodic)
+            # Minimise the energy with a BFGS minimiser supporting bounds on
+            # the values (rotation is periodic)
             result = minimize(get_energy, x0=np.array(rot_angles),
-                              args=(c, s, cagesubt.energy_func, cage_coords, subst_coords), method='L-BFGS-B',
+                              args=(c, s, cagesubt.energy_func, cage_coords, subst_coords),
+                              method='L-BFGS-B',
                               bounds=Bounds(lb=0.0, ub=2*np.pi), tol=0.01)
 
             energy = result.fun
@@ -160,7 +171,8 @@ def get_centered_substrate_coords(substrate):
 
 def cat_cage_subst_coords(cage, substrate, cage_coords, substrate_coords):
     """
-    Concatenate some coordinates into a set of xyzs by adding back the atom labels from the original xyzs
+    Concatenate some coordinates into a set of xyzs by adding back the atom
+    labels from the original xyzs
 
     :param cage:
     :param substrate:
@@ -178,7 +190,8 @@ def cat_cage_subst_coords(cage, substrate, cage_coords, substrate_coords):
 
 
 def get_rotated_subst_coords(x, subst_coords):
-    """Get substrate coordinates that have been rotated by x[0] radians in the x axis etc."""
+    """Get substrate coordinates that have been rotated by x[0] radians in the
+     x axis etc."""
 
     x_rot, y_rot, z_rot = x
 
@@ -192,7 +205,8 @@ def get_rotated_subst_coords(x, subst_coords):
 
 def get_energy(x, cage, substrate, energy_func, cage_coords, subst_coords):
     """
-    Calculate the energy in kcal mol-1 for a particular x, which contains the rotations in x, y, z cartesian directions
+    Calculate the energy in kcal mol-1 for a particular x, which contains the
+    rotations in x, y, z cartesian directions
     """
     rot_substrate_coords = get_rotated_subst_coords(x, subst_coords)
     energy = energy_func(cage, substrate, cage_coords, rot_substrate_coords)

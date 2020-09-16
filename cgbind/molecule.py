@@ -40,8 +40,7 @@ def extract_conformers_from_rdkit_mol_object(mol_obj, conf_ids):
         conformers.append(conformer)
 
     if len(conformers) == 0:
-        logger.critical('Length of conformer xyz list was 0')
-        exit()
+        raise CgbindCritical('Length of conformer xyz list was 0. RDKit failed')
 
     return conformers
 
@@ -50,7 +49,8 @@ class BaseStruct:
 
     def print_xyz_file(self, filename=None):
         """
-        Print a .xyz file from self.xyzs provided self.reasonable_geometry is True
+        Print a .xyz file from self.xyzs provided self.reasonable_geometry is
+        True
 
         :param filename: (str) Override the default filename
         :return: None
@@ -76,10 +76,12 @@ class BaseStruct:
 
     def singlepoint(self, method, keywords=None, n_cores=None):
         """
-        Perform a single-point energy evaluation using an electronic structure theory method e.g. XTB, ORCA, G09
+        Perform a single-point energy evaluation using an electronic structure
+        theory method e.g. XTB, ORCA, G09
 
         :param method: (autode.ElectronicStructureMethod)
-        :param keywords: (list(str)) Keywords to use for the ESM e.g. ['SP', 'PBE', 'def2-SVP']
+        :param keywords: (list(str)) Keywords to use for the ESM e.g.
+                         ['SP', 'PBE', 'def2-SVP']
         :param n_cores: (int) Number of cores for the calculation to use
         :return: None
         """
@@ -88,16 +90,20 @@ class BaseStruct:
 
     def optimise(self, method, keywords=None, n_cores=1, cartesian_constraints=None):
         """
-        Perform a single-point energy evaluation using an electronic structure theory method e.g. XTB, ORCA, G09
+        Perform a single-point energy evaluation using an electronic structure
+        theory method e.g. XTB, ORCA, G09
 
         :param method: (autode.ElectronicStructureMethod)
-        :param keywords: (list(str)) Keywords to use for the ESM e.g. ['Opt', 'PBE', 'def2-SVP']
+        :param keywords: (list(str)) Keywords to use for the ESM e.g.
+                         ['Opt', 'PBE', 'def2-SVP']
         :param n_cores: (int) Number of cores for the calculation to use
-        :param cartesian_constraints: (list(int)) List of atom ids to constrain to their current coordinates
+        :param cartesian_constraints: (list(int)) List of atom ids to constrain
+                                      to their current coordinates
         :return: None
         """
         n_cores = n_cores if n_cores is not None else Config.n_cores
-        return calculations.optimise(self, method, keywords, n_cores, cartesian_constraints)
+        return calculations.optimise(self, method, keywords, n_cores,
+                                     cartesian_constraints)
 
     def set_atoms(self, atoms=None, coords=None):
         """

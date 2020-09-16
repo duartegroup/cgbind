@@ -1,7 +1,5 @@
 class ArchitectureNotFound(Exception):
-
-    def __init__(self, message):
-        super().__init__(message)
+    """Class for an architecture not found"""
 
 
 class NoXYZs(Exception):
@@ -10,16 +8,18 @@ class NoXYZs(Exception):
 
 class CgbindCritical(Exception):
     """Non recoverable error"""
-    def __init__(self, message=''):
-        super().__init__(message)
+
+
+class CannotBuildCage(Exception):
+    """Exception for a cage-substrate complex failing to build"""
 
 
 class CannotBuildCSComplex(Exception):
-    pass
+    """Exception for a cage-substrate complex failing to build"""
 
 
 class RequiresAutodE(Exception):
-    pass
+    """Exception for autode being required"""
 
 
 class FileMalformatted(Exception):

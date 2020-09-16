@@ -9,7 +9,8 @@ def get_bond_list_from_atoms(atoms, relative_tolerance=0.2):
     :param relative_tolerance: (float)
     :return: (list(tuple(int)))
     """
-    logger.info(f'Getting bond list from xyzs. Maximum bond is {1 + relative_tolerance}x average')
+    logger.info(f'Getting bond list from xyzs. Maximum bond is '
+                f'{1 + relative_tolerance}x average')
 
     bond_list = []
 
@@ -31,8 +32,8 @@ def get_bond_list_from_atoms(atoms, relative_tolerance=0.2):
 
 
 def get_avg_bond_length(atom_i_label, atom_j_label):
-    """Get the average bond length from either a molecule and a bond or two atom labels (e.g. atom_i_label = 'C'
-    atom_j_label = 'H')"""
+    """Get the average bond length from either a molecule and a bond or two
+    atom labels (e.g. atom_i_label = 'C' atom_j_label = 'H')"""
     key1, key2 = atom_i_label + atom_j_label, atom_j_label + atom_i_label
 
     if key1 in avg_bond_lengths.keys():
@@ -40,7 +41,8 @@ def get_avg_bond_length(atom_i_label, atom_j_label):
     elif key2 in avg_bond_lengths.keys():
         return avg_bond_lengths[key2]
     else:
-        logger.warning(f'Couldn\'t find a default bond length for ({atom_i_label},{atom_j_label})')
+        logger.warning(f'Couldn\'t find a default bond length for '
+                       f'({atom_i_label},{atom_j_label}) using 1.5 Å')
         return 1.5
 
 

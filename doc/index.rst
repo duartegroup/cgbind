@@ -26,7 +26,7 @@ Documentation
 
 .. only:: html
 
-    :Release: 1.0.1
+    :Release: 1.0.2
     :Date: |today|
 
 .. toctree::
