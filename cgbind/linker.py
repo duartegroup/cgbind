@@ -54,8 +54,9 @@ class Linker(Molecule):
 
     def __eq__(self, other):
         """
-        Linkers are the same if their SMILES strings are identical, otherwise very close centroids should serve as a
-        unique measure for linkers with identical (up to numerical precision) coordinates
+        Linkers are the same if their SMILES strings are identical, otherwise
+        very close centroids should serve as a unique measure for linkers with
+        identical (up to numerical precision) coordinates
 
         :param other: (Linker)
         :return:
@@ -72,7 +73,8 @@ class Linker(Molecule):
 
     def _find_possible_donor_atoms(self):
         """
-        For the atoms in the linker find all those capable of donating a 'lone pair' to a metal i.e. being a donor/
+        For the atoms in the linker find all those capable of donating a
+        'lone pair' to a metal i.e. being a donor/
         'X-atom'
 
         :return: (list(int)) donor atoms
@@ -89,8 +91,9 @@ class Linker(Molecule):
                     if atom_id in bond:
                         n_bonds += 1
 
-                # If the number of bonds is lower than the max valancy for that atom then there should be a lone pair
-                # and a donor atom has been found
+                # If the number of bonds is lower than the max valancy for that
+                # atom then there should be a lone pair and a donor atom has
+                # been found
                 if n_bonds < max_valency:
                     donor_atom_ids.append(atom_id)
 
@@ -99,16 +102,20 @@ class Linker(Molecule):
 
     def _strip_possible_x_motifs_on_connectivity(self):
         """
-        For a list of x motifs remove those which don't have the same number of atoms as the template linkers
+        For a list of x motifs remove those which don't have the same number
+        of atoms as the template linkers
+
         :return: (list) new list of x motifs
         """
-        logger.info('Stripping x motifs from liker based on the n atoms in each must = template')
+        logger.info('Stripping x motifs from liker based on the n atoms in '
+                    'each must = template')
+
         self.x_motifs = [x_motif for x_motif in self.x_motifs
                          if x_motif.n_atoms == self.cage_template.linkers[0].x_motifs[0].n_atoms]
 
-        logger.info(f'Current number of donor atoms = {len(self.x_motifs)}')
+        logger.info(f'Current number of donor atoms = {len(self.x_atoms)}')
         self.x_atoms = [atom_id for x_motif in self.x_motifs for atom_id in x_motif.atom_ids if atom_id in self.x_atoms]
-        logger.info(f'New number of donor atoms = {len(self.x_motifs)}')
+        logger.info(f'New number of donor atoms = {len(self.x_atoms)}')
         return None
 
     def _set_arch(self, arch_name):
@@ -132,10 +139,12 @@ class Linker(Molecule):
 
     def set_ranked_linker_possibilities(self, metal=None, n=0):
         """
-        For this linker, return a list of Linker objects with appropriate .xyzs, .dr and .x_motifs attributes ordered
-        by their cost function low -> high i.e. good to bad. This will loop through all the possibilities and the possible
-        combinations of x motifs in the linker. Linker.dr controls how large the template needs to be to make
-        the best fit
+        For this linker, return a list of Linker objects with appropriate
+        .xyzs, .dr and .x_motifs attributes ordered by their cost function
+        low -> high i.e. good to bad. This will loop through all the
+        possibilities and the possible combinations of x motifs in the linker.
+        Linker.dr controls how large the template needs to be to make the best
+        fit
 
         :param metal: (str) Atomic symbol of the metal
         :param n: (int) linker number in the template
@@ -146,20 +155,27 @@ class Linker(Molecule):
         template_linker = self.cage_template.linkers[n]
         n_x_motifs_in_linker = len(template_linker.x_motifs)
 
-        # For all the possible combinations of x_motifs minimise the SSD between the x_motifs and the template
-        # x_motifs. The template needs to be modified to accommodate longer linkers with the same architecture
-        x_motifs_list = list(itertools.combinations(self.x_motifs, n_x_motifs_in_linker))
+        # For all the possible combinations of x_motifs minimise the SSD
+        # between the x_motifs and the template x_motifs. The template needs
+        # to be modified to accommodate longer linkers with the same
+        # architecture
+        x_motifs_list = list(itertools.combinations(self.x_motifs,
+                                                    n_x_motifs_in_linker))
 
-        logger.info(f'Have {len(x_motifs_list)*len(self.conformers)} iterations to do')
+        logger.info(f'Have {len(x_motifs_list)*len(self.conformers)} '
+                    f'iterations to do')
         possibilities = []
 
         for i, x_motifs in enumerate(x_motifs_list):
 
-            # Execute calculation to get cost of adding a particular conformation to the template in parallel
-            logger.info(f'Running with {Config.n_cores} cores. Iteration {i+1}/{len(x_motifs_list)}')
+            # Execute calculation to get cost of adding a particular
+            # conformation to the template in parallel
+            logger.info(f'Running with {Config.n_cores} cores. Iteration '
+                        f'{i+1}/{len(x_motifs_list)}')
             logger.disabled = True
 
-            # Sort this block of linkers the cost function. Not sorted the full list to retain the block structure with
+            # Sort this block of linkers the cost function. Not sorted the
+            # full list to retain the block structure with
             # X motifs
             if Config.n_cores > 1:
                 with Pool(processes=Config.n_cores) as pool:
@@ -169,9 +185,11 @@ class Linker(Molecule):
                     chunk = [res.get(timeout=None) for res in results]
             else:
                 # Skip multiprocessing so this function can be called by mp 
-                chunk = [get_linker_conformer(conf, self, x_motifs, template_linker) for conf in self.conformers]
+                chunk = [get_linker_conformer(conf, self, x_motifs, template_linker)
+                         for conf in self.conformers]
 
-            # Add a penalty to all the possibilities in this chunk based on the metal-donor atom favorability
+            # Add a penalty to all the possibilities in this chunk based on
+            # the metal-donor atom favorability
             penalty = get_cost_metal_x_atom_interaction(x_motifs, self, metal=metal)
             for conf in chunk:
                 conf.cost += penalty
@@ -179,11 +197,13 @@ class Linker(Molecule):
             # Add the possibilities in this chunk to the full list
             possibilities += chunk
 
-            # Renable the logging that would otherwise dominate with lots of possibilities and/or Xmotifs
+            # Renable the logging that would otherwise dominate with lots of
+            # possibilities and/or Xmotifs
             logger.disabled = False
 
-        # Reset the possibilities as those with both different Xmotifs and geometry i.e. now
-        # len(possibilities) = len(x_motifs_list)*len(self.possibilities) where they are sorted by their cost
+        # Reset the possibilities as those with both different Xmotifs and
+        # geometry i.e. now len(possibilities) = len(x_motifs_list)*len(self.possibilities)
+        # where they are sorted by their cost
         self.possibilities = sorted(possibilities, key=lambda conf: conf.cost)
 
         assert len(self.possibilities) > 0
@@ -208,11 +228,13 @@ class Linker(Molecule):
         :param charge: (int)
         :param n_confs: (int) Number of initial conformers to search through
         :param filename: (str)
-        :param use_etdg_confs: (bool) Use a different, sometimes better, conformer generation algorithm
+        :param use_etdg_confs: (bool) Use a different, sometimes better,
+                               conformer generation algorithm
         """
-        logger.info(f'Initialising a Linker object for {name} with {n_confs} conformers')
+        logger.info(f'Initialising a Linker object for {name} with {n_confs} '
+                    f'conformers')
 
-        self.arch = None                                                      #: (Arch object) Metallocage architecture
+        self.arch = None              #: (Arch object) Metallocage architecture
         self._set_arch(arch_name)
 
         # May exit here if the specified architecture is not found

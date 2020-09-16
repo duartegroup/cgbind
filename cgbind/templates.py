@@ -16,10 +16,12 @@ from cgbind.x_motifs import check_x_motifs
 
 def find_mols_in_xyzs(atoms, allow_same=False):
     """
-    From a list of xyzs determine the bonds in the system, thus the distinct molecules in the system
+    From a list of xyzs determine the bonds in the system, thus the distinct
+    molecules in the system
 
     :param atoms: (list(cgbind.atoms.Atom))
-    :param allow_same: (bool) add only the unique molecules (False) or add every molecule (True)
+    :param allow_same: (bool) add only the unique molecules (False) or add
+                       every molecule (True)
     :return: (list(xyzs))
     """
 
@@ -49,10 +51,12 @@ def find_mols_in_xyzs(atoms, allow_same=False):
 
 def get_template(arch_name='m2l4', folder_path=None):
     """
-    Get a template defined by the architectures arch_name. The saved objects are in
+    Get a template defined by the architectures arch_name. The saved objects
+    are in
 
     :param arch_name: (str)
-    :param folder_path: (str) Path to the folder where the templates are stored. Has a default
+    :param folder_path: (str) Path to the folder where the templates
+                        are stored. Has a default
     :return: (object) Template
     """
     obj_name = arch_name + '.obj'
@@ -90,8 +94,8 @@ class Linker:
 
     def __init__(self, atoms, x_atoms):
         """
-        Make a template linker object from the corresponding xyzs and the donor atoms which were bonded to the metals
-        which form the basis of the cage
+        Make a template linker object from the corresponding xyzs and the donor
+        atoms which were bonded to the metals which form the basis of the cage
 
         :param atoms: (list(list))
         :param x_atoms: (list(int)) Donor atom ids in the xyzs
@@ -113,8 +117,9 @@ class Template:
 
     def _find_metallocage_mol(self):
         """
-        From a list of distinct molecules find the metallocage. This is assumed to be the molecule with the highest
-        frequency of metal_label atoms
+        From a list of distinct molecules find the metallocage. This is
+        assumed to be the molecule with the highest frequency of metal_label
+        atoms
 
         :return: atoms, metal_label label
         """
@@ -127,12 +132,14 @@ class Template:
                 if atom.label in metals:
                     metals_and_freq[atom.label] += 1
 
-            # Add the maximum frequency that any metal_label arises in the structure
+            # Add the maximum frequency that any metal_label arises in the
+            # structure
             metal = max(metals_and_freq, key=metals_and_freq.get)
             freq = metals_and_freq[metal]
             mol_metals_and_freqs.append((metal, freq))
 
-            logger.info(f'Max metal_label frequencies in molecules are {metal} with n = {freq}')
+            logger.info(f'Max metal_label frequencies in molecules are '
+                        f'{metal} with n = {freq}')
 
         mol_id_with_max_metals, max_freq, max_metal = 0, 0, None
         for i, (metal, freq) in enumerate(mol_metals_and_freqs):
@@ -149,15 +156,18 @@ class Template:
         atoms_no_metals = [atom for atom in self.atoms if self.metal_label != atom.label]
 
         logger.info('Finding the distinct linker molecules ')
-        linkers_atoms = find_mols_in_xyzs(atoms=atoms_no_metals, allow_same=True)
+        linkers_atoms = find_mols_in_xyzs(atoms=atoms_no_metals,
+                                          allow_same=True)
 
         linkers = []
-        # Add the x_atoms which are contained within each linker, that were found bonded to each metal_label
+        # Add the x_atoms which are contained within each linker, that were
+        # found bonded to each metal_label
         for atoms in linkers_atoms:
             coords = np.array([atom.coord for atom in atoms])
             linker_x_atoms = []
 
-            # Iterate through the coordinates until one matches that of the full template
+            # Iterate through the coordinates until one matches that of the
+            #  full template
             for i, coord in enumerate(coords):
                 for donor_atom_id in self.x_atoms:
                     if list(coord) == list(self.coords[donor_atom_id]):
@@ -167,7 +177,8 @@ class Template:
             linkers.append(Linker(atoms=atoms, x_atoms=linker_x_atoms))
             logger.info(f'Linker has {len(linker_x_atoms)} donor atoms')
 
-        logger.info(f'Found {len(linkers_atoms)} linkers each with {len(linker_x_atoms)} donor atoms')
+        logger.info(f'Found {len(linkers_atoms)} linkers each with '
+                    f'{len(linker_x_atoms)} donor atoms')
         return linkers
 
     def _find_metals(self):
@@ -176,7 +187,9 @@ class Template:
         try:
             for i in range(len(self.atoms)):
                 if self.atoms[i].label == self.metal_label:
-                    metals.append(Metal(label=self.metal_label, atom_id=i, coord=self.atoms[i].coord))
+                    metals.append(Metal(label=self.metal_label,
+                                        atom_id=i,
+                                        coord=self.atoms[i].coord))
 
             return metals
 
@@ -187,7 +200,8 @@ class Template:
 
     def _find_donor_atoms(self):
         """
-        Find the donor atoms or 'x_atoms' in a metallocage. Will be bonded to the metal_label with a bond distance up to
+        Find the donor atoms or 'x_atoms' in a metallocage. Will be bonded to
+        the metal_label with a bond distance up to
         1.1 x the value defined in cgbind.bonds.
 
         :return: (list(int))
@@ -288,7 +302,8 @@ class Template:
         Initialise a Template object
 
         :param arch_name: (str) Name of the architecture
-        :param mol2_filename: (str) Name of the .mol2 file to read a structure from e.g. downloaded from the CCDC
+        :param mol2_filename: (str) Name of the .mol2 file to read a structure
+                            from e.g. downloaded from the CCDC
         """
 
         self.arch_name = arch_name
@@ -306,7 +321,9 @@ class Template:
         self.x_atoms = self._find_donor_atoms()                # donor atom ids
 
         self.coords = np.array([atom.coord for atom in self.atoms])
-        self.centroid = self._find_centroid()                  # centroid of the cage ~ average metal_label coordinate
+
+        # centroid of the cage ~ average metal_label coordinate
+        self.centroid = self._find_centroid()
 
         self.linkers = self._find_linkers()
         self.n_linkers = len(self.linkers)

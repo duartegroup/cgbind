@@ -7,7 +7,7 @@ from cgbind.substrate import Substrate
 from cgbind.cage_subt import CageSubstrateComplex
 from cgbind.templates import Template
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 __all__ = ['Config',
            'Constants',

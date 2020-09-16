@@ -40,7 +40,7 @@ strings, which can be generated directly from ChemDraw, as
 ![alt text](cgbind/common/SMILES_generation.png)
 
 
-To generate a simple Pd<sub>2</sub>L<sub>4</sub> construct and print the geometry geometry
+To generate a simple Pd<sub>2</sub>L<sub>4</sub> construct and print the geometry
 ```python
 from cgbind import Linker, Cage
 

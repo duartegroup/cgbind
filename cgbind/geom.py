@@ -34,8 +34,9 @@ def calc_normalised_vector(coord1, coord2):
 
 def is_geom_reasonable(molecule):
     """
-    For an xyz list check to ensure the geometry is sensible, before an optimisation is carried out. There should be
-    no distances smaller than 0.7 Å
+    For an xyz list check to ensure the geometry is sensible, before an
+    optimisation is carried out. There should be no distances smaller than
+     0.7 Å
 
     :param molecule: (cgbind.molecule.BaseStruct)
     :return: (bool)
@@ -44,16 +45,19 @@ def is_geom_reasonable(molecule):
 
     coords = molecule.get_coords()
 
-    # Compute the distance matrix with all i,j pairs, thus add 1 to the diagonals to remove the d(ii) = 0
-    # components that would otherwise result in an unreasonable geometry
+    # Compute the distance matrix with all i,j pairs, thus add 1 to the
+    # diagonals to remove the d(ii) = 0 components that would otherwise result
+    #  in an unreasonable geometry
 
     dist_mat = distance_matrix(coords, coords) + np.identity(len(coords))
 
     if np.min(dist_mat) < 0.8:
-        logger.warning('There is a distance < 0.8 Å. There is likely a problem with the geometry')
+        logger.warning('There is a distance < 0.8 Å. There is likely a problem'
+                       ' with the geometry')
         return False
     if np.max(dist_mat) > 1000:
-        logger.warning('There is a distance > 1000 Å. There is likely a problem with the geometry')
+        logger.warning('There is a distance > 1000 Å. There is likely a '
+                       'problem with the geometry')
         return False
 
     return True
@@ -100,7 +104,8 @@ def get_rot_mat_kabsch(p_matrix, q_matrix):
 
 def get_centered_matrix(mat):
     """
-    For a list of coordinates n.e. a n_atoms x 3 matrix as a np array translate to the center of the coordinates
+    For a list of coordinates n.e. a n_atoms x 3 matrix as a np array
+    translate to the center of the coordinates
 
     :param mat: (np.ndarray)
     :return: (np.ndarray) translated coordinates

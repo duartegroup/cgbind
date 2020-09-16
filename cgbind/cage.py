@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import basinhopping, minimize
+from cgbind.exceptions import CannotBuildCage
 from cgbind.molecule import BaseStruct
 from cgbind.calculations import get_charges
 from cgbind.build import build_homoleptic_cage
@@ -15,7 +16,8 @@ class Cage(BaseStruct):
 
     def get_centroid(self):
         """
-        Get the centroid of a metallocage. Defined as the midpoint between all self.metal atoms in the structure
+        Get the centroid of a metallocage. Defined as the midpoint between all
+        self.metal atoms in the structure
 
         :return: (np.ndarray) Centroid coordinate (x, y, z)
         """
@@ -25,14 +27,17 @@ class Cage(BaseStruct):
 
     def get_esp_cube(self, return_min_max=False):
         """
-        Get the electrostatic potential (ESP) in a Gaussian .cube format by calculating partial atomic charges using
-        XTB (tested with v. 6.2). Calls self.get_charges() and depends on self.xyzs
+        Get the electrostatic potential (ESP) in a Gaussian .cube format by
+        calculating partial atomic charges using XTB (tested with v. 6.2).
+        Calls self.get_charges() and depends on self.xyzs
 
-        :param return_min_max: (bool) Return the minimum and maximum of the ESP along with the cube file lines
-                                      evaluated roughly on the VdW surface
+        :param return_min_max: (bool) Return the minimum and maximum of the ESP
+                               along with the cube file lines evaluated
+                               roughly on the VdW surface
         :return: (list) .cube file lines
         """
-        esp_lines, (min_esp, max_esp) = get_esp_cube_lines(charges=self.get_charges(), atoms=self.atoms)
+        esp_lines, (min_esp, max_esp) = get_esp_cube_lines(charges=self.get_charges(),
+                                                           atoms=self.atoms)
 
         if return_min_max:
             return esp_lines, min_esp, max_esp
@@ -42,7 +47,8 @@ class Cage(BaseStruct):
 
     def print_esp_cube_file(self):
         """
-        Print an electrostatic potential (ESP) .cube file. Prints the lines from self.get_esp_cube()
+        Print an electrostatic potential (ESP) .cube file. Prints the lines
+        from self.get_esp_cube()
 
         :return: None
         """
@@ -60,8 +66,9 @@ class Cage(BaseStruct):
 
     def get_charges(self, estimate=False):
         """
-        Get the partial atomic charges on the cage either using XTB or estimate using no polarisation i.e. the metals
-        retain their full charge and the linker charges are estimated using the Gasteiger scheme in RDKit
+        Get the partial atomic charges on the cage either using XTB or estimate
+        using no polarisation i.e. the metals retain their full charge and the
+        linker charges are estimated using the Gasteiger scheme in RDKit
 
         :param estimate: (bool)
         :param guess: (bool) Guess the charges based on the electronegativity
@@ -101,8 +108,9 @@ class Cage(BaseStruct):
 
     def get_cavity_vol(self):
         """
-        For a cage extract the cavity volume defined as the volume of the largest sphere, centered on the cage centroid
-        that may be constructed while r < r(midpoint--closest atom)
+        For a cage extract the cavity volume defined as the volume of the
+        largest sphere, centered on the cage centroid that may be constructed
+        while r < r(midpoint--closest atom)
 
         :return: (float) Cavity volume in Å^3
         """
@@ -129,7 +137,8 @@ class Cage(BaseStruct):
 
         if min_atom_dist_id is not None:
             vdv_radii = get_vdw_radii(atom=self.atoms[min_atom_dist_id])
-            # V = 4/3 π r^3, where r is the centroid -> closest atom distance, minus it's VdW volume
+            # V = 4/3 π r^3, where r is the centroid -> closest atom distance,
+            # minus it's VdW volume
             return (4.0 / 3.0) * np.pi * (min_centriod_atom_dist - vdv_radii)**3
 
         else:
@@ -200,12 +209,14 @@ class Cage(BaseStruct):
 
     def get_max_escape_sphere(self, basinh=False, max_dist_from_metals=10):
         """
-        Get the maximum radius of a sphere that can escape from the centroid of the cage – will iterate through all
-        theta/phi
+        Get the maximum radius of a sphere that can escape from the centroid of
+        the cage – will iterate through all theta/phi
 
-        :param basinh: (bool) Find the true maximum escape sphere by basin hopping on the surface
-        :param max_dist_from_metals: (float) Distance in Å on top of the average M-M distance that will be used for the
-                                             search for the maximum escape sphere
+        :param basinh: (bool) Find the true maximum escape sphere by basin
+                       hopping on the surface
+        :param max_dist_from_metals: (float) Distance in Å on top of the
+                                     average M-M distance that will be used for
+                                    the search for the maximum escape sphere
         :return: (float) Volume of the maximum escape sphere in Å^3
         """
         logger.info('Getting the volume of the largest sphere that can escape '
@@ -223,14 +234,20 @@ class Cage(BaseStruct):
         opt_theta_phi, opt_r = np.zeros(2), 0.0
         for r in np.linspace(0.0, avg_m_m_dist + max_dist_from_metals, 30):
             if basinh:
-                opt = basinhopping(get_max_sphere_negative_radius, x0=opt_theta_phi, stepsize=1.0, niter=5,
-                                   minimizer_kwargs={'args': (r, cage_coords), 'method': 'BFGS'})
+                opt = basinhopping(get_max_sphere_negative_radius,
+                                   x0=opt_theta_phi, stepsize=1.0, niter=5,
+                                   minimizer_kwargs={'args': (r, cage_coords),
+                                                     'method': 'BFGS'})
             else:
-                opt = minimize(get_max_sphere_negative_radius, x0=opt_theta_phi, args=(r, cage_coords), method='BFGS')
+                opt = minimize(get_max_sphere_negative_radius,
+                               x0=opt_theta_phi,
+                               args=(r, cage_coords),
+                               method='BFGS')
 
             opt_theta_phi = opt.x
 
-            # This is the correct way round because we want the largest sphere that CAN escape
+            # This is the correct way round because we want the largest sphere
+            #  that CAN escape
             if -opt.fun < max_sphere_escape_r:
                 max_sphere_escape_r = -opt.fun
                 opt_r = r
@@ -252,14 +269,16 @@ class Cage(BaseStruct):
             return False
 
         if linker.n_atoms == 0 or linker.arch is None or linker.name is None:
-            logger.error(f'Linker doesn\'t have all the required attributes. Cannot build {self.name}')
+            logger.error(f'Linker doesn\'t have all the required attributes. '
+                         f'Cannot build {self.name}')
             return False
 
         return True
 
     def _calc_charge(self):
         logger.info('Calculating the charge on the metallocage')
-        self.charge = self.arch.n_metals * self.metal_charge + np.sum(np.array([linker.charge for linker in self.linkers]))
+        self.charge = (self.arch.n_metals * self.metal_charge
+                       + sum([linker.charge for linker in self.linkers]))
         return None
 
     def _init_homoleptic_cage(self, linker):
@@ -286,11 +305,11 @@ class Cage(BaseStruct):
 
         if not all([self._is_linker_reasonable(linker) for linker in linkers]):
             logger.error('Not all linkers were reasonable')
-            return
+            raise CannotBuildCage
 
         if not all([linker.arch.name == linkers[0].arch.name for linker in linkers]):
             logger.error('Linkers had different architectures, not building a cage')
-            return
+            raise CannotBuildCage
 
         if self.name == 'cage':
             # Only override the default name
@@ -313,7 +332,7 @@ class Cage(BaseStruct):
             build_heteroleptic_cage(self, max_cost)
 
         if self.reasonable_geometry:
-            if self.n_atoms != self.arch.n_metals + np.sum(np.array([linker.n_atoms for linker in self.linkers])):
+            if self.n_atoms != self.arch.n_metals + sum([linker.n_atoms for linker in self.linkers]):
                 logger.error('Failed to build a cage')
                 self.reasonable_geometry = False
                 return None
@@ -335,14 +354,17 @@ class Cage(BaseStruct):
 
         :param name: (str) Name of the cage
         :param solvent: (str)
-        :param linker: (Linker object) Linker to initialise a homoleptic metallocage
+        :param linker: (Linker object) Linker to initialise a homoleptic
+                        metallocage
         :param linkers: (list(Linker object)) List of Linkers to inialise a metallocage
         :param metal: (str) Atomic symbol of the metal
         :param metal_charge: (int) Formal charge on the metal atom/ion
         :param mult: (int) Total spin multiplicity of the cage
-        :param max_cost: (float) Acceptable ligand-ligand repulsion to accommodate in metallocage construction
+        :param max_cost: (float) Acceptable ligand-ligand repulsion to
+                         accommodate in metallocage construction
         """
-        super(Cage, self).__init__(name=name, charge=0, mult=mult, filename=None, solvent=solvent)
+        super(Cage, self).__init__(name=name, charge=0, mult=mult,
+                                   filename=None, solvent=solvent)
 
         logger.info(f'Initialising a Cage object')
 
@@ -367,11 +389,11 @@ class Cage(BaseStruct):
         else:
             logger.error('Could not generate a cage object without either a '
                          'linker or set of linkers')
-            return
+            raise CannotBuildCage
 
         if self.linkers is None:
             logger.error('Cannot build a cage with linkers as None')
-            return
+            raise CannotBuildCage
 
         self._calc_charge()
 

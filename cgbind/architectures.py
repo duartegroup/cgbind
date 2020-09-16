@@ -7,19 +7,22 @@ class Arch:
 
     def __init__(self, name, n_metals, n_linkers):
         """
-        Architecture class holding the name (self.name), self.n_metals and self.n_linkers
+        Architecture class holding the name (self.name), self.n_metals and
+        self.n_linkers
 
         :ivar self.name: (str)
         :ivar self.n_metals: (int)
         :ivar self.n_linkers: (int)
 
         :param name: (str) Name of the architecture
-        :param n_metals: (int) Number of metals in the architecture. e.g. 2 for M2L4
-        :param n_linkers: (int) Number of linkers in the architecture. e.g. 4 for M2L4
+        :param n_metals: (int) Number of metals in the architecture.
+                         e.g. 2 for M2L4
+        :param n_linkers: (int) Number of linkers in the architecture.
+                          e.g. 4 for M2L4
         """
-        self.name = name
-        self.n_metals = n_metals
-        self.n_linkers = n_linkers
+        self.name = str(name)
+        self.n_metals = int(n_metals)
+        self.n_linkers = int(n_linkers)
 
 
 archs = []
