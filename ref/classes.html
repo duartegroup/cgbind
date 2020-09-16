@@ -1,0 +1,813 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Classes &mdash; cgbind 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Input Output" href="input_output.html" />
+    <link rel="prev" title="Reference" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> cgbind
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="input_output.html">Input Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geom.html">Geometry Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Templates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../archs.html">Architectures</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cgbind</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Reference</a> &raquo;</li>
+        
+      <li>Classes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/ref/classes.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="classes">
+<span id="id1"></span><h1>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="cgbind.Linker">
+<em class="property">class </em><code class="sig-prename descclassname">cgbind.</code><code class="sig-name descname">Linker</code><span class="sig-paren">(</span><em class="sig-param">arch_name</em>, <em class="sig-param">smiles=None</em>, <em class="sig-param">name='linker'</em>, <em class="sig-param">charge=0</em>, <em class="sig-param">n_confs=300</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">use_etdg_confs=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Linker" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="cgbind.Linker.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">arch_name</em>, <em class="sig-param">smiles=None</em>, <em class="sig-param">name='linker'</em>, <em class="sig-param">charge=0</em>, <em class="sig-param">n_confs=300</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">use_etdg_confs=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Linker.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metallocage Linker. Inherits from cgbind.molecule.Molecule</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arch_name</strong> – (str) Name of the architecture</p></li>
+<li><p><strong>smiles</strong> – (str) SMILES string</p></li>
+<li><p><strong>name</strong> – (str) Linker name</p></li>
+<li><p><strong>charge</strong> – (int)</p></li>
+<li><p><strong>n_confs</strong> – (int) Number of initial conformers to search through</p></li>
+<li><p><strong>filename</strong> – (str)</p></li>
+<li><p><strong>use_etdg_confs</strong> – (bool) Use a different, sometimes better,
+conformer generation algorithm</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.Linker.arch">
+<code class="sig-name descname">arch</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.Linker.arch" title="Permalink to this definition">¶</a></dt>
+<dd><p>(Arch object) Metallocage architecture</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.Linker.cage_template">
+<code class="sig-name descname">cage_template</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.Linker.cage_template" title="Permalink to this definition">¶</a></dt>
+<dd><p>(Template object) Metallocage template</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.Linker.dr">
+<code class="sig-name descname">dr</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.Linker.dr" title="Permalink to this definition">¶</a></dt>
+<dd><p>(float) Template shift distance</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Linker.get_xmotif_coordinates">
+<code class="sig-name descname">get_xmotif_coordinates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Linker.get_xmotif_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a numpy array of all the coordinates in the Xmotifs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Linker.set_ranked_linker_possibilities">
+<code class="sig-name descname">set_ranked_linker_possibilities</code><span class="sig-paren">(</span><em class="sig-param">metal=None</em>, <em class="sig-param">n=0</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Linker.set_ranked_linker_possibilities" title="Permalink to this definition">¶</a></dt>
+<dd><p>For this linker, return a list of Linker objects with appropriate
+.xyzs, .dr and .x_motifs attributes ordered by their cost function
+low -&gt; high i.e. good to bad. This will loop through all the
+possibilities and the possible combinations of x motifs in the linker.
+Linker.dr controls how large the template needs to be to make the best
+fit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metal</strong> – (str) Atomic symbol of the metal</p></li>
+<li><p><strong>n</strong> – (int) linker number in the template</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(list(Linker))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.Linker.x_atoms">
+<code class="sig-name descname">x_atoms</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.Linker.x_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>(list(int)) List of donor atom ids</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.Linker.x_motifs">
+<code class="sig-name descname">x_motifs</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.Linker.x_motifs" title="Permalink to this definition">¶</a></dt>
+<dd><p>(list(Xmotif object))</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cgbind.Cage">
+<em class="property">class </em><code class="sig-prename descclassname">cgbind.</code><code class="sig-name descname">Cage</code><span class="sig-paren">(</span><em class="sig-param">linker=None</em>, <em class="sig-param">metal='M'</em>, <em class="sig-param">metal_charge=0</em>, <em class="sig-param">linkers=None</em>, <em class="sig-param">solvent=None</em>, <em class="sig-param">mult=1</em>, <em class="sig-param">name='cage'</em>, <em class="sig-param">max_cost=5</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="cgbind.Cage.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">linker=None</em>, <em class="sig-param">metal='M'</em>, <em class="sig-param">metal_charge=0</em>, <em class="sig-param">linkers=None</em>, <em class="sig-param">solvent=None</em>, <em class="sig-param">mult=1</em>, <em class="sig-param">name='cage'</em>, <em class="sig-param">max_cost=5</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metallocage object. Inherits from cgbind.molecule.BaseStruct</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self.metal</strong> – (str)</p></li>
+<li><p><strong>self.linkers</strong> – (list(Linker object))</p></li>
+<li><p><strong>self.dr</strong> – (float)</p></li>
+<li><p><strong>self.arch</strong> – (Arch object)</p></li>
+<li><p><strong>self.cage_template</strong> – (Template object)</p></li>
+<li><p><strong>self.m_ids</strong> – (list(int))</p></li>
+<li><p><strong>self.metal_charge</strong> – (int)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>name</strong> – (str) Name of the cage</p></li>
+<li><p><strong>solvent</strong> – (str)</p></li>
+<li><p><strong>linker</strong> – (Linker object) Linker to initialise a homoleptic
+metallocage</p></li>
+<li><p><strong>linkers</strong> – (list(Linker object)) List of Linkers to inialise a metallocage</p></li>
+<li><p><strong>metal</strong> – (str) Atomic symbol of the metal</p></li>
+<li><p><strong>metal_charge</strong> – (int) Formal charge on the metal atom/ion</p></li>
+<li><p><strong>mult</strong> – (int) Total spin multiplicity of the cage</p></li>
+<li><p><strong>max_cost</strong> – (float) Acceptable ligand-ligand repulsion to
+accommodate in metallocage construction</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.get_cavity_vol">
+<code class="sig-name descname">get_cavity_vol</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.get_cavity_vol" title="Permalink to this definition">¶</a></dt>
+<dd><p>For a cage extract the cavity volume defined as the volume of the
+largest sphere, centered on the cage centroid that may be constructed
+while r &lt; r(midpoint–closest atom)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(float) Cavity volume in Å^3</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.get_centroid">
+<code class="sig-name descname">get_centroid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.get_centroid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the centroid of a metallocage. Defined as the midpoint between all
+self.metal atoms in the structure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(np.ndarray) Centroid coordinate (x, y, z)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.get_charges">
+<code class="sig-name descname">get_charges</code><span class="sig-paren">(</span><em class="sig-param">estimate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.get_charges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the partial atomic charges on the cage either using XTB or estimate
+using no polarisation i.e. the metals retain their full charge and the
+linker charges are estimated using the Gasteiger scheme in RDKit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimate</strong> – (bool)</p></li>
+<li><p><strong>guess</strong> – (bool) Guess the charges based on the electronegativity</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(function) calculations.get_charges(self)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.get_esp_cube">
+<code class="sig-name descname">get_esp_cube</code><span class="sig-paren">(</span><em class="sig-param">return_min_max=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.get_esp_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the electrostatic potential (ESP) in a Gaussian .cube format by
+calculating partial atomic charges using XTB (tested with v. 6.2).
+Calls self.get_charges() and depends on self.xyzs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>return_min_max</strong> – (bool) Return the minimum and maximum of the ESP
+along with the cube file lines evaluated
+roughly on the VdW surface</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(list) .cube file lines</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.get_m_m_dist">
+<code class="sig-name descname">get_m_m_dist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.get_m_m_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>For a cage calculate the average M-M distance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(float) Distance in Å</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.get_max_escape_sphere">
+<code class="sig-name descname">get_max_escape_sphere</code><span class="sig-paren">(</span><em class="sig-param">basinh=False</em>, <em class="sig-param">max_dist_from_metals=10</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.get_max_escape_sphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the maximum radius of a sphere that can escape from the centroid of
+the cage – will iterate through all theta/phi</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>basinh</strong> – (bool) Find the true maximum escape sphere by basin
+hopping on the surface</p></li>
+<li><p><strong>max_dist_from_metals</strong> – <dl class="simple">
+<dt>(float) Distance in Å on top of the</dt><dd><p>average M-M distance that will be used for</p>
+</dd>
+</dl>
+<p>the search for the maximum escape sphere</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(float) Volume of the maximum escape sphere in Å^3</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.get_metal_atom_ids">
+<code class="sig-name descname">get_metal_atom_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.get_metal_atom_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the atom ids of the self.metal atoms in the xyzs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(list(int))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.get_num_h_bond_acceptors">
+<code class="sig-name descname">get_num_h_bond_acceptors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.get_num_h_bond_acceptors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of hydrogen bond acceptors in a metallocage</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.get_num_h_bond_donors">
+<code class="sig-name descname">get_num_h_bond_donors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.get_num_h_bond_donors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of hydrogen bond donors in a metallocage</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.get_num_rot_bonds">
+<code class="sig-name descname">get_num_rot_bonds</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.get_num_rot_bonds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of rotatable bonds in a metallocage</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Cage.print_esp_cube_file">
+<code class="sig-name descname">print_esp_cube_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Cage.print_esp_cube_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print an electrostatic potential (ESP) .cube file. Prints the lines
+from self.get_esp_cube()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cgbind.Substrate">
+<em class="property">class </em><code class="sig-prename descclassname">cgbind.</code><code class="sig-name descname">Substrate</code><span class="sig-paren">(</span><em class="sig-param">smiles=None</em>, <em class="sig-param">name='substrate'</em>, <em class="sig-param">n_confs=1</em>, <em class="sig-param">charge=0</em>, <em class="sig-param">mult=1</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">solvent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Substrate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="cgbind.Substrate.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">smiles=None</em>, <em class="sig-param">name='substrate'</em>, <em class="sig-param">n_confs=1</em>, <em class="sig-param">charge=0</em>, <em class="sig-param">mult=1</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">solvent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Substrate.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substrate. Inherits from cgbind.molecule.Molecule</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>smiles</strong> – (str) SMILES string</p></li>
+<li><p><strong>name</strong> – (str) Molecule name</p></li>
+<li><p><strong>n_confs</strong> – (int) Number of conformers to initialise with</p></li>
+<li><p><strong>charge</strong> – (int) Charge on the molecule</p></li>
+<li><p><strong>mult</strong> – (int) Spin multiplicity on the molecule</p></li>
+<li><p><strong>filename</strong> – (str)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.Substrate.gen_confs">
+<code class="sig-name descname">gen_confs</code><span class="sig-paren">(</span><em class="sig-param">n_confs=1</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.Substrate.gen_confs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populate self.conf_xyzs by calling RDKit</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cgbind.CageSubstrateComplex">
+<em class="property">class </em><code class="sig-prename descclassname">cgbind.</code><code class="sig-name descname">CageSubstrateComplex</code><span class="sig-paren">(</span><em class="sig-param">cage</em>, <em class="sig-param">substrate</em>, <em class="sig-param">solvent=None</em>, <em class="sig-param">mult=1</em>, <em class="sig-param">n_subst_confs=1</em>, <em class="sig-param">n_init_geom=50</em>, <em class="sig-param">energy_method='repulsion'</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.CageSubstrateComplex" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="cgbind.CageSubstrateComplex.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">cage</em>, <em class="sig-param">substrate</em>, <em class="sig-param">solvent=None</em>, <em class="sig-param">mult=1</em>, <em class="sig-param">n_subst_confs=1</em>, <em class="sig-param">n_init_geom=50</em>, <em class="sig-param">energy_method='repulsion'</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.CageSubstrateComplex.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cage-substrate complex. Generated by minimising the energy given an
+energy method. Inherits from cgbind.molecule.BaseStruct</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self.energy_func</strong> – (function)</p></li>
+<li><p><strong>self.binding_energy_kcal</strong> – (float) Binding energy of the substrate
+in kcal mol-1</p></li>
+<li><p><strong>self.n_subst_confs</strong> – (int)</p></li>
+<li><p><strong>self.n_init_geom</strong> – (int)</p></li>
+<li><p><strong>self.name</strong> – (str) cage.name + ‘_’ + substrate.name</p></li>
+<li><p><strong>self.cage</strong> – (Cage object)</p></li>
+<li><p><strong>self.substrate</strong> – (Substrate object)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>cage</strong> – (Cage object)</p></li>
+<li><p><strong>substrate</strong> – (Substrate object)</p></li>
+<li><p><strong>solvent</strong> – (str)</p></li>
+<li><p><strong>mult</strong> – (int) Spin multiplicity of the cage-substrate complex</p></li>
+<li><p><strong>n_subst_confs</strong> – (int) Number of substrate conformations to
+iterate over while minimising the energy</p></li>
+<li><p><strong>n_init_geom</strong> – (int) Number of initial geometries to minimise the
+energy from (generated by random rotation)</p></li>
+<li><p><strong>energy_method</strong> – (str) Name of the energy method to build the
+structure from</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cgbind.molecule.BaseStruct">
+<em class="property">class </em><code class="sig-prename descclassname">cgbind.molecule.</code><code class="sig-name descname">BaseStruct</code><span class="sig-paren">(</span><em class="sig-param">name='molecule'</em>, <em class="sig-param">charge=0</em>, <em class="sig-param">mult=1</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">solvent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.molecule.BaseStruct" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="cgbind.molecule.BaseStruct.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">name='molecule'</em>, <em class="sig-param">charge=0</em>, <em class="sig-param">mult=1</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">solvent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.molecule.BaseStruct.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base structure class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – (str)</p></li>
+<li><p><strong>charge</strong> – (int)</p></li>
+<li><p><strong>mult</strong> – (int) Spin multiplicity</p></li>
+<li><p><strong>filename</strong> – (str)</p></li>
+<li><p><strong>solvent</strong> – (str)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.BaseStruct.atoms">
+<code class="sig-name descname">atoms</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.BaseStruct.atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>(list(list)) Geometry of the structure</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.molecule.BaseStruct.centre">
+<code class="sig-name descname">centre</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.molecule.BaseStruct.centre" title="Permalink to this definition">¶</a></dt>
+<dd><p>Centre the species at the centre of mass (i.e. so COM = origin)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.BaseStruct.charge">
+<code class="sig-name descname">charge</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.BaseStruct.charge" title="Permalink to this definition">¶</a></dt>
+<dd><p>(int) Charge in e</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.BaseStruct.com">
+<code class="sig-name descname">com</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.BaseStruct.com" title="Permalink to this definition">¶</a></dt>
+<dd><p>(np.ndarray) Center of mass (x, y, z)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.BaseStruct.energy">
+<code class="sig-name descname">energy</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.BaseStruct.energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>(float) Energy in Hartrees (Ha)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.BaseStruct.mult">
+<code class="sig-name descname">mult</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.BaseStruct.mult" title="Permalink to this definition">¶</a></dt>
+<dd><p>(int) Spin multiplicity 2S+1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.BaseStruct.n_atoms">
+<code class="sig-name descname">n_atoms</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.BaseStruct.n_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>(int) Number of atoms</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.BaseStruct.name">
+<code class="sig-name descname">name</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.BaseStruct.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>(str) Name of the structure</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.molecule.BaseStruct.optimise">
+<code class="sig-name descname">optimise</code><span class="sig-paren">(</span><em class="sig-param">method</em>, <em class="sig-param">keywords=None</em>, <em class="sig-param">n_cores=1</em>, <em class="sig-param">cartesian_constraints=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.molecule.BaseStruct.optimise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a single-point energy evaluation using an electronic structure
+theory method e.g. XTB, ORCA, G09</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> – (autode.ElectronicStructureMethod)</p></li>
+<li><p><strong>keywords</strong> – (list(str)) Keywords to use for the ESM e.g.
+[‘Opt’, ‘PBE’, ‘def2-SVP’]</p></li>
+<li><p><strong>n_cores</strong> – (int) Number of cores for the calculation to use</p></li>
+<li><p><strong>cartesian_constraints</strong> – (list(int)) List of atom ids to constrain
+to their current coordinates</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.molecule.BaseStruct.print_xyz_file">
+<code class="sig-name descname">print_xyz_file</code><span class="sig-paren">(</span><em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.molecule.BaseStruct.print_xyz_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a .xyz file from self.xyzs provided self.reasonable_geometry is
+True</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – (str) Override the default filename</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.BaseStruct.reasonable_geometry">
+<code class="sig-name descname">reasonable_geometry</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.BaseStruct.reasonable_geometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>(bool)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.molecule.BaseStruct.set_atoms">
+<code class="sig-name descname">set_atoms</code><span class="sig-paren">(</span><em class="sig-param">atoms=None</em>, <em class="sig-param">coords=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.molecule.BaseStruct.set_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the xyzs of a molecular structure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms</strong> – (list(cgbind.atoms.Atom))</p></li>
+<li><p><strong>coords</strong> – (np.ndarray) n_atoms x 3 positions of the atoms</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.molecule.BaseStruct.singlepoint">
+<code class="sig-name descname">singlepoint</code><span class="sig-paren">(</span><em class="sig-param">method</em>, <em class="sig-param">keywords=None</em>, <em class="sig-param">n_cores=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.molecule.BaseStruct.singlepoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a single-point energy evaluation using an electronic structure
+theory method e.g. XTB, ORCA, G09</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> – (autode.ElectronicStructureMethod)</p></li>
+<li><p><strong>keywords</strong> – (list(str)) Keywords to use for the ESM e.g.
+[‘SP’, ‘PBE’, ‘def2-SVP’]</p></li>
+<li><p><strong>n_cores</strong> – (int) Number of cores for the calculation to use</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.BaseStruct.solvent">
+<code class="sig-name descname">solvent</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.BaseStruct.solvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>(str) Name of the solvent</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cgbind.molecule.Molecule">
+<em class="property">class </em><code class="sig-prename descclassname">cgbind.molecule.</code><code class="sig-name descname">Molecule</code><span class="sig-paren">(</span><em class="sig-param">smiles=None</em>, <em class="sig-param">name='molecule'</em>, <em class="sig-param">charge=0</em>, <em class="sig-param">mult=1</em>, <em class="sig-param">n_confs=1</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">solvent=None</em>, <em class="sig-param">use_etdg_confs=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.molecule.Molecule" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="cgbind.molecule.Molecule.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">smiles=None</em>, <em class="sig-param">name='molecule'</em>, <em class="sig-param">charge=0</em>, <em class="sig-param">mult=1</em>, <em class="sig-param">n_confs=1</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">solvent=None</em>, <em class="sig-param">use_etdg_confs=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.molecule.Molecule.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Molecule. Inherits from cgbind.molecule.BaseStruct</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>smiles</strong> – (str) SMILES string</p></li>
+<li><p><strong>name</strong> – (str) Molecule name</p></li>
+<li><p><strong>n_confs</strong> – (int) Number of conformers to initialise with</p></li>
+<li><p><strong>charge</strong> – (int) Charge on the molecule</p></li>
+<li><p><strong>mult</strong> – (int) Spin multiplicity on the molecule</p></li>
+<li><p><strong>filename</strong> – (str)</p></li>
+<li><p><strong>use_etdg_confs</strong> – (bool) Use an alternate conformer generation algorithm</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.Molecule.bonds">
+<code class="sig-name descname">bonds</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.Molecule.bonds" title="Permalink to this definition">¶</a></dt>
+<dd><p>(list(tuple)) List of bonds defined by atom ids</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.Molecule.conformers">
+<code class="sig-name descname">conformers</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.Molecule.conformers" title="Permalink to this definition">¶</a></dt>
+<dd><p>(list(BaseStruct)) List of conformers</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgbind.molecule.Molecule.get_charges">
+<code class="sig-name descname">get_charges</code><span class="sig-paren">(</span><em class="sig-param">estimate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.molecule.Molecule.get_charges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the partial atomic charges using either XTB or estimate with RDKit using the Gasteiger charge scheme</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimate</strong> – (bool)</p></li>
+<li><p><strong>guess</strong> – (bool)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.Molecule.mol_obj">
+<code class="sig-name descname">mol_obj</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.Molecule.mol_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>(RDKit.mol object)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.Molecule.n_confs">
+<code class="sig-name descname">n_confs</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.Molecule.n_confs" title="Permalink to this definition">¶</a></dt>
+<dd><p>(int) Number of conformers initialised with</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.Molecule.n_h_acceptors">
+<code class="sig-name descname">n_h_acceptors</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.Molecule.n_h_acceptors" title="Permalink to this definition">¶</a></dt>
+<dd><p>(int) Number of H-bond acceptors</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.Molecule.n_h_donors">
+<code class="sig-name descname">n_h_donors</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.Molecule.n_h_donors" title="Permalink to this definition">¶</a></dt>
+<dd><p>(int) Number of H-bond donors</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.Molecule.n_rot_bonds">
+<code class="sig-name descname">n_rot_bonds</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.Molecule.n_rot_bonds" title="Permalink to this definition">¶</a></dt>
+<dd><p>(int) Number of rotatable bonds</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.Molecule.smiles">
+<code class="sig-name descname">smiles</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.Molecule.smiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>(str) SMILES string</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cgbind.molecule.Molecule.volume">
+<code class="sig-name descname">volume</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.molecule.Molecule.volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>(float) Molecular volume in Å^3</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="input_output.html" class="btn btn-neutral float-right" title="Input Output" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Tom Young
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

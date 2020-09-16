@@ -1,0 +1,289 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Install &mdash; cgbind 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="Overview" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> cgbind
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Install</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pip">PIP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mac-osx-linux">Mac OSX / Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-problems">Common Problems</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="archs.html">Architectures</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">cgbind</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Install</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/install.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="install">
+<h1>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h1>
+<p>cgbind is built in Python 3 and has been tested with v. 3.7. An <a class="reference external" href="https://www.anaconda.com/distribution">anaconda</a> or
+<a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a> installation is highly recommended to easily install the
+dependencies.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <a class="reference external" href="https://duartegroup.github.io/autodE/install.html">autode</a> package is an optional dependency to perform
+semi-emprical, DFT and ab initio calculations.</p>
+</div>
+<div class="section" id="pip">
+<h2>PIP<a class="headerlink" href="#pip" title="Permalink to this headline">¶</a></h2>
+<p>If the requirements (rdkit, numpy, scipy, networkx, Cython) are already available <code class="docutils literal notranslate"><span class="pre">cgbind</span></code> can be install with
+<a class="reference external" href="https://pypi.org/project/pip/">pip</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install cgbind
+</pre></div>
+</div>
+</div>
+<div class="section" id="mac-osx-linux">
+<h2>Mac OSX / Linux<a class="headerlink" href="#mac-osx-linux" title="Permalink to this headline">¶</a></h2>
+<p>To install <code class="docutils literal notranslate"><span class="pre">cgbind</span></code> inside a conda environment first clone the repository and <code class="docutils literal notranslate"><span class="pre">cd</span></code> there:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/duartegroup/cgbind.git
+$ cd cgbind
+</pre></div>
+</div>
+<p>then install the appropriate dependencies (you may want to create a new virtual environment):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ conda config --append channels conda-forge
+$ conda install --file requirements.txt
+</pre></div>
+</div>
+<p>finally:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python setup.py install
+</pre></div>
+</div>
+<p>The whole process including installing miniconda is shown <a class="reference external" href="https://youtu.be/R-J6vJeydAE">here</a>.</p>
+</div>
+<div class="section" id="windows">
+<h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
+<p>On Windows without a <code class="docutils literal notranslate"><span class="pre">git</span></code> installation <code class="docutils literal notranslate"><span class="pre">cgbind</span></code> can be installed with <a class="reference external" href="https://www.anaconda.com/distribution">anaconda</a>
+by, on the GitHub <a class="reference external" href="https://github.com/duartegroup/cgbind">page</a> using Clone or download → Download ZIP then
+extracting it. Then, open an anaconda command prompt and <code class="docutils literal notranslate"><span class="pre">cd</span></code> to the directory and proceed as above e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd Downloads/cgbind-master/
+$ conda config --append channels conda-forge
+$ conda install --file requirements.txt
+$ python setup.py install
+</pre></div>
+</div>
+<p>The above commands assume you have extracted the zip to <code class="docutils literal notranslate"><span class="pre">C:\Users\yourusername\Downloads</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default Windows doesn’t have a C++ compiler required to build the extension to generate electrostatic potentials,
+as such this feature is not enabled by default. If a C++ compiler is available install with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span> <span class="pre">--esp_gen</span></code> to build the ESP extension.</p>
+</div>
+</div>
+<div class="section" id="common-problems">
+<h2>Common Problems<a class="headerlink" href="#common-problems" title="Permalink to this headline">¶</a></h2>
+<p>Conda is not found:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ conda config --append channels conda-forge
+conda command not found
+</pre></div>
+</div>
+<p>First, make sure either miniconda or anaconda installed then ensure you’ve closed and reopened your terminal after
+installation.</p>
+<p>A required module is not found (setuptools, rdkit, Cython):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python setup.py install
+Traceback (most recent call last):
+  File &quot;setup.py&quot;, line 2, in &lt;module&gt;
+    from Cython.Build import cythonize
+ImportError: No module named Cython.Build
+</pre></div>
+</div>
+<p>Check that you’ve run <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">--file</span> <span class="pre">requirements.txt</span></code> and that you’re using the conda version of python (i.e.
+running <code class="docutils literal notranslate"><span class="pre">which</span> <span class="pre">python</span></code> returns /some/path/(ana/mini)conda/bin/python). If <code class="docutils literal notranslate"><span class="pre">which</span> <span class="pre">python</span></code> returns /usr/bin/python or
+another non-conda version of python then you may need to activate the base conda environment with <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">base</span></code>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="examples.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Tom Young
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

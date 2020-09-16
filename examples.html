@@ -1,0 +1,293 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Examples &mdash; cgbind 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference" href="ref/index.html" />
+    <link rel="prev" title="Install" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> cgbind
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#generating-a-metallocage">Generating a Metallocage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#obtaining-metallocage-properties">Obtaining Metallocage Properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#m4l6-metallocages">M4L6 Metallocages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-architectures">Adding Architectures</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ref/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="archs.html">Architectures</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">cgbind</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Examples</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/examples.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<p>A few examples for generating and analysing metallocages. The full examples are available on
+<a class="reference external" href="https://github.com/duartegroup/cgbind/tree/master/examples">GitHub</a>.</p>
+<div class="section" id="generating-a-metallocage">
+<h2>Generating a Metallocage<a class="headerlink" href="#generating-a-metallocage" title="Permalink to this headline">¶</a></h2>
+<p>To generate an archetype  Pd<sub>2</sub>L<sub>4</sub> metallocage (<a class="reference external" href="https://dx.doi.org/10.5517/ccdc.csd.cc1m3h4c">EZEVAI</a>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">cgbind</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">linker</span> <span class="o">=</span> <span class="n">cgbind</span><span class="o">.</span><span class="n">Linker</span><span class="p">(</span><span class="n">smiles</span><span class="o">=</span><span class="s1">&#39;C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                       <span class="n">arch_name</span><span class="o">=</span><span class="s1">&#39;m2l4&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cage</span> <span class="o">=</span> <span class="n">cgbind</span><span class="o">.</span><span class="n">Cage</span><span class="p">(</span><span class="n">linker</span><span class="o">=</span><span class="n">linker</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="s1">&#39;Pd&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="ref/classes.html#cgbind.Linker" title="cgbind.Linker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Linker</span></code></a> holds the linker as a <code class="xref py py-class docutils literal notranslate"><span class="pre">Molecule</span></code> and is required to build a <a class="reference internal" href="ref/classes.html#cgbind.Cage" title="cgbind.Cage"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cage</span></code></a>. If a cage is
+initialised from a single linker a homoleptic metallocage will be constructed. To generate a heteroleptic metallocage
+the cage needs multple linkers, for example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">alt_linker</span> <span class="o">=</span> <span class="n">cgbind</span><span class="o">.</span><span class="n">Linker</span><span class="p">(</span><span class="n">smiles</span><span class="o">=</span><span class="s1">&#39;C1(C#CC2=NC(C#CC3=CC=CN=C3)=CC=C2)=CC=CN=C1&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                           <span class="n">arch_name</span><span class="o">=</span><span class="s1">&#39;m2l4&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;alt_linker&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">heteroleptic_cage</span> <span class="o">=</span> <span class="n">cgbind</span><span class="o">.</span><span class="n">Cage</span><span class="p">(</span><span class="n">linkers</span><span class="o">=</span><span class="p">[</span><span class="n">linker</span><span class="p">,</span> <span class="n">linker</span><span class="p">,</span> <span class="n">alt_linker</span><span class="p">,</span> <span class="n">alt_linker</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>                                <span class="n">metal</span><span class="o">=</span><span class="s1">&#39;Pd&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To generate a standard .xyz file that can be visualised with e.g. <a class="reference external" href="https://avogadro.cc">Avogadro</a> use</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cage</span><span class="o">.</span><span class="n">print_xyz_file</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="obtaining-metallocage-properties">
+<h2>Obtaining Metallocage Properties<a class="headerlink" href="#obtaining-metallocage-properties" title="Permalink to this headline">¶</a></h2>
+<p>To obtain properties of a specific <a class="reference internal" href="ref/classes.html#cgbind.Cage" title="cgbind.Cage"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cage</span></code></a> e.g. the Pd-Pd distance, cavity volume (in Å<sup>3</sup>) and maximum
+escape sphere (Å<sup>3</sup>) as a window size probe</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m_m_dist</span> <span class="o">=</span> <span class="n">cage</span><span class="o">.</span><span class="n">get_m_m_dist</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vol</span> <span class="o">=</span> <span class="n">cage</span><span class="o">.</span><span class="n">get_cavity_vol</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">escape_sphere</span> <span class="o">=</span> <span class="n">cage</span><span class="o">.</span><span class="n">get_max_escape_sphere</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>To check all the current methods available</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="n">method</span> <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">cgbind</span><span class="o">.</span><span class="n">Cage</span><span class="p">)</span> <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">cgbind</span><span class="o">.</span><span class="n">Cage</span><span class="p">,</span> <span class="n">method</span><span class="p">))]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">methods</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="m4l6-metallocages">
+<h2>M4L6 Metallocages<a class="headerlink" href="#m4l6-metallocages" title="Permalink to this headline">¶</a></h2>
+<p>Two M<sub>4</sub>L<sub>6</sub> templates are available in cgbind the first suitable for catechol derived linkers
+(<cite>arch_name=’m4l6’</cite>), for example the cage published by <a class="reference external" href="http://dx.doi.org/10.1021/ja411631v">Raymond</a> . Also
+available is a template suitable for bipyridyl based linkers (<cite>arch_name=’m4l6n’</cite>, also referred to as M4L6’),
+for example published by <a class="reference external" href="https://doi.org/10.1021/ja402084x">Nitchke</a>. To generate a bipyridyl-based
+Fe(II)<sub>4</sub>L<sub>6</sub> metallocage over two cores:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cgbind</span> <span class="kn">import</span> <span class="n">Linker</span><span class="p">,</span> <span class="n">Cage</span><span class="p">,</span> <span class="n">Config</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Config</span><span class="o">.</span><span class="n">n_cores</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">linker</span> <span class="o">=</span> <span class="n">Linker</span><span class="p">(</span><span class="n">smiles</span><span class="o">=</span><span class="s1">&#39;C1(C2=CC=C(C#CC3=CN=C(C4=NC=CC=C4)C=C3)C=N2)=NC=CC=C1&#39;</span><span class="p">,</span> <span class="n">arch_name</span><span class="o">=</span><span class="s1">&#39;m4l6n&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cage</span> <span class="o">=</span> <span class="n">Cage</span><span class="p">(</span><span class="n">linker</span><span class="o">=</span><span class="n">linker</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="s1">&#39;Fe&#39;</span><span class="p">,</span> <span class="n">metal_charge</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Due to the conformational flexibility of some linkers a larger number of conformers may be required to find one
+with the correct geometry. To request more than the default 300 conformers initialise a linker with
+<cite>Linker(…, n_confs=300)</cite>. Also possible is the ETKDGv2 algorithm in RDKit does not generate a conformer that affords a
+sensible structure, to use an earlier version <cite>Linker(…, use_etdg_confs=True)</cite>.</p>
+</div>
+<div class="section" id="adding-architectures">
+<h2>Adding Architectures<a class="headerlink" href="#adding-architectures" title="Permalink to this headline">¶</a></h2>
+<p>Extending <em>cgbind</em> to other architectures is possible using the add_template.py
+<a class="reference external" href="https://github.com/duartegroup/cgbind/blob/master/scripts/add_template.py">script</a>.
+For example, the M24L48 metallocage from <a class="reference external" href="https://doi.org/10.1126/science.1188605">Fujita</a> can
+be added as a template by downloading the crystal structure deposited in the
+<a class="reference external" href="https://www.ccdc.cam.ac.uk/structures/Search?Ccdcid=765717&amp;DatabaseToSearch=Published">CCDC</a>
+using Open → CSD entry in external viewer to download the structure as a .mol2. Then:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python /path/to/cgbind/scripts/add_template.py WUQROQ.mol2 --name m24l48
+</pre></div>
+</div>
+<p>Creating a M24L48 cage is then as easy as:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cgbind</span> <span class="kn">import</span> <span class="n">Linker</span><span class="p">,</span> <span class="n">Cage</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">linker</span> <span class="o">=</span> <span class="n">Linker</span><span class="p">(</span><span class="n">smiles</span><span class="o">=</span><span class="s1">&#39;n1ccc(cc1)-c2sc(cc2)-c3ccncc3&#39;</span><span class="p">,</span> <span class="n">arch_name</span><span class="o">=</span><span class="s1">&#39;m24l48&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cage</span> <span class="o">=</span> <span class="n">Cage</span><span class="p">(</span><span class="n">linker</span><span class="o">=</span><span class="n">linker</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="s1">&#39;Pd&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cage</span><span class="o">.</span><span class="n">print_xyz_file</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ref/index.html" class="btn btn-neutral float-right" title="Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install.html" class="btn btn-neutral float-left" title="Install" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Tom Young
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
