@@ -1,5 +1,6 @@
 import numpy as np
 from copy import deepcopy
+import networkx as nx
 from rdkit.Chem import AllChem
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
@@ -178,7 +179,8 @@ class Molecule(BaseStruct):
 
     def get_charges(self, estimate=False):
         """
-        Get the partial atomic charges using either XTB or estimate with RDKit using the Gasteiger charge scheme
+        Get the partial atomic charges using either XTB or estimate with RDKit
+        using the Gasteiger charge scheme
 
         :param estimate: (bool)
         :param guess: (bool)
@@ -186,7 +188,8 @@ class Molecule(BaseStruct):
         """
 
         if estimate and self.mol_obj is None:
-            raise CgbindCritical('Cannot estimate charges without a rdkit molecule object')
+            raise CgbindCritical('Cannot estimate charges without a rdkit '
+                                 'molecule object')
 
         if estimate:
             try:
@@ -200,6 +203,22 @@ class Molecule(BaseStruct):
             charges = calculations.get_charges(self)
 
         return charges
+
+    def get_single_bonds(self):
+        """Get the single bonds in this molecule as a list of tuples"""
+
+        if self.mol_obj is None:
+            logger.error('Cannot fragment without an RDKit molecule object')
+            raise ValueError
+
+        single_bonds = []
+
+        for bond in self.mol_obj.GetBonds():
+            if bond.GetBondType() == Chem.BondType.SINGLE:
+                pair = (bond.GetBeginAtomIdx(), bond.GetEndAtomIdx())
+                single_bonds.append(pair)
+
+        return single_bonds
 
     def _init_smiles(self, smiles, use_etdg_confs=False):
         """
@@ -225,7 +244,9 @@ class Molecule(BaseStruct):
         method = AllChem.ETKDGv2() if use_etdg_confs is False else AllChem.ETDG()
         method.pruneRmsThresh = 0.3
         method.numThreads = Config.n_cores
-        conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj, numConfs=self.n_confs, params=method))
+        conf_ids = list(AllChem.EmbedMultipleConfs(self.mol_obj,
+                                                   numConfs=self.n_confs,
+                                                   params=method))
         logger.info('                                          ... done')
 
         try:
@@ -237,12 +258,33 @@ class Molecule(BaseStruct):
         self.bonds = [(b.GetBeginAtomIdx(), b.GetEndAtomIdx()) for b in self.mol_obj.GetBonds()]
         self.conformers = extract_conformers_from_rdkit_mol_object(mol_obj=self.mol_obj, conf_ids=conf_ids)
 
-        # Default to the first generated conformer in the absence of any other information
+        # Default to the first generated conformer in the absence of any other
+        # information
         self.set_atoms(atoms=self.conformers[0].atoms)
 
         return None
 
-    def __init__(self, smiles=None, name='molecule', charge=0, mult=1, n_confs=1, filename=None, solvent=None,
+    def set_graph(self):
+        """Set the graph of this molecule using the defined bonds"""
+
+        if self.bonds is None:
+            logger.error('Could not set graph - no bonds were present')
+            return None
+
+        # Add nodes then edges to an networkX graph
+        self.graph = nx.Graph()
+
+        for i in range(self.n_atoms):
+            self.graph.add_node(i)
+
+        for (i, j) in self.bonds:
+            self.graph.add_edge(i, j)
+
+        logger.info('Successfully built molecular graph')
+        return None
+
+    def __init__(self, smiles=None, name='molecule',
+                 charge=0, mult=1, n_confs=1, filename=None, solvent=None,
                  use_etdg_confs=False):
         """
         Molecule. Inherits from cgbind.molecule.BaseStruct
@@ -255,9 +297,11 @@ class Molecule(BaseStruct):
         :param filename: (str)
         :param use_etdg_confs: (bool) Use an alternate conformer generation algorithm
         """
-        logger.info('Initialising a Molecule object for {}'.format(name))
+        logger.info(f'Initialising a Molecule object for {name} with '
+                    f'{n_confs} conformers')
 
-        super(Molecule, self).__init__(name=name, charge=charge, mult=mult, filename=filename, solvent=solvent)
+        super().__init__(name=name, charge=charge, mult=mult,
+                         filename=filename, solvent=solvent)
 
         self.smiles = smiles                                        #: (str) SMILES string
         self.n_confs = n_confs                                      #: (int) Number of conformers initialised with
@@ -269,7 +313,7 @@ class Molecule(BaseStruct):
         self.n_h_acceptors = None                                   #: (int) Number of H-bond acceptors
         self.volume = None                                          #: (float) Molecular volume in Å^3
         self.bonds = None                                           #: (list(tuple)) List of bonds defined by atom ids
-
+        self.graph = None
         self.conformers = None                                      #: (list(BaseStruct)) List of conformers
 
         if smiles:
@@ -278,3 +322,5 @@ class Molecule(BaseStruct):
         if filename is not None:
             self.bonds = get_bond_list_from_atoms(self.atoms)
             self.conformers = [deepcopy(self)]
+
+        self.set_graph()

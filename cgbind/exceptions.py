@@ -24,3 +24,7 @@ class RequiresAutodE(Exception):
 
 class FileMalformatted(Exception):
     """Exception for a file in the wrong format"""
+
+
+class FragmentationFailed(Exception):
+    """Exception for where a fragmentation fails"""

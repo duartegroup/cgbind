@@ -1,12 +1,15 @@
 from cgbind.log import logger
 import numpy as np
 import itertools
+import networkx as nx
 from cgbind.config import Config
 from cgbind.molecule import Molecule
 from cgbind.architectures import archs
 from cgbind.exceptions import *
 from scipy.optimize import minimize, Bounds
 from cgbind.build import cost_fitted_x_motifs
+from cgbind.fragmentation import fragment_graph
+from cgbind.fragmentation import get_frag_minimised_linker
 from cgbind.atoms import heteroatoms
 from cgbind.atoms import get_max_valency
 from cgbind.templates import get_template
@@ -32,7 +35,8 @@ def get_linker_conformer(init_conformer, linker, x_motifs, template_linker):
     x_coords = [coords[atom_id] for motif in x_motifs for atom_id in motif.atom_ids]
 
     # Minimise the cost function as a function of dr in Å
-    min_result = minimize(cost_fitted_x_motifs, x0=np.array([1.0]),
+    min_result = minimize(cost_fitted_x_motifs,
+                          x0=np.array([1.0]),
                           args=(linker, template_linker, x_coords),
                           method='L-BFGS-B', tol=1e-3,
                           bounds=Bounds(-100.0, 10.0))
@@ -162,6 +166,10 @@ class Linker(Molecule):
         x_motifs_list = list(itertools.combinations(self.x_motifs,
                                                     n_x_motifs_in_linker))
 
+        if self.use_fragment_conf:
+            return self._set_fragmented_linker_possibilities(metal,
+                                                             x_motifs_list,
+                                                             n=n)
         logger.info(f'Have {len(x_motifs_list)*len(self.conformers)} '
                     f'iterations to do')
         possibilities = []
@@ -209,6 +217,44 @@ class Linker(Molecule):
         assert len(self.possibilities) > 0
         return None
 
+    def _set_fragmented_linker_possibilities(self, metal, x_motifs_list, n=0):
+        """
+        Set the list of linker possibilities for linker conformations and
+        combinations of x-motifs. Here a conformer is built by fragmenting
+        the structure over single X-X bonds where both are heavy atoms into
+        n+1 components for n x motifs. For example, for a M2L4 linker
+
+        X1-----C------X2
+
+        where the X fragments contain the X motifs and the central portion
+        does not contain any donor atoms
+
+        :param metal: (str or None)
+        :param x_motifs_list: (list(cgbind.x_motifs.Xmotif))
+        """
+
+        frag_graph = self.graph.copy()
+        bonds = self.get_single_bonds()
+
+        # Fragment over single bonds until no more fragmentation can be done
+        n_deleted = 1
+        while n_deleted > 0:
+            n_deleted = fragment_graph(bonds, frag_graph, self.x_motifs)
+
+        # List of atom indexes for the each of the fragments
+        fragments = [list(frag) for frag in nx.connected_components(frag_graph)]
+        template_linker = self.cage_template.linkers[n]
+
+        for x_motifs in x_motifs_list:
+
+            # TODO minimisation wrt. dr
+            linker = get_frag_minimised_linker(self, fragments,
+                                               template_linker,
+                                               x_motifs=x_motifs)
+            self.possibilities.append(linker)
+
+        return None
+
     def get_xmotif_coordinates(self):
         """Return a numpy array of all the coordinates in the Xmotifs"""
 
@@ -218,7 +264,8 @@ class Linker(Molecule):
         return np.array(coords)
 
     def __init__(self, arch_name, smiles=None, name='linker', charge=0,
-                 n_confs=300, filename=None, use_etdg_confs=False):
+                 n_confs=300, filename=None, use_etdg_confs=False,
+                 use_fragment_conf=False):
         """
         Metallocage Linker. Inherits from cgbind.molecule.Molecule
 
@@ -236,11 +283,19 @@ class Linker(Molecule):
 
         self.arch = None              #: (Arch object) Metallocage architecture
         self._set_arch(arch_name)
-
         # May exit here if the specified architecture is not found
-        super(Linker, self).__init__(smiles=smiles, name=name, charge=charge,
-                                     n_confs=n_confs, filename=filename,
-                                     use_etdg_confs=use_etdg_confs)
+
+        self.use_fragment_conf = use_fragment_conf
+
+        if use_fragment_conf:
+            logger.info('Will generate a single conformer in the correct'
+                        'orientation with fragmentation')
+            n_confs = 1
+
+        super().__init__(smiles=smiles, name=name, charge=charge,
+                         n_confs=n_confs,
+                         filename=filename,
+                         use_etdg_confs=use_etdg_confs)
 
         # Allow linker construction with no atoms
         if self.n_atoms == 0:

@@ -91,20 +91,23 @@ def test_rdkit_props():
 
 def test_confs():
 
-    butane = Molecule(name='butane', smiles='CCCC', n_confs=5)
-    assert len(butane.conformers) > 1
-    assert butane.conformers[0].n_atoms == butane.n_atoms
+    alkane = Molecule(name='alkane', smiles='CCCCC', n_confs=5)
+    assert len(alkane.conformers) > 1
+    assert alkane.conformers[0].n_atoms == alkane.n_atoms
 
 
 def test_molecule_from_file():
 
-    methane = Molecule(name='methane', filename=os.path.join(here, 'data', 'methane.xyz'))
+    methane = Molecule(name='methane',
+                       filename=os.path.join(here, 'data', 'methane.xyz'))
     assert methane.n_atoms == 5
     assert methane.charge == 0
     assert methane.mult == 1
 
-    methane = Molecule(name='methane', filename=os.path.join(here, 'data', 'methane.mol2'))
+    methane = Molecule(name='methane',
+                       filename=os.path.join(here, 'data', 'methane.mol2'))
     assert methane.n_atoms == 5
 
-    methane = Molecule(name='methane', filename=os.path.join(here, 'data', 'methane.mol'))
+    methane = Molecule(name='methane',
+                       filename=os.path.join(here, 'data', 'methane.mol'))
     assert methane.n_atoms == 5
