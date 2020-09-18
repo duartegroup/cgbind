@@ -23,29 +23,10 @@ def get_frag_minimised_linker(linker, fragments, template_linker, x_motifs):
         # Stitch the non x_motif containing fragments back together
         raise NotImplementedError
 
-    # Minimise the cost function as a function of dr in Å
-    opt = minimize(frag_linker,
-                   x0=np.array([0.0]),
-                   args=(linker, fragments, template_linker, x_motifs, True),
-                   method='L-BFGS-B', tol=1e-3,
-                   bounds=Bounds(-100.0, 10.0))
-
-    # Create a linker conformer from the minimisation
-    conformer = deepcopy(linker)
-    conformer.dr = opt.x[0]
-    conformer.x_motifs = x_motifs
-
-    coords = frag_linker(conformer.dr, linker, fragments, template_linker,
-                         x_motifs, return_coords=True)
-    conformer.set_atoms(coords=coords)
-    conformer.cost = opt.fun
-    # linker.print_xyz_file()
-
-    return conformer
+    return frag_linker(linker, fragments, template_linker, x_motifs)
 
 
-def frag_linker(dr, linker, fragments, template_linker, x_motifs,
-                return_energy=False, return_coords=False):
+def frag_linker(linker, fragments, template_linker, x_motifs):
     """
     From a linker with a set of fragments, fit the fragments containing
     x-motifs using a defined dr to the template, then minimise the remaining
@@ -67,12 +48,24 @@ def frag_linker(dr, linker, fragments, template_linker, x_motifs,
     coords = np.array(linker.get_coords(), copy=True)
 
     fitted_idxs = []
-    for i, fragment in enumerate(fragments):
-        if is_x_motif_and_fit(fragment, template_linker, coords, dr, x_motifs):
-            fitted_idxs.append(i)
+    shift_vecs = []
 
-    # Fitted coordinates are now fixed in space
-    fixed_idxs = [idx for i in fitted_idxs for idx in fragments[i]]
+    for i, fragment in enumerate(fragments):
+
+        # If the fragment contains an x_motif this function fits it to the
+        # template and returns the shift vector
+        shift_vec = x_motif_vec_and_fit(fragment, template_linker,
+                                        coords, x_motifs)
+        if shift_vec is not None:
+            fitted_idxs.append(i)
+            shift_vecs.append(shift_vec)
+
+    # Fitted coordinates that are fixed up to the shift vector value
+    x_frag_idxs = [np.array(fragment, dtype=np.int)
+                   for i, fragment in enumerate(fragments) if i in fitted_idxs]
+
+    flat_x_frag_idxs = np.array([idx for i in fitted_idxs for idx in fragments[i]],
+                                dtype=np.int)
 
     # Deal with the remaining, not fitted fragment
     fragment = [frag for i, frag in enumerate(fragments)
@@ -80,29 +73,42 @@ def frag_linker(dr, linker, fragments, template_linker, x_motifs,
 
     # Minimise the energy with respect to the remaining fragments
     fragment_idxs = np.array(fragment, dtype=np.int)
-    ij_bonds = get_cross_bonds(linker, fragment, fixed_idxs)
+    ij_bonds = get_cross_bonds(linker, fragment, flat_x_frag_idxs)
 
     opt = minimize(rotated_fragment_linker_energy,
-                   x0=np.random.uniform(size=7),
-                   args=(coords, fragment_idxs, fixed_idxs, ij_bonds),
+                   x0=np.array([0] + np.random.uniform(size=7).tolist()),
+                   args=(coords,
+                         fragment_idxs,
+                         x_frag_idxs,
+                         flat_x_frag_idxs,
+                         ij_bonds,
+                         shift_vecs),
                    method='BFGS')
 
-    # print(opt)
-    energy = rotated_fragment_linker_energy(opt.x, coords, fragment_idxs,
-                                            fixed_idxs,
+    print(opt)
+    energy = rotated_fragment_linker_energy(opt.x,
+                                            coords,
+                                            fragment_idxs,
+                                            x_frag_idxs,
+                                            flat_x_frag_idxs,
                                             ij_bonds,
+                                            shift_vecs,
                                             modify=True)
-    if return_energy:
-        return energy
 
-    if return_coords:
-        return coords
+    linker = deepcopy(linker)
+    linker.dr = opt.x[0]
+    linker.x_motifs = x_motifs
+    linker.cost = energy
+    linker.set_atoms(coords=coords)
 
-    return None
+    return linker
 
 
-def rotated_fragment_linker_energy(x, coords, idxs_to_shift, fixed_idxs,
+def rotated_fragment_linker_energy(x, coords, idxs_to_shift,
+                                   x_motifs_idxs,
+                                   flat_x_motifs_idxs,
                                    ij_bonds,
+                                   shift_vecs,
                                    modify=False):
     """
     Rotate a fragment of the linker using a numpy array defining the shift
@@ -111,7 +117,7 @@ def rotated_fragment_linker_energy(x, coords, idxs_to_shift, fixed_idxs,
     :param x:
     :param coords:
     :param idxs_to_shift:
-    :param fixed_idxs:
+    :param x_motifs_idxs:
     :param ij_bonds:
     :param modify: (bool) Modify the coordinates in place
     :return:
@@ -119,14 +125,23 @@ def rotated_fragment_linker_energy(x, coords, idxs_to_shift, fixed_idxs,
     if not modify:
         coords = np.array(coords, copy=True)
 
-    coords[idxs_to_shift] += x[:3]
+    # Shift all the fragments with x motifs in them with dr with the the
+    # associated shift vector
 
-    rot_mat = rotation_matrix(axis=x[3:6],
-                              theta=x[6])
+    dr = x[0]
+    for i, x_motif_idxs in enumerate(x_motifs_idxs):
+        coords[x_motif_idxs] += dr * shift_vecs[i]
 
+    # Translate the shiftable portion
+    coords[idxs_to_shift] += x[1:4]
+
+    # And rotate it
+    rot_mat = rotation_matrix(axis=x[4:7],
+                              theta=x[7])
     coords[idxs_to_shift] = rot_mat.dot(coords[idxs_to_shift].T).T
 
-    energy = linker_energy(coords_i=coords[fixed_idxs],
+    # Compute the repulsive energy with the bonds crossing fragments
+    energy = linker_energy(coords_i=coords[flat_x_motifs_idxs],
                            coords_j=coords[idxs_to_shift],
                            ij_bonds=ij_bonds)
     return energy
@@ -176,6 +191,7 @@ def get_cross_bonds(linker, fragment, fixed):
     """
 
     i_idxs, j_idxs = [], []
+    fixed = list(fixed)
 
     for (i, j) in get_cross_fragment_bonds(linker, fragment):
         if i in fixed:
@@ -215,7 +231,7 @@ def get_cross_fragment_bonds(linker, fragment):
     return cross_bonds
 
 
-def is_x_motif_and_fit(fragment, template_linker, coords, dr, x_motifs):
+def x_motif_vec_and_fit(fragment, template_linker, coords, x_motifs, dr=0.0):
     """
     If this fragment contains an x motif then fit the coordinates will
     modify coords in place
@@ -255,9 +271,9 @@ def is_x_motif_and_fit(fragment, template_linker, coords, dr, x_motifs):
             coords[f_idxs] = rot_mat.dot(coords[f_idxs].T).T
             coords[f_idxs] += t_centre
 
-            return True
+            return template_linker.x_motifs[j].norm_shift_vec
 
-    return False
+    return None
 
 
 def fragment_graph(bonds, graph, x_motifs):
