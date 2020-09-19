@@ -10,6 +10,7 @@ from scipy.optimize import minimize, Bounds
 from cgbind.build import cost_fitted_x_motifs
 from cgbind.fragmentation import fragment_graph
 from cgbind.fragmentation import get_frag_minimised_linker
+from cgbind.fragmentation import stitched_fragments
 from cgbind.atoms import heteroatoms
 from cgbind.atoms import get_max_valency
 from cgbind.templates import get_template
@@ -236,7 +237,7 @@ class Linker(Molecule):
         frag_graph = self.graph.copy()
         bonds = self.get_single_bonds()
 
-        # Fragment over single bonds until no more fragmentation can be done
+        # Fragment over single bonds until no more fragmentation is possible
         n_deleted = 1
         while n_deleted > 0:
             n_deleted = fragment_graph(bonds, frag_graph, self.x_motifs)
@@ -246,9 +247,9 @@ class Linker(Molecule):
         template_linker = self.cage_template.linkers[n]
 
         for x_motifs in x_motifs_list:
-
-            # TODO minimisation wrt. dr
-            linker = get_frag_minimised_linker(self, fragments,
+            curr_fragments = stitched_fragments(fragments, bonds, x_motifs)
+            linker = get_frag_minimised_linker(self,
+                                               curr_fragments,
                                                template_linker,
                                                x_motifs=x_motifs)
             self.possibilities.append(linker)
