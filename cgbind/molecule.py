@@ -89,7 +89,8 @@ class BaseStruct:
         n_cores = n_cores if n_cores is not None else Config.n_cores
         return calculations.singlepoint(self, method, keywords, n_cores)
 
-    def optimise(self, method, keywords=None, n_cores=1, cartesian_constraints=None):
+    def optimise(self, method, keywords=None, n_cores=None,
+                 cartesian_constraints=None):
         """
         Perform a single-point energy evaluation using an electronic structure
         theory method e.g. XTB, ORCA, G09

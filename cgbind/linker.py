@@ -244,9 +244,15 @@ class Linker(Molecule):
 
         # List of atom indexes for the each of the fragments
         fragments = [list(frag) for frag in nx.connected_components(frag_graph)]
+        logger.info(f'Fragmented linker into {len(fragments)} components')
+
         template_linker = self.cage_template.linkers[n]
 
         for x_motifs in x_motifs_list:
+
+            if len(fragments) == len(x_motifs):
+                raise FragmentationFailed('No rotatable component')
+
             curr_fragments = stitched_fragments(fragments, bonds, x_motifs)
             linker = get_frag_minimised_linker(self,
                                                curr_fragments,
