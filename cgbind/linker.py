@@ -258,8 +258,17 @@ class Linker(Molecule):
                                                curr_fragments,
                                                template_linker,
                                                x_motifs=x_motifs)
+
+            # Increase the cost function given fallibility of M-X interactions
+            penalty = get_cost_metal_x_atom_interaction(x_motifs, linker,
+                                                        metal=metal)
+            linker.cost += penalty
+
             self.possibilities.append(linker)
 
+        # Sort the possibilities from low -> high cost
+        self.possibilities = sorted(self.possibilities,
+                                    key=lambda conf: conf.cost)
         return None
 
     def get_xmotif_coordinates(self):

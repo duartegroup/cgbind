@@ -2,8 +2,10 @@ from cgbind.geom import get_rot_mat_kabsch
 from cgbind.geom import rotation_matrix
 from cgbind.bonds import get_avg_bond_length
 from cgbind.log import logger
+from cgbind.utils import fast_xtb_opt
 from scipy.spatial import distance_matrix
 from scipy.optimize import minimize
+from itertools import product
 from copy import deepcopy
 from time import time
 import networkx as nx
@@ -59,10 +61,9 @@ def get_frag_minimised_linker(linker, fragments, template_linker, x_motifs):
 
     min_opt = None
 
-    for _ in range(5):
+    for _ in range(15):
         opt = minimize(rotated_fragment_linker_energy,
-                       x0=np.concatenate((np.zeros(1),
-                                          np.random.normal(size=6)),
+                       x0=np.concatenate((np.random.uniform(size=8, low=-1.0, high=2.0)),
                                          axis=None),
                        args=(coords,
                              fragment_idxs,
@@ -88,6 +89,9 @@ def get_frag_minimised_linker(linker, fragments, template_linker, x_motifs):
     linker.x_motifs = x_motifs
     linker.cost = energy
     linker.set_atoms(coords=coords)
+
+    # Try to optimise slightly with XTB
+    fast_xtb_opt(linker, n_cycles=10)
 
     logger.info(f'Generated linker in {time() - start_time:.3f} s')
     return linker
@@ -128,8 +132,8 @@ def rotated_fragment_linker_energy(x, coords, idxs_to_shift,
     coords[idxs_to_shift] += x[1:4]
 
     # And rotate it
-    rot_mat = rotation_matrix(axis=np.concatenate((np.zeros(1), x[4:6]), axis=None),
-                              theta=x[6])
+    rot_mat = rotation_matrix(axis=np.concatenate((x[4:7]), axis=None),
+                              theta=x[7])
     coords[idxs_to_shift] = rot_mat.dot(coords[idxs_to_shift].T).T
 
     # Compute the repulsive energy with the bonds crossing fragments

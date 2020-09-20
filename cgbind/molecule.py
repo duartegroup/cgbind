@@ -269,7 +269,7 @@ class Molecule(BaseStruct):
         """Set the graph of this molecule using the defined bonds"""
 
         if self.bonds is None:
-            logger.error('Could not set graph - no bonds were present')
+            logger.warning('Could not set graph - no bonds were present')
             return None
 
         # Add nodes then edges to an networkX graph
