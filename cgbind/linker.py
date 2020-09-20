@@ -1,16 +1,12 @@
 from cgbind.log import logger
 import numpy as np
 import itertools
-import networkx as nx
 from cgbind.config import Config
 from cgbind.molecule import Molecule
 from cgbind.architectures import archs
 from cgbind.exceptions import *
 from scipy.optimize import minimize, Bounds
 from cgbind.build import cost_fitted_x_motifs
-from cgbind.fragmentation import fragment_graph
-from cgbind.fragmentation import get_frag_minimised_linker
-from cgbind.fragmentation import stitched_fragments
 from cgbind.atoms import heteroatoms
 from cgbind.atoms import get_max_valency
 from cgbind.templates import get_template
@@ -216,59 +212,6 @@ class Linker(Molecule):
         self.possibilities = sorted(possibilities, key=lambda conf: conf.cost)
 
         assert len(self.possibilities) > 0
-        return None
-
-    def _set_fragmented_linker_possibilities(self, metal, x_motifs_list, n=0):
-        """
-        Set the list of linker possibilities for linker conformations and
-        combinations of x-motifs. Here a conformer is built by fragmenting
-        the structure over single X-X bonds where both are heavy atoms into
-        n+1 components for n x motifs. For example, for a M2L4 linker
-
-        X1-----C------X2
-
-        where the X fragments contain the X motifs and the central portion
-        does not contain any donor atoms
-
-        :param metal: (str or None)
-        :param x_motifs_list: (list(cgbind.x_motifs.Xmotif))
-        """
-
-        frag_graph = self.graph.copy()
-        bonds = self.get_single_bonds()
-
-        # Fragment over single bonds until no more fragmentation is possible
-        n_deleted = 1
-        while n_deleted > 0:
-            n_deleted = fragment_graph(bonds, frag_graph, self.x_motifs)
-
-        # List of atom indexes for the each of the fragments
-        fragments = [list(frag) for frag in nx.connected_components(frag_graph)]
-        logger.info(f'Fragmented linker into {len(fragments)} components')
-
-        template_linker = self.cage_template.linkers[n]
-
-        for x_motifs in x_motifs_list:
-
-            if len(fragments) == len(x_motifs):
-                raise FragmentationFailed('No rotatable component')
-
-            curr_fragments = stitched_fragments(fragments, bonds, x_motifs)
-            linker = get_frag_minimised_linker(self,
-                                               curr_fragments,
-                                               template_linker,
-                                               x_motifs=x_motifs)
-
-            # Increase the cost function given fallibility of M-X interactions
-            penalty = get_cost_metal_x_atom_interaction(x_motifs, linker,
-                                                        metal=metal)
-            linker.cost += penalty
-
-            self.possibilities.append(linker)
-
-        # Sort the possibilities from low -> high cost
-        self.possibilities = sorted(self.possibilities,
-                                    key=lambda conf: conf.cost)
         return None
 
     def get_xmotif_coordinates(self):

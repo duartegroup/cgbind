@@ -184,7 +184,6 @@ class Molecule(BaseStruct):
         using the Gasteiger charge scheme
 
         :param estimate: (bool)
-        :param guess: (bool)
         :return:
         """
 
