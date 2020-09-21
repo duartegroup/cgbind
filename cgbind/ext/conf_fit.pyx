@@ -167,7 +167,7 @@ def rotate_coords(py_coords, py_axis, py_theta, py_origin, py_rot_idxs):
     return np.asarray(coords)
 
 
-def opt_coords(thetas_list, bonds_and_rot_idxs, py_coords, py_template_coords,
+def opt_coords(thetas_list, bonds_and_rot_idxs, py_coords, t_coords,
                fit_idxs):
     """
     Calculate the list of rotations about dihedral bonds that minimise the
@@ -180,7 +180,7 @@ def opt_coords(thetas_list, bonds_and_rot_idxs, py_coords, py_template_coords,
     :param bonds_and_rot_idxs: (dict) Keys of bonds (tuple(int)) and values of
                               the atom indexes right of the bond to rotate
     :param py_coords: (np.ndarray)
-    :param py_template_coords: (np.ndarray)
+    :param t_coords: (np.ndarray)
     :param fit_idxs: (list(int))
     :return: (list(float))
     """
@@ -196,7 +196,7 @@ def opt_coords(thetas_list, bonds_and_rot_idxs, py_coords, py_template_coords,
                                      dtype=np.int32)
     cdef int n_bonds = len(bonds_and_rot_idxs)
 
-    for n, bond in enumerate(bonds_and_rot_idxs):
+    for n, bond in enumerate(bonds_and_rot_idxs.keys()):
         for m in range(2):
             bonds[n, m] = bond[m]
 
@@ -206,7 +206,7 @@ def opt_coords(thetas_list, bonds_and_rot_idxs, py_coords, py_template_coords,
                                                len(py_coords)), dtype=np.int32)
     cdef int n_atoms = len(py_coords)
 
-    for n, idxs in enumerate(bonds_and_rot_idxs):
+    for n, idxs in enumerate(bonds_and_rot_idxs.values()):
         for m in range(len(py_coords)):
             if m in idxs:
                 rot_idxs[n, m] = 1
@@ -214,7 +214,7 @@ def opt_coords(thetas_list, bonds_and_rot_idxs, py_coords, py_template_coords,
     cdef double [:, :] coords = np.array(py_coords, dtype='f8')
     cdef double [:, :] rot_coords = np.array(py_coords, dtype='f8')
 
-    cdef double [:, :] t_coords = np.array(py_template_coords, dtype='f8')
+    # cdef double [:, :] t_coords = np.array(py_template_coords, dtype='f8')
 
     cdef double [:, :] rot_mat = np.zeros(shape=(3, 3), dtype='f8')
     cdef double [:] axis = np.zeros(3, dtype='f8')
@@ -232,6 +232,7 @@ def opt_coords(thetas_list, bonds_and_rot_idxs, py_coords, py_template_coords,
             for l in range(3):
                 rot_coords[k, l] = coords[k, l]
 
+        # Rotate all dihedrals in the number of bonds
         for j in range(n_bonds):
 
             l_idx = bonds[j][0]
@@ -239,24 +240,22 @@ def opt_coords(thetas_list, bonds_and_rot_idxs, py_coords, py_template_coords,
 
             # Set the axis and origin
             for k in range(3):
-                axis[k] = coords[l_idx][k] - coords[r_idx][k]
-                origin[k] = coords[l_idx][k]
+                axis[k] = rot_coords[l_idx][k] - rot_coords[r_idx][k]
+                origin[k] = rot_coords[l_idx][k]
 
             # And rotate around this dihedral
             coords_rotated_dihedral(coords=rot_coords,
                                     axis=axis,
-                                    origin=coords[l_idx],
+                                    origin=origin,
                                     theta=thetas[i, j],
                                     rot_idxs=rot_idxs[j],
                                     rot_mat=rot_mat,
                                     n_atoms=n_atoms)
 
-        rot_coords = np.asarray(rot_coords)
-        cost = fit_cost(np.array([rot_coords[n, :] for n in range(len(py_coords)) if n in fit_idxs]), t_coords)
-        print(cost)
+        cost = fit_cost(np.array(rot_coords)[fit_idxs], t_coords)
 
         if min_cost is None or cost < min_cost:
             min_cost = cost
-            py_coords = np.array([rot_coords[n, :] for n in range(len(py_coords))])
+            py_coords = np.array(rot_coords)
 
-    return py_coords
+    return py_coords, min_cost

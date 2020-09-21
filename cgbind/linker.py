@@ -5,8 +5,8 @@ from cgbind.config import Config
 from cgbind.molecule import Molecule
 from cgbind.architectures import archs
 from cgbind.exceptions import *
-from scipy.optimize import minimize, Bounds
-from cgbind.build import cost_fitted_x_motifs
+from cgbind.linker_conformers import set_best_fit_linker
+from copy import deepcopy
 from cgbind.atoms import heteroatoms
 from cgbind.atoms import get_max_valency
 from cgbind.templates import get_template
@@ -14,41 +14,6 @@ from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import check_x_motifs
 from cgbind.x_motifs import get_cost_metal_x_atom_interaction
 from multiprocessing import Pool
-
-
-def get_linker_conformer(init_conformer, linker, x_motifs, template_linker):
-    """
-    For a set of linker xyzs e.g. one conformer and a linker object together
-    with a list of x motifs in the structure return cost function associated
-    with fitting the X motifs to the template
-
-    :param init_conformer: (cgbind.molecule.BaseStruct)
-    :param linker: (Linker)
-    :param x_motifs: (list(Xmotif))
-    :param template_linker: (Template.Linker)
-    :return: (tuple(Linker, float)) New linker and cost
-    """
-    coords = init_conformer.get_coords()
-    x_coords = [coords[atom_id] for motif in x_motifs for atom_id in motif.atom_ids]
-
-    # Minimise the cost function as a function of dr in Å
-    min_result = minimize(cost_fitted_x_motifs,
-                          x0=np.array([1.0]),
-                          args=(linker, template_linker, x_coords),
-                          method='L-BFGS-B', tol=1e-3,
-                          bounds=Bounds(-100.0, 10.0))
-
-    # Create a linker conformer from the minimisation
-    conformer = Linker(arch_name=linker.arch.name)
-    conformer.dr = min_result.x[0]
-    conformer.x_motifs = x_motifs
-    conformer.set_atoms(init_conformer.atoms)
-
-    x_motif_atoms = [atom_id for motif in x_motifs for atom_id in motif.atom_ids]
-    conformer.x_atoms = [atom_id for atom_id in linker.x_atoms if atom_id in x_motif_atoms]
-    conformer.cost = min_result.fun
-
-    return conformer
 
 
 class Linker(Molecule):
@@ -163,52 +128,27 @@ class Linker(Molecule):
         x_motifs_list = list(itertools.combinations(self.x_motifs,
                                                     n_x_motifs_in_linker))
 
-        if self.use_fragment_conf:
-            return self._set_fragmented_linker_possibilities(metal,
-                                                             x_motifs_list,
-                                                             n=n)
         logger.info(f'Have {len(x_motifs_list)*len(self.conformers)} '
                     f'iterations to do')
         possibilities = []
 
         for i, x_motifs in enumerate(x_motifs_list):
 
-            # Execute calculation to get cost of adding a particular
-            # conformation to the template in parallel
-            logger.info(f'Running with {Config.n_cores} cores. Iteration '
-                        f'{i+1}/{len(x_motifs_list)}')
-            logger.disabled = True
-
             # Sort this block of linkers the cost function. Not sorted the
             # full list to retain the block structure with
             # X motifs
-            if Config.n_cores > 1:
-                with Pool(processes=Config.n_cores) as pool:
-                    results = [pool.apply_async(get_linker_conformer, (conf, self, x_motifs, template_linker))
-                               for conf in self.conformers]
-
-                    chunk = [res.get(timeout=None) for res in results]
-            else:
-                # Skip multiprocessing so this function can be called by mp 
-                chunk = [get_linker_conformer(conf, self, x_motifs, template_linker)
-                         for conf in self.conformers]
+            linker_ = deepcopy(self)
+            set_best_fit_linker(linker_, x_motifs, template_linker)
 
             # Add a penalty to all the possibilities in this chunk based on
             # the metal-donor atom favorability
             penalty = get_cost_metal_x_atom_interaction(x_motifs, self, metal=metal)
-            for conf in chunk:
-                conf.cost += penalty
+            linker_.cost += penalty
 
-            # Add the possibilities in this chunk to the full list
-            possibilities += chunk
-
-            # Renable the logging that would otherwise dominate with lots of
-            # possibilities and/or Xmotifs
-            logger.disabled = False
+            possibilities.append(linker_)
 
         # Reset the possibilities as those with both different Xmotifs and
-        # geometry i.e. now len(possibilities) = len(x_motifs_list)*len(self.possibilities)
-        # where they are sorted by their cost
+        # geometry
         self.possibilities = sorted(possibilities, key=lambda conf: conf.cost)
 
         assert len(self.possibilities) > 0
@@ -223,8 +163,7 @@ class Linker(Molecule):
         return np.array(coords)
 
     def __init__(self, arch_name, smiles=None, name='linker', charge=0,
-                 n_confs=300, filename=None, use_etdg_confs=False,
-                 use_fragment_conf=False):
+                 n_confs=1, filename=None, use_etdg_confs=False):
         """
         Metallocage Linker. Inherits from cgbind.molecule.Molecule
 
@@ -237,19 +176,13 @@ class Linker(Molecule):
         :param use_etdg_confs: (bool) Use a different, sometimes better,
                                conformer generation algorithm
         """
+        self.cost = None
         logger.info(f'Initialising a Linker object for {name} with {n_confs} '
                     f'conformers')
 
         self.arch = None              #: (Arch object) Metallocage architecture
         self._set_arch(arch_name)
         # May exit here if the specified architecture is not found
-
-        self.use_fragment_conf = use_fragment_conf
-
-        if use_fragment_conf:
-            logger.info('Will generate a single conformer in the correct'
-                        'orientation with fragmentation')
-            n_confs = 1
 
         super().__init__(smiles=smiles, name=name, charge=charge,
                          n_confs=n_confs,

@@ -1,6 +1,11 @@
 import itertools
 import networkx as nx
 import numpy as np
+from time import time
+from scipy.spatial import distance_matrix
+from scipy.optimize import minimize
+from cgbind.x_motifs import get_shifted_template_x_motif_coords
+from cgbind.utils import fast_xtb_opt
 from cgbind.exceptions import CgbindCritical
 from cgbind.geom import rotation_matrix
 from cgbind.log import logger
@@ -19,18 +24,32 @@ def set_best_fit_linker(linker, x_motifs, template_linker):
     logger.info('Generating conformers of the linker that change the template '
                 'fit')
 
-    t_coords = np.vstack(tuple(xm.coords for xm in template_linker.x_motifs))
+    # Indexes in the coordinates that will be fit to the template
+    fit_idxs = np.array([atom_id for motif in x_motifs for atom_id in motif.atom_ids],
+                        dtype=np.int)
+
+    dr0 = get_optimised_dr(x_coords=linker.get_coords()[fit_idxs],
+                           template_linker=template_linker)
+
+    t_coords = get_shifted_template_x_motif_coords(template_linker, dr=dr0)
 
     # Dictionary of bonds as the tuple of atom indexes and the indexes of atoms
-    # to rotate on the left and right of the split
+    # to rotate on one side of the split
     bonds_and_lr_idxs = get_rot_bonds_and_idxs(linker, t_coords, x_motifs)
+    n_dihedrals = len(bonds_and_lr_idxs)
+
+    if n_dihedrals > 6:
+        logger.warning('Conformer space for intermediate dihedrals is large'
+                       f' removing *{len(bonds_and_lr_idxs) - 6}* randomly')
+        rand_idxs = np.random.choice(n_dihedrals, size=6)
+
+        # Truncate the dictionary selecting only a few keys
+        bonds_and_lr_idxs = {key: val for i, (key, val) in enumerate(bonds_and_lr_idxs.items())
+                             if i in rand_idxs}
 
     # Possible angles for the rotatable dihedrals
     thetas_list = itertools.product([0, 2*np.pi/3, np.pi, 4*np.pi/3],
                                     repeat=len(bonds_and_lr_idxs))
-
-    # Indexes in the coordinates that will be fit to the template
-    fit_idxs = [atom_id for motif in x_motifs for atom_id in motif.atom_ids]
 
     # Calculate the best list of thetas using the Cython extension
     try:
@@ -38,14 +57,71 @@ def set_best_fit_linker(linker, x_motifs, template_linker):
     except ModuleNotFoundError:
         return CgbindCritical('opt_coords module not built')
 
-    best_coords = opt_coords(np.array(list(thetas_list)),
-                             bonds_and_lr_idxs,
-                             py_coords=linker.get_coords(),
-                             py_template_coords=t_coords,
-                             fit_idxs=np.array(fit_idxs, dtype=np.int))
+    start_time = time()
+    logger.info(f'Rotating {bonds_and_lr_idxs.keys()} dihedrals')
 
+    best_coords, cost = opt_coords(thetas_list=np.array(list(thetas_list)),
+                                   bonds_and_rot_idxs=bonds_and_lr_idxs,
+                                   py_coords=linker.get_coords(),
+                                   t_coords=t_coords,
+                                   fit_idxs=fit_idxs)
+
+    logger.info(f'Optimised linker conformer in {time() - start_time:.3f} s')
+
+    linker.dr = get_optimised_dr(best_coords[fit_idxs], template_linker)
+    linker.x_motifs = x_motifs
+    linker.cost = cost
     linker.set_atoms(coords=best_coords)
+
+    fast_xtb_opt(linker)
+
     return None
+
+
+def get_optimised_dr(x_coords, template_linker):
+    """
+    Optimise the value of dr to shift the template by
+
+    :param x_coords:
+    :param template_linker:
+    :return:
+    """
+    logger.info('Optimising ∆r between the for a set of fixed coordinates')
+    start_time = time()
+
+    t_coords = np.vstack(tuple(xm.coords for xm in template_linker.x_motifs))
+
+    def average_distance(coords):
+        """Average distance between atoms in x-motifs """
+        dist_mat = distance_matrix(coords, coords)
+        return np.average(dist_mat.flatten())
+
+    dr0 = average_distance(x_coords) - average_distance(t_coords)
+    logger.info(f'Initial guess of ∆r = {dr0:.3f} Å')
+
+    opt = minimize(cost_on_shift_template,
+                   x0=np.array([dr0]),
+                   args=(template_linker, x_coords),
+                   method='BFGS')
+
+    logger.info(f'Optimised ∆r in the linker in {time() - start_time:.3f} s '
+                f'to {float(opt.x):.3f} Å')
+    return float(opt.x)
+
+
+def cost_on_shift_template(dr, template_linker, x_coords):
+    """
+    Calculate the fitting cost upon changing dr in the template
+
+    :param dr: (float)
+    :param template_linker:
+    :param x_coords:
+    :return:
+    """
+
+    t_coords = get_shifted_template_x_motif_coords(template_linker,
+                                                   dr=dr)
+    return fit_cost(x_coords, t_coords)
 
 
 def get_rot_bonds_and_idxs(linker, t_coords, x_motifs):
