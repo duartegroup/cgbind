@@ -23,6 +23,7 @@ def set_best_fit_linker(linker, x_motifs, template_linker):
     """
     logger.info('Generating conformers of the linker that change the template '
                 'fit')
+    linker.x_motifs = x_motifs
 
     # Indexes in the coordinates that will be fit to the template
     fit_idxs = np.array([atom_id for motif in x_motifs for atom_id in motif.atom_ids],
@@ -31,21 +32,19 @@ def set_best_fit_linker(linker, x_motifs, template_linker):
     dr0 = get_optimised_dr(x_coords=linker.get_coords()[fit_idxs],
                            template_linker=template_linker)
 
+    if linker.mol_obj is None:
+        logger.warning('Cannot do dihedral rotations. Fixing ∆r and the'
+                       'x motifs')
+        linker.dr = dr0
+        return
+
+    # Shift the template coordinates to an approximate ∆r
     t_coords = get_shifted_template_x_motif_coords(template_linker, dr=dr0)
 
     # Dictionary of bonds as the tuple of atom indexes and the indexes of atoms
     # to rotate on one side of the split
-    bonds_and_lr_idxs = get_rot_bonds_and_idxs(linker, t_coords, x_motifs)
-    n_dihedrals = len(bonds_and_lr_idxs)
-
-    if n_dihedrals > 6:
-        logger.warning('Conformer space for intermediate dihedrals is large'
-                       f' removing *{len(bonds_and_lr_idxs) - 6}* randomly')
-        rand_idxs = np.random.choice(n_dihedrals, size=6)
-
-        # Truncate the dictionary selecting only a few keys
-        bonds_and_lr_idxs = {key: val for i, (key, val) in enumerate(bonds_and_lr_idxs.items())
-                             if i in rand_idxs}
+    bonds_and_lr_idxs = get_rot_bonds_and_idxs(linker, t_coords, x_motifs,
+                                               max_n=6)
 
     # Possible angles for the rotatable dihedrals
     thetas_list = itertools.product([0, 2*np.pi/3, np.pi, 4*np.pi/3],
@@ -69,7 +68,6 @@ def set_best_fit_linker(linker, x_motifs, template_linker):
     logger.info(f'Optimised linker conformer in {time() - start_time:.3f} s')
 
     linker.dr = get_optimised_dr(best_coords[fit_idxs], template_linker)
-    linker.x_motifs = x_motifs
     linker.cost = cost
     linker.set_atoms(coords=best_coords)
 
@@ -124,13 +122,14 @@ def cost_on_shift_template(dr, template_linker, x_coords):
     return fit_cost(x_coords, t_coords)
 
 
-def get_rot_bonds_and_idxs(linker, t_coords, x_motifs):
+def get_rot_bonds_and_idxs(linker, t_coords, x_motifs, max_n=6):
     """
     Find the bonds in the linker that can be rotated to alter the fitting cost
 
     :param linker:
     :param t_coords: (np.ndarray) Template coordinates
     :param x_motifs:
+    :param max_n: (int) Maximum number of dihedrals to consider
     :return:
     """
     bonds = linker.get_single_bonds()
@@ -165,8 +164,18 @@ def get_rot_bonds_and_idxs(linker, t_coords, x_motifs):
         # TODO: Is ok to only consider one side??
         bonds_and_rot_idxs[(i, j)] = l_idxs
 
-    logger.info(f'Have *{len(bonds_and_rot_idxs)}* dihedrals that can be '
-                f'rotated')
+    n_dihedrals = len(bonds_and_rot_idxs)
+    logger.info(f'Have *{n_dihedrals}* dihedrals that can be rotated')
+
+    if n_dihedrals > max_n:
+        logger.warning('Conformer space for intermediate dihedrals is large'
+                       f' removing *{n_dihedrals - max_n}* randomly')
+        rand_idxs = np.random.choice(n_dihedrals, size=max_n)
+
+        # Truncate the dictionary selecting only a few keys
+        return {key: val for i, (key, val) in enumerate(bonds_and_rot_idxs.items())
+                if i in rand_idxs}
+
     return bonds_and_rot_idxs
 
 

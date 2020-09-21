@@ -200,6 +200,8 @@ class Linker(Molecule):
         self.x_motifs = find_x_motifs(self)                                   #: (list(Xmotif object))
         check_x_motifs(self, linker_template=self.cage_template.linkers[0])
         self._strip_possible_x_motifs_on_connectivity()
+
+        self.cost = 0                                                         #: (float) Fitting cose for this linker
         self.dr = None                                                        #: (float) Template shift distance
 
         self.possibilities = []
