@@ -389,11 +389,11 @@ class Cage(BaseStruct):
         else:
             logger.error('Could not generate a cage object without either a '
                          'linker or set of linkers')
-            raise CannotBuildCage
+            return
 
         if self.linkers is None:
             logger.error('Cannot build a cage with linkers as None')
-            raise CannotBuildCage
+            return
 
         self._calc_charge()
 
