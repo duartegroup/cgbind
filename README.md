@@ -1,4 +1,3 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3930811.svg)](https://doi.org/10.5281/zenodo.3930811) [![Build Status](https://travis-ci.org/duartegroup/cgbind.svg?branch=master)](https://travis-ci.org/duartegroup/cgbind) [![PyPI version](https://badge.fury.io/py/cgbind.svg)](https://badge.fury.io/py/cgbind)
 ![alt text](cgbind/common/llogo.png) 
 
 **cgbind** automates the process of generating and analysing metallocage structures
@@ -9,28 +8,18 @@ guest(s). A graphical user interface (GUI) is available at
 
 ## Installation
 
-For detailed instructions see the [installation instructions](https://duartegroup.github.io/cgbind/install.html).
-If the requirements are already satisfied
+Install with:
 ```
+conda install autode rdkit -c conda-forge
 pip install cgbind
 ```
+For detailed instructions see the [installation instructions](https://duartegroup.github.io/cgbind/install.html)
 
 ### Requirements
-0. Python v. 3.7
+0. Python >v. 3.6
 1. All Python packages listed in requirements.txt 
-2. [autode](https://github.com/duartegroup/autodE) latest (optional)
-3. [ORCA](https://sites.google.com/site/orcainputlibrary/home) v. 4.1 (optional)
-4. [XTB](https://github.com/grimme-lab/xtb) v. 6.2 (optional)
-
-The Python dependencies are most easily satisfied using a conda
-([anaconda](https://www.anaconda.com/distribution)/[miniconda](https://docs.conda.io/en/latest/miniconda.html))
-installation by running
-
-```
-conda config --append channels conda-forge
-conda install --file requirements.txt
-```
-
+3. [ORCA](https://sites.google.com/site/orcainputlibrary/home) >v. 4.0 (optional)
+4. [XTB](https://github.com/grimme-lab/xtb) >v. 6.2 (optional)
 
 ## Usage
 

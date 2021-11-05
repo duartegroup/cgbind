@@ -125,13 +125,10 @@ class BaseStruct:
 
         # Reset the atoms, number of atoms and the centre of mass
         if atoms is not None:
-            assert type(atoms) == list
-            assert len(atoms) > 0
-            assert hasattr(atoms[0], 'label')
-            assert hasattr(atoms[0], 'coord')
-            assert len(atoms[0].coord) == 3
+            assert (len(atoms) > 0 and hasattr(atoms[0], 'label')
+                    and hasattr(atoms[0], 'coord') and len(atoms[0].coord) == 3)
 
-            self.atoms = atoms
+            self.atoms = [atom for atom in atoms]
             self.n_atoms = len(atoms)
             self.com = calc_com(atoms=self.atoms)
 

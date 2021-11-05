@@ -51,7 +51,8 @@ def optimise(molecule, method, keywords, n_cores=None, cartesian_constraints=Non
         if type(keywords) is list:
             keywords = OptKeywords(keywords)
 
-    opt = Calculation(name=molecule.name + '_opt', molecule=molecule,
+    opt = Calculation(name=molecule.name + '_opt',
+                      molecule=molecule,
                       method=method,
                       keywords=keywords,
                       n_cores=n_cores,
