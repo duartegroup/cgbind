@@ -11,7 +11,7 @@ guest(s). A graphical user interface (GUI) is available at
 
 Install with:
 ```
-conda install numpy autode rdkit scipy networkx -c conda-forge
+conda install numpy autode rdkit scipy networkx Cython -c conda-forge
 pip install cgbind
 ```
 For detailed instructions see the [installation instructions](https://duartegroup.github.io/cgbind/install.html)
