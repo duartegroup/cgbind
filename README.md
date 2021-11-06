@@ -11,14 +11,14 @@ guest(s). A graphical user interface (GUI) is available at
 
 Install with:
 ```
-conda install autode rdkit -c conda-forge
+conda install numpy autode rdkit scipy networkx -c conda-forge
 pip install cgbind
 ```
 For detailed instructions see the [installation instructions](https://duartegroup.github.io/cgbind/install.html)
 
 ### Requirements
-0. Python >v. 3.6
-1. All Python packages listed in requirements.txt 
+0. Python > v. 3.6
+1. All Python packages listed in [requirements.txt](https://github.com/duartegroup/cgbind/blob/master/requirements.txt)
 3. [ORCA](https://sites.google.com/site/orcainputlibrary/home) >v. 4.0 (optional)
 4. [XTB](https://github.com/grimme-lab/xtb) >v. 6.2 (optional)
 
@@ -40,8 +40,8 @@ cage = Cage(linker, metal='Pd')
 cage.print_xyz_file()
 ```
 
-See _examples/_ and the [docs](https://duartegroup.github.io/cgbind/examples.html)
-for further examples.
+See [_examples/_](https://github.com/duartegroup/cgbind/tree/master/examples) and the 
+[documentation](https://duartegroup.github.io/cgbind/examples.html) for further examples.
 
 
 ## Citation
