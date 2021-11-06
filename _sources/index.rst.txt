@@ -26,7 +26,7 @@ Documentation
 
 .. only:: html
 
-    :Release: 1.0.2
+    :Version: |version|
     :Date: |today|
 
 .. toctree::
@@ -38,9 +38,4 @@ Documentation
    citing
    archs
 
-
-Indices and tables
-------------------
-
 * :ref:`genindex`
-* :ref:`modindex`

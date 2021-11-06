@@ -1,176 +1,209 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Templates &mdash; cgbind 1.0.0 documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
-  
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Templates &#8212; cgbind  documentation</title>
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
 
     
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Citing" href="../citing.html" />
-    <link rel="prev" title="Config" href="config.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-
-   
-  <div class="wy-grid-for-nav">
+    <link rel="prev" title="Config" href="config.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
 
-          
-            <a href="../index.html" class="icon icon-home"> cgbind
-          
+    
 
+    <div class="container-xl">
+      <div class="row">
           
-          </a>
-
-          
-            
-            
-              <div class="version">
-                1.0.2
-              </div>
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../install.html">Install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="classes.html">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="input_output.html">Input Output</a></li>
-<li class="toctree-l2"><a class="reference internal" href="geom.html">Geometry Utilities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="config.html">Config</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Templates</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../archs.html">Architectures</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
       
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">cgbind</a>
-        
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html">Docs</a> &raquo;</li>
-        
-          <li><a href="index.html">Reference</a> &raquo;</li>
-        
-      <li>Templates</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="../_sources/ref/templates.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
+      
+      
+      <h1 class="site-logo" id="site-title">cgbind  documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../install.html">
+   Install
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../examples.html">
+   Examples
+  </a>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="index.html">
+   Reference
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="classes.html">
+     Classes
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="input_output.html">
+     Input Output
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="geom.html">
+     Geometry Utilities
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="config.html">
+     Config
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Templates
+    </a>
+   </li>
   </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../citing.html">
+   Citing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../archs.html">
+   Architectures
+  </a>
+ </li>
+</ul>
 
-  
-  <hr/>
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
             
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/ref/templates.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
   <div class="section" id="templates">
 <span id="id1"></span><h1>Templates<a class="headerlink" href="#templates" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="cgbind.templates.Template">
-<em class="property">class </em><code class="sig-prename descclassname">cgbind.templates.</code><code class="sig-name descname">Template</code><span class="sig-paren">(</span><em class="sig-param">arch_name</em>, <em class="sig-param">mol2_filename</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Template" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="cgbind.templates.Template.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">arch_name</em>, <em class="sig-param">mol2_filename</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Template.__init__" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt class="sig sig-object py" id="cgbind.templates.Template">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">cgbind.templates.</span></span><span class="sig-name descname"><span class="pre">Template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arch_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol2_filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Template" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cgbind.templates.Template.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arch_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol2_filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Template.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialise a Template object</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -183,9 +216,9 @@ from e.g. downloaded from the CCDC</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="cgbind.templates.Template.save_template">
-<code class="sig-name descname">save_template</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Template.save_template" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="cgbind.templates.Template.save_template">
+<span class="sig-name descname"><span class="pre">save_template</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Template.save_template" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the template to ./lib/self.arch_name.obj</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -196,12 +229,12 @@ from e.g. downloaded from the CCDC</p></li>
 
 </dd></dl>
 
-<dl class="class">
-<dt id="cgbind.templates.Linker">
-<em class="property">class </em><code class="sig-prename descclassname">cgbind.templates.</code><code class="sig-name descname">Linker</code><span class="sig-paren">(</span><em class="sig-param">atoms</em>, <em class="sig-param">x_atoms</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Linker" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="cgbind.templates.Linker.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">atoms</em>, <em class="sig-param">x_atoms</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Linker.__init__" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt class="sig sig-object py" id="cgbind.templates.Linker">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">cgbind.templates.</span></span><span class="sig-name descname"><span class="pre">Linker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_atoms</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Linker" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cgbind.templates.Linker.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_atoms</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Linker.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a template linker object from the corresponding xyzs and the donor
 atoms which were bonded to the metals which form the basis of the cage</p>
 <dl class="field-list simple">
@@ -214,50 +247,50 @@ atoms which were bonded to the metals which form the basis of the cage</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="cgbind.templates.Linker.atoms">
-<code class="sig-name descname">atoms</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.templates.Linker.atoms" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cgbind.templates.Linker.atoms">
+<span class="sig-name descname"><span class="pre">atoms</span></span><a class="headerlink" href="#cgbind.templates.Linker.atoms" title="Permalink to this definition">¶</a></dt>
 <dd><p>(list(list))</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="cgbind.templates.Linker.bonds">
-<code class="sig-name descname">bonds</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.templates.Linker.bonds" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cgbind.templates.Linker.bonds">
+<span class="sig-name descname"><span class="pre">bonds</span></span><a class="headerlink" href="#cgbind.templates.Linker.bonds" title="Permalink to this definition">¶</a></dt>
 <dd><p>(list(Atom))</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="cgbind.templates.Linker.com">
-<code class="sig-name descname">com</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.templates.Linker.com" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cgbind.templates.Linker.com">
+<span class="sig-name descname"><span class="pre">com</span></span><a class="headerlink" href="#cgbind.templates.Linker.com" title="Permalink to this definition">¶</a></dt>
 <dd><p>(np.ndarray)</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="cgbind.templates.Linker.coords">
-<code class="sig-name descname">coords</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.templates.Linker.coords" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cgbind.templates.Linker.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><a class="headerlink" href="#cgbind.templates.Linker.coords" title="Permalink to this definition">¶</a></dt>
 <dd><p>(list(np.ndarray)) Linker coordinates</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="cgbind.templates.Linker.x_atoms">
-<code class="sig-name descname">x_atoms</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.templates.Linker.x_atoms" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cgbind.templates.Linker.x_atoms">
+<span class="sig-name descname"><span class="pre">x_atoms</span></span><a class="headerlink" href="#cgbind.templates.Linker.x_atoms" title="Permalink to this definition">¶</a></dt>
 <dd><p>(list(int)) List of donor atoms in the linker</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="cgbind.templates.Linker.x_motifs">
-<code class="sig-name descname">x_motifs</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.templates.Linker.x_motifs" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cgbind.templates.Linker.x_motifs">
+<span class="sig-name descname"><span class="pre">x_motifs</span></span><a class="headerlink" href="#cgbind.templates.Linker.x_motifs" title="Permalink to this definition">¶</a></dt>
 <dd><p>(list(Xmotif objects)</p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="class">
-<dt id="cgbind.templates.Metal">
-<em class="property">class </em><code class="sig-prename descclassname">cgbind.templates.</code><code class="sig-name descname">Metal</code><span class="sig-paren">(</span><em class="sig-param">label</em>, <em class="sig-param">atom_id</em>, <em class="sig-param">coord</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Metal" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="cgbind.templates.Metal.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">label</em>, <em class="sig-param">atom_id</em>, <em class="sig-param">coord</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Metal.__init__" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt class="sig sig-object py" id="cgbind.templates.Metal">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">cgbind.templates.</span></span><span class="sig-name descname"><span class="pre">Metal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Metal" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cgbind.templates.Metal.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.Metal.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Template metal</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -270,35 +303,35 @@ atoms which were bonded to the metals which form the basis of the cage</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="cgbind.templates.Metal.atom_id">
-<code class="sig-name descname">atom_id</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.templates.Metal.atom_id" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cgbind.templates.Metal.atom_id">
+<span class="sig-name descname"><span class="pre">atom_id</span></span><a class="headerlink" href="#cgbind.templates.Metal.atom_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>(int)</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="cgbind.templates.Metal.coord">
-<code class="sig-name descname">coord</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.templates.Metal.coord" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cgbind.templates.Metal.coord">
+<span class="sig-name descname"><span class="pre">coord</span></span><a class="headerlink" href="#cgbind.templates.Metal.coord" title="Permalink to this definition">¶</a></dt>
 <dd><p>(np.ndarray) Coordinate of the atom/ion</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="cgbind.templates.Metal.label">
-<code class="sig-name descname">label</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.templates.Metal.label" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cgbind.templates.Metal.label">
+<span class="sig-name descname"><span class="pre">label</span></span><a class="headerlink" href="#cgbind.templates.Metal.label" title="Permalink to this definition">¶</a></dt>
 <dd><p>(str) Atomic symbol</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="cgbind.templates.Metal.shift_vec">
-<code class="sig-name descname">shift_vec</code><em class="property"> = None</em><a class="headerlink" href="#cgbind.templates.Metal.shift_vec" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cgbind.templates.Metal.shift_vec">
+<span class="sig-name descname"><span class="pre">shift_vec</span></span><a class="headerlink" href="#cgbind.templates.Metal.shift_vec" title="Permalink to this definition">¶</a></dt>
 <dd><p>(np.ndarray) Vector to shift by when expanding/contracting</p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="function">
-<dt id="cgbind.templates.find_mols_in_xyzs">
-<code class="sig-prename descclassname">cgbind.templates.</code><code class="sig-name descname">find_mols_in_xyzs</code><span class="sig-paren">(</span><em class="sig-param">atoms</em>, <em class="sig-param">allow_same=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.find_mols_in_xyzs" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="cgbind.templates.find_mols_in_xyzs">
+<span class="sig-prename descclassname"><span class="pre">cgbind.templates.</span></span><span class="sig-name descname"><span class="pre">find_mols_in_xyzs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_same</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.find_mols_in_xyzs" title="Permalink to this definition">¶</a></dt>
 <dd><p>From a list of xyzs determine the bonds in the system, thus the distinct
 molecules in the system</p>
 <dl class="field-list simple">
@@ -315,9 +348,9 @@ every molecule (True)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="cgbind.templates.get_template">
-<code class="sig-prename descclassname">cgbind.templates.</code><code class="sig-name descname">get_template</code><span class="sig-paren">(</span><em class="sig-param">arch_name='m2l4'</em>, <em class="sig-param">folder_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.get_template" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="cgbind.templates.get_template">
+<span class="sig-prename descclassname"><span class="pre">cgbind.templates.</span></span><span class="sig-name descname"><span class="pre">get_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arch_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'m2l4'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cgbind.templates.get_template" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a template defined by the architectures arch_name. The saved objects
 are in</p>
 <dl class="field-list simple">
@@ -337,52 +370,56 @@ are stored. Has a default</p></li>
 </div>
 
 
-           </div>
-           
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../citing.html" class="btn btn-neutral float-right" title="Citing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="config.html" class="btn btn-neutral float-left" title="Config" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+              </div>
+              
+        
+            
+
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="config.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title">Config</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="../citing.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title">Citing</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
+        
+        </div>
+    </div>
+    <footer class="footer">
+    <div class="container">
+      <p>
+        
+          By Tom Young<br/>
+        
+            &copy; Copyright 2019-2021, Tom Young.<br/>
+      </p>
+    </div>
+  </footer>
+</main>
+
+
+      </div>
     </div>
   
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2019, Tom Young
-
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
-</footer>
-
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
 
   
-  
-    
-   
-
-</body>
+  </body>
 </html>

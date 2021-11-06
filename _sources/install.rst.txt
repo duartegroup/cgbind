@@ -10,10 +10,10 @@ dependencies.
     semi-emprical, DFT and ab initio calculations.
 
 
-PIP
+pip
 ---
 
-If the requirements (rdkit, numpy, scipy, networkx, Cython) are already available ``cgbind`` can be install with
+If the requirements (autode, rdkit, numpy, scipy, networkx, Cython) are already available ``cgbind`` can be install with
 `pip <https://pypi.org/project/pip/>`_::
 
     $ pip install cgbind
@@ -29,13 +29,9 @@ To install ``cgbind`` inside a conda environment first clone the repository and 
     $ cd cgbind
 
 
-then install the appropriate dependencies (you may want to create a new virtual environment)::
+then install the appropriate dependencies (you may want to create a new virtual environment) and install::
 
-    $ conda config --append channels conda-forge
-    $ conda install --file requirements.txt
-
-finally::
-
+    $ conda install --file requirements.txt -c conda-forge
     $ python setup.py install
 
 
