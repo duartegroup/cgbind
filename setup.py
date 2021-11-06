@@ -32,4 +32,6 @@ setup(name='cgbind',
       url='https://github.com/duartegroup/cgbind',
       license='MIT',
       author='Tom Young',
-      author_email='tom.young@chem.ox.ac.uk')
+      author_email='tom.young@chem.ox.ac.uk',
+      install_requires=['Cython'],
+      python_requires=">3.6")

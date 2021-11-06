@@ -1,3 +1,4 @@
+[![pytest](https://github.com/duartegroup/cgbind/actions/workflows/pytest.yml/badge.svg)](https://github.com/duartegroup/cgbind/actions/workflows/pytest.yml) [![PyPI version](https://badge.fury.io/py/cgbind.svg)](https://badge.fury.io/py/cgbind)
 ![alt text](cgbind/common/llogo.png) 
 
 **cgbind** automates the process of generating and analysing metallocage structures
