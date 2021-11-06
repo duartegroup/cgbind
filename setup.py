@@ -24,7 +24,7 @@ if '--esp_gen' in sys.argv:
 
 
 setup(name='cgbind',
-      version='1.0.2',
+      version='1.0.3',
       description='Metallocage construction and binding affinity calculations',
       packages=['cgbind'],
       package_data={'': ['lib/*']},
@@ -32,4 +32,6 @@ setup(name='cgbind',
       url='https://github.com/duartegroup/cgbind',
       license='MIT',
       author='Tom Young',
-      author_email='tom.young@chem.ox.ac.uk')
+      author_email='tom.young@chem.ox.ac.uk',
+      install_requires=['Cython'],
+      python_requires=">3.6")

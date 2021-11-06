@@ -1,6 +1,6 @@
+autode
 rdkit
 numpy
-pytest
 scipy
 networkx
 Cython
