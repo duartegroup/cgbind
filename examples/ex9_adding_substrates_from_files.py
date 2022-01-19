@@ -12,4 +12,4 @@ cage = Cage(linker, metal='Fe', metal_charge='3')
 substrate = Substrate(name='PhO-', filename='phenoxide.xyz', charge=-1, mult=1)
 
 cs = CageSubstrateComplex(cage, substrate)
-cs.print_xyz_file()
+cs.print_to_file()

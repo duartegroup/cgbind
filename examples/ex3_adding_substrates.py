@@ -12,13 +12,13 @@ substrate = Substrate(name='benzoquione', smiles='O=C1C=CC(C=C1)=O')
 # Build the cage.substrate complex from the cage and substrate objects
 cs_complex = CageSubstrateComplex(cage=cage, substrate=substrate,
                                   energy_method='repulsion')
-cs_complex.print_xyz_file(filename='C-1_bq_rep.xyz')
+cs_complex.print_to_file(filename='C-1_bq_rep.xyz')
 
 # Also generate a cage-substrate complex using a more realistic forcefield
 # for a better binding mode with: energy_method='electrostatic_fast'
 cs_complex = CageSubstrateComplex(cage=cage, substrate=substrate,
                                   energy_method='electrostatic_fast')
-cs_complex.print_xyz_file(filename='C-1_bq_fast-elec.xyz')
+cs_complex.print_to_file(filename='C-1_bq_fast-elec.xyz')
 
 """
 To calculate binding affinities see ex5

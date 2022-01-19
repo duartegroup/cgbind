@@ -29,7 +29,7 @@ the cage needs multple linkers, for example
 
 To generate a standard .xyz file that can be visualised with e.g. `Avogadro <https://avogadro.cc>`_ use
 
-    >>> cage.print_xyz_file()
+    >>> cage.print_to_file()
 
 
 
@@ -91,7 +91,7 @@ Creating a M24L48 cage is then as easy as:
     >>> from cgbind import Linker, Cage
     >>> linker = Linker(smiles='n1ccc(cc1)-c2sc(cc2)-c3ccncc3', arch_name='m24l48')
     >>> cage = Cage(linker=linker, metal='Pd')
-    >>> cage.print_xyz_file()
+    >>> cage.print_to_file()
 
 
 

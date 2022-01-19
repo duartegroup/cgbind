@@ -9,4 +9,4 @@ linker = Linker(name='linker_m4l6',
                 arch_name='m4l6')
 
 cage = Cage(linker, metal='Ga', metal_charge=3)
-cage.print_xyz_file()
+cage.print_to_file()

@@ -11,4 +11,4 @@ linker = Linker(name='m4l6_linker',
                 arch_name='m4l6n')
 
 cage = Cage(linker, metal='Fe', metal_charge='2')
-cage.print_xyz_file()
+cage.print_to_file()

@@ -21,7 +21,7 @@ cage = Cage(linker, metal='Pd', metal_charge='2')
 # using ORCA (with DFT) in a similar way but will take several hours
 cage.optimise(method=xtb, n_cores=2)
 
-cage.print_xyz_file()
+cage.print_to_file()
 
 """
 To optimise either the linker or the full cage at the DFT level see ex3

@@ -7,7 +7,7 @@ def gen_cage(linker_name, linker_smiles):
 
     linker = Linker(name=linker_name, smiles=linker_smiles, arch_name='m2l4')
     cage = Cage(linker, metal_charge=2, metal='Pd')
-    cage.print_xyz_file()
+    cage.print_to_file()
 
     return cage
 

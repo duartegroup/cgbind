@@ -11,6 +11,9 @@ from cgbind.geom import get_max_sphere_negative_radius
 from cgbind.geom import spherical_to_cart
 from cgbind.esp import get_esp_cube_lines
 
+from rdkit import Chem
+from scipy.spatial import distance_matrix
+
 
 class Cage(BaseStruct):
 
@@ -139,7 +142,7 @@ class Cage(BaseStruct):
             vdv_radii = get_vdw_radii(atom=self.atoms[min_atom_dist_id])
             # V = 4/3 π r^3, where r is the centroid -> closest atom distance,
             # minus it's VdW volume
-            return (4.0 / 3.0) * np.pi * (min_centriod_atom_dist - vdv_radii)**3
+            return (4.0 / 3.0) * np.pi * (min_centriod_atom_dist - vdv_radii) ** 3
 
         else:
             logger.error('Could not calculate the cavity volume. Returning 0.0')
@@ -200,7 +203,6 @@ class Cage(BaseStruct):
         :return: (int)
         """
         try:
-            print(self.linkers[0].x_atoms)
             n_donor_atoms = sum([len(linker.x_atoms) for linker in self.linkers])
 
             return max(sum([linker.n_h_acceptors for linker in self.linkers]) - n_donor_atoms, 0)
@@ -260,7 +262,7 @@ class Cage(BaseStruct):
         logger.info(f'Radius of largest sphere that can escape from the '
                     f'cavity = {radius}')
 
-        return (4.0 / 3.0) * np.pi * radius**3
+        return (4.0 / 3.0) * np.pi * radius ** 3
 
     def _is_linker_reasonable(self, linker):
 
@@ -281,6 +283,19 @@ class Cage(BaseStruct):
                        + sum([linker.charge for linker in self.linkers]))
         return None
 
+    def _init_mol_obj_and_connectivity(self):
+        # Create list of bonds (for .pdb file)
+        for n_linker in range(self.linkers[0].arch.n_linkers):
+            self.connectivity += [[ii + n_linker * self.linkers[n_linker].n_atoms for ii in i] for i in self.linkers[n_linker].connectivity]
+
+        # Initilize the RDKIT mol representation
+        self.mol_obj = Chem.Mol()
+        for n_linker in range(self.linkers[0].arch.n_linkers):
+            self.mol_obj = Chem.CombineMols(self.mol_obj, self.linkers[n_linker].mol_obj)
+        metal = Chem.MolFromSmiles(f"[{self.metal:s}" + "+" * int(self.metal_charge) + "]")
+        for n_metal in range(self.arch.n_metals):
+            self.mol_obj = Chem.CombineMols(self.mol_obj, metal)
+
     def _init_homoleptic_cage(self, linker):
         logger.info(f'Initialising a homoleptic cage')
         self.homoleptic = True
@@ -297,7 +312,11 @@ class Cage(BaseStruct):
         self.linkers = [linker for _ in range(linker.arch.n_linkers)]
         self.cage_template = linker.cage_template
 
+        self._init_mol_obj_and_connectivity()
+
         return None
+
+
 
     def _init_heteroleptic_cage(self, linkers):
         logger.info(f'Initialising a heteroleptic cage')
@@ -319,6 +338,8 @@ class Cage(BaseStruct):
         self.linkers = linkers
         self.cage_template = linkers[0].cage_template
 
+        self._init_mol_obj_and_connectivity()
+
         return None
 
     def _build(self, max_cost):
@@ -338,6 +359,40 @@ class Cage(BaseStruct):
                 return None
 
         return None
+
+    def add_bonds_to_mol_obj(self):
+        logger.info('Adding bonds between donor and metal in Rdkit (mol_obj) representation')
+
+        # Find indexes and coords of donor atoms
+        n_atoms_tot = 0
+        all_x_atoms_idx = []
+        all_x_atoms_coords = []
+        for linker in self.linkers:
+            for x_atom in linker.x_atoms:
+                absulte_idx = x_atom + n_atoms_tot
+                all_x_atoms_idx.append(absulte_idx)
+                all_x_atoms_coords.append(self.atoms[absulte_idx].coord)
+            n_atoms_tot += linker.n_atoms
+
+        # metal coords
+        metal_coords = np.array([self.atoms[idx].coord for idx in self.m_ids])
+
+        # Search for the closest metal to the donor, if metal is 3A away, do not create bond
+        editable_mol = Chem.EditableMol(self.mol_obj)
+        distance_array = distance_matrix(metal_coords, all_x_atoms_coords)
+        distance_min = np.min(distance_array, axis=0)
+        closest_metal = np.argmin(distance_array, axis=0)
+        for i, m_idx in enumerate(closest_metal):
+            if distance_min[i] < 4.0:  # TODO there should be more elegant way than just cut-off, for example find
+                # out to which motives the atoms were connected, for now this has to do, alternatively find 4 or 6
+                # (depending on coordination chemistry) the closest donor atoms
+                # that information should be in template!
+                # this is problematic, it gives errors sometimes.. :-(
+                editable_mol.AddBond(all_x_atoms_idx[i], self.m_ids[m_idx], order=Chem.rdchem.BondType.ZERO)
+
+        mol_obj = editable_mol.GetMol()
+
+        return mol_obj
 
     def __init__(self, linker=None, metal='M', metal_charge=0, linkers=None,
                  solvent=None, mult=1, name='cage', max_cost=5):
@@ -401,5 +456,8 @@ class Cage(BaseStruct):
         self._build(max_cost=max_cost)
 
         self.m_ids = self.get_metal_atom_ids()
+
+        self.mol_obj = self.add_bonds_to_mol_obj()
+
         logger.info(f'Generated cage successfully. '
                     f'Geometry is reasonable: {self.reasonable_geometry}')

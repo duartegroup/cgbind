@@ -9,7 +9,7 @@ cage = Cage(linker=Linker(name='linker',
 
 # Print the xyz file which can be loaded by e.g. Chimera and the ESP map over
 # the VdW surface
-cage.print_xyz_file()
+cage.print_to_file()
 
 # Generate and print a .cube file of the electrostatic potential using XTB
 # partial atomic charges which provides qualitatively identical results to

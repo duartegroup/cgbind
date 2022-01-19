@@ -11,7 +11,7 @@ linker = Linker(name='linker',
 cage = Cage(linker, metal='Pd', metal_charge='2')
 
 # Print a .xyz file from the cage's xyzs
-cage.print_xyz_file()
+cage.print_to_file()
 
 
 """

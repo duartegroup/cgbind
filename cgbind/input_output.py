@@ -1,7 +1,11 @@
 import os
 from cgbind.atoms import Atom
 from cgbind.log import logger
-from cgbind.exceptions import FileMalformatted, CgbindCritical
+from cgbind.exceptions import FileMalformatted, CgbindCritical, RequiresOpenBabel
+from rdkit import Chem
+from rdkit.Geometry import Point3D
+from tempfile import mkdtemp
+import shutil
 
 
 def xyz_file_to_atoms(filename):
@@ -11,6 +15,7 @@ def xyz_file_to_atoms(filename):
     :param filename: (str) .xyz filename
     :return: (list(Atom))
     """
+
     logger.info(f'Getting atoms from {filename}')
 
     atoms = []
@@ -29,7 +34,7 @@ def xyz_file_to_atoms(filename):
             raise FileMalformatted
 
         # XYZ lines should be the following 2 + n_atoms lines
-        xyz_lines = xyz_file.readlines()[1:n_atoms+1]
+        xyz_lines = xyz_file.readlines()[1:n_atoms + 1]
 
         for line in xyz_lines:
 
@@ -58,6 +63,92 @@ def atoms_to_xyz_file(atoms, filename, title_line=''):
             x, y, z = atom.coord
             print(f'{atom.label:<3} {x:^10.5f} {y:^10.5f} {z:^10.5f}',
                   file=xyz_file)
+
+    return None
+
+
+def atoms_to_pdb_file(atoms, connectivity, filename, title_line=''):
+    """
+    Print a standard .pdb file from a set of atoms
+
+    :param atoms: (list(Atom))
+    :param connectivity: (list(list))
+    :param filename: (str)
+    :param title_line: (str)
+    """
+
+    with open(filename, 'w') as pdb_file:
+        print("AUTHOR cgbind", file=pdb_file)
+        print(f"TITLE {title_line:s}", file=pdb_file)
+        for idx, atom in enumerate(atoms):
+            x, y, z = atom.coord
+            print(
+                f'HETATM{idx + 1:>5d}  {atom.label:<4s}UNL {0:5d}    {x:8.3f}{y:8.3f}{z:8.3f}{1.:6.2}{0.:6.2}          {atom.label:>2s}',
+                file=pdb_file)
+
+        if connectivity is not None:
+            for idx, connect in enumerate(connectivity):
+                string = f'{idx + 1:>5d}'
+                for connect_i in connect:
+                    string += f'{connect_i + 1:>5d}'
+                print(f'CONECT{string:s}', file=pdb_file)
+        print("END   ", file=pdb_file)
+
+    return None
+
+
+def atoms_to_mol_file(atoms, mol_obj, filename, title_line=''):
+    """
+    Print a standard .mol file from a set of atoms
+
+    :param atoms: (list(Atom))
+    :param mol_obj: (RDKit.mol object)
+    :param filename: (str)
+    :param title_line: (str)
+    """
+
+    conf = mol_obj.GetConformer()
+    for idx, atom in enumerate(atoms):
+        x, y, z = atom.coord
+        conf.SetAtomPosition(idx, Point3D(x, y, z))
+    Chem.rdmolfiles.MolToMolFile(mol_obj, filename)
+
+    return None
+
+
+def atoms_to_mol2_file(atoms, mol_obj, filename, title_line=''):
+    """
+    Print a standard .mol2 file from a set of atoms
+
+    :param atoms: (list(Atom))
+    :param mol_obj: (RDKit.mol object)
+    :param filename: (str)
+    :param title_line: (str)
+    """
+
+    try:
+        import openbabel
+    except ModuleNotFoundError:
+        logger.error('autode not found. Calculations not available')
+        raise RequiresOpenBabel
+
+    # Create temporary directory and save .mol file
+    tmpdir_path = mkdtemp()
+    atoms_to_mol_file(atoms, mol_obj, tmpdir_path + "/temp.mol", title_line='')
+
+    # Convert using Open Babel to .mol2 file
+    ob_conversion = openbabel.OBConversion()
+    ob_conversion.SetInAndOutFormats("mol", "mol2")
+    mol = openbabel.OBMol()
+    ob_conversion.ReadFile(mol, tmpdir_path + "/temp.mol")
+
+    # RDKIT does not allow more bonds than from valance, we change here 0-order bond to single bond
+    # this is needed if the file is used for minimization using Open Babel
+    for bond in openbabel.OBMolBondIter(mol):
+        if bond.GetBondOrder() == 0:
+            bond.SetBondOrder(1)
+    ob_conversion.WriteFile(mol, filename)
+    shutil.rmtree(tmpdir_path)
 
     return None
 
@@ -147,7 +238,7 @@ def molfile_to_atoms(filename):
         except ValueError:
             raise FileMalformatted
 
-        for line in mol_lines[1:n_atoms+1]:
+        for line in mol_lines[1:n_atoms + 1]:
             x, y, z, atom_label = line.split()[:4]
             atoms.append(Atom(atom_label, float(x), float(y), float(z)))
 
@@ -196,7 +287,7 @@ def mol2file_to_atoms(filename):
 
         # e.g.   @<TRIPOS>ATOM
         #        1 Pd1     -2.1334  12.0093  11.5778   Pd        1 RES1   2.0000
-        if '@' in line and 'ATOM' in line and len(mol_file_lines[n_line+1].split()) == 9:
+        if '@' in line and 'ATOM' in line and len(mol_file_lines[n_line + 1].split()) == 9:
             xyz_block = True
 
     # Fix any atom labels

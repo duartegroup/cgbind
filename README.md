@@ -37,7 +37,7 @@ from cgbind import Linker, Cage
 linker = Linker(smiles='C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1', arch_name='m2l4')
 
 cage = Cage(linker, metal='Pd')
-cage.print_xyz_file()
+cage.print_to_file()
 ```
 
 See [_examples/_](https://github.com/duartegroup/cgbind/tree/master/examples) and the 

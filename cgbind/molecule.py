@@ -11,7 +11,7 @@ from cgbind.geom import is_geom_reasonable
 from cgbind.config import Config
 from cgbind.bonds import get_bond_list_from_atoms
 from cgbind.input_output import get_atoms_from_file
-from cgbind.input_output import atoms_to_xyz_file
+from cgbind.input_output import atoms_to_xyz_file, atoms_to_pdb_file, atoms_to_mol_file, atoms_to_mol2_file
 from cgbind.geom import calc_com
 from cgbind import calculations
 
@@ -47,6 +47,7 @@ def extract_conformers_from_rdkit_mol_object(mol_obj, conf_ids):
 
 class BaseStruct:
 
+
     def print_xyz_file(self, filename=None):
         """
         Print a .xyz file from self.xyzs provided self.reasonable_geometry is
@@ -59,8 +60,32 @@ class BaseStruct:
             logger.error('Geometry is not reasonable')
 
         filename = filename if filename is not None else f'{self.name}.xyz'
-
         atoms_to_xyz_file(atoms=self.atoms, filename=filename)
+
+        return None
+
+    def print_to_file(self, filename=None):
+        """
+        Print a .xyz file from self.xyzs provided self.reasonable_geometry is
+        True
+
+        :param filename: (str) Override the default filename
+        :return: None
+        """
+        if not self.reasonable_geometry:
+            logger.error('Geometry is not reasonable')
+
+        if filename is None:
+            atoms_to_xyz_file(atoms=self.atoms, filename=f'{self.name}.xyz')
+        elif filename.endswith('.pdb'):
+            atoms_to_pdb_file(atoms=self.atoms, connectivity=self.connectivity, filename=filename)
+        elif filename.endswith('.mol'):
+            atoms_to_mol_file(atoms=self.atoms, mol_obj=self.mol_obj, filename=filename)
+        elif filename.endswith('.mol2'):
+            atoms_to_mol2_file(atoms=self.atoms, mol_obj=self.mol_obj, filename=filename)
+        else:
+            atoms_to_xyz_file(atoms=self.atoms, filename=filename)
+
         return None
 
     def get_coords(self):
@@ -158,6 +183,9 @@ class BaseStruct:
         self.atoms = []                                                     #: (list(list)) Geometry of the structure
         self.com = None                                                     #: (np.ndarray) Center of mass (x, y, z)
 
+        self.connectivity = []                                              #: (list(list)) Edges of molecular graph
+        self.mol_obj = None                                                 #: (RDKit.mol object)
+
         # If initialised from a structure file then set the atoms
         if filename is not None:
             self.set_atoms(atoms=get_atoms_from_file(filename))
@@ -214,6 +242,8 @@ class Molecule(BaseStruct):
             self.n_h_donors = rdMolDescriptors.CalcNumHBD(self.mol_obj)
             self.n_h_acceptors = rdMolDescriptors.CalcNumHBA(self.mol_obj)
 
+            self.connectivity = [[bonded.GetIdx() for bonded in atom.GetNeighbors()] for atom in self.mol_obj.GetAtoms()]
+
         except:
             logger.error('RDKit failed to generate mol objects')
             return
@@ -259,7 +289,6 @@ class Molecule(BaseStruct):
         self.smiles = smiles                                        #: (str) SMILES string
         self.n_confs = n_confs                                      #: (int) Number of conformers initialised with
 
-        self.mol_obj = None                                         #: (RDKit.mol object)
 
         self.n_rot_bonds = None                                     #: (int) Number of rotatable bonds
         self.n_h_donors = None                                      #: (int) Number of H-bond donors

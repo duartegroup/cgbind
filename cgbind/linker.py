@@ -14,6 +14,7 @@ from cgbind.x_motifs import find_x_motifs
 from cgbind.x_motifs import check_x_motifs
 from cgbind.x_motifs import get_cost_metal_x_atom_interaction
 from multiprocessing import Pool
+import re
 
 
 def get_linker_conformer(init_conformer, linker, x_motifs, template_linker):
@@ -94,7 +95,8 @@ class Linker(Molecule):
                 # If the number of bonds is lower than the max valancy for that
                 # atom then there should be a lone pair and a donor atom has
                 # been found
-                if n_bonds < max_valency:
+                # also check if atoms were not explicitly excluded from the search
+                if n_bonds < max_valency and atom_id not in self.excluded_donors:
                     donor_atom_ids.append(atom_id)
 
         logger.info(f'Found {len(donor_atom_ids)} possible X atoms')
@@ -217,6 +219,19 @@ class Linker(Molecule):
 
         return np.array(coords)
 
+    def _format_smiles(self, smiles):
+        """ Removes "@" from smiles, which are removed from donor list """
+        print("smiles", smiles)
+        if "@" in smiles:
+            letter_smiles =re.sub("[^@a-zA-Z]+", "", smiles)
+
+            temp = np.array([i for i in range(len(letter_smiles)) if letter_smiles.startswith('@', i)])
+            self.excluded_donors = temp - np.arange(len(temp))-1
+
+            return smiles.replace('@','')
+        else:
+            return smiles
+
     def __init__(self, arch_name, smiles=None, name='linker', charge=0,
                  n_confs=300, filename=None, use_etdg_confs=False):
         """
@@ -236,6 +251,12 @@ class Linker(Molecule):
 
         self.arch = None              #: (Arch object) Metallocage architecture
         self._set_arch(arch_name)
+
+
+        self.excluded_donors = []     #: (list(int)) list of atoms which are excluded from search of donors
+
+        if smiles is not None:
+            smiles = self._format_smiles(smiles)
 
         # May exit here if the specified architecture is not found
         super(Linker, self).__init__(smiles=smiles, name=name, charge=charge,
