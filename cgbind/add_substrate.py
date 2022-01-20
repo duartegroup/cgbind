@@ -194,11 +194,14 @@ def get_rotated_subst_coords(x, subst_coords):
      x axis etc."""
 
     x_rot, y_rot, z_rot = x
+    x_axis = np.array([1.0, 0.0, 0.0])
+    y_axis = np.array([0.0, 1.0, 0.0])
+    z_axis = np.array([0.0, 0.0, 1.0])
 
     rot_matrix = np.identity(3)
-    rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=geom.i, theta=x_rot))
-    rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=geom.j, theta=y_rot))
-    rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=geom.k, theta=z_rot))
+    rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=x_axis, theta=x_rot))
+    rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=y_axis, theta=y_rot))
+    rot_matrix = np.matmul(rot_matrix, rotation_matrix(axis=z_axis, theta=z_rot))
 
     return np.array([np.matmul(rot_matrix, coord) for coord in deepcopy(subst_coords)])
 

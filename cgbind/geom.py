@@ -143,6 +143,3 @@ def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
     return -np.min(cdist(point, cage_coords))
 
 
-i = np.array([1.0, 0.0, 0.0])
-j = np.array([0.0, 1.0, 0.0])
-k = np.array([0.0, 0.0, 1.0])
