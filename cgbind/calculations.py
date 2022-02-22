@@ -2,6 +2,7 @@ from cgbind.log import logger
 from cgbind.config import Config
 from cgbind.exceptions import RequiresAutodE
 
+from cgbind.obabel_wrapper import obabel, ob
 
 def optimise(molecule, method, keywords, n_cores=None, cartesian_constraints=None):
     """
@@ -40,6 +41,9 @@ def optimise(molecule, method, keywords, n_cores=None, cartesian_constraints=Non
         elif method == xtb:
             keywords = xtb.keywords.opt
 
+        elif method == ob:
+            None # TODO
+
         else:
             logger.critical('No keywords were set for the optimisation '
                             'calculation')
@@ -51,13 +55,26 @@ def optimise(molecule, method, keywords, n_cores=None, cartesian_constraints=Non
         if type(keywords) is list:
             keywords = OptKeywords(keywords)
 
-    opt = Calculation(name=molecule.name + '_opt',
-                      molecule=molecule,
-                      method=method,
-                      keywords=keywords,
-                      n_cores=n_cores,
-                      cartesian_constraints=cartesian_constraints)
-    opt.run()
+
+    if method == ob:
+        # Open babel is maintained separetly
+        # This is ugly.... but I don't know yet how to do it so nicely as Tom TODO
+        opt = obabel(molecule)
+        opt.optimise()  # TODO keywords
+        # TODO energy in normal units
+
+    else:
+        # If QM we use autode:
+
+
+        opt = Calculation(name=molecule.name + '_opt',
+                          molecule=molecule,
+                          method=method,
+                          keywords=keywords,
+                          n_cores=n_cores,
+                          cartesian_constraints=cartesian_constraints)
+        opt.run()
+
     molecule.energy = opt.get_energy()
     molecule.set_atoms(atoms=opt.get_final_atoms())
 

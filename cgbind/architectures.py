@@ -29,10 +29,13 @@ archs = []
 
 # Populate the available architectures from lib/
 folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib')
+print("PATH", folder_path)
 
 logger.info('Populating available architectures')
 for filename in os.listdir(folder_path):
     if filename.endswith('.obj'):
+        print(filename)
+
         pickled_file = open(os.path.join(folder_path, filename), 'rb')
         template = pickle.load(pickled_file)
 

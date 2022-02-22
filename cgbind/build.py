@@ -225,6 +225,8 @@ def build_homoleptic_cage(cage, max_cost):
         atoms.append(Atom(cage.metal, coord=metal_coord))
 
     cage.set_atoms(atoms)
+
+    cage.energy = cage_cost
     return None
 
 

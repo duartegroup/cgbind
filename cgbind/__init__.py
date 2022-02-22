@@ -21,7 +21,8 @@ try:
     from autode.wrappers.MOPAC import mopac
     from autode.wrappers.ORCA import orca
     from autode.wrappers.XTB import xtb
-    __all__ += ['mopac', 'orca', 'xtb']
+    from cgbind.obabel_wrapper import ob
+    __all__ += ['mopac', 'orca', 'xtb', 'ob']
 
 except ModuleNotFoundError:
     pass

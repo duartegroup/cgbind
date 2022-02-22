@@ -222,13 +222,13 @@ class Linker(Molecule):
     def _format_smiles(self, smiles):
         """ Removes "@" from smiles, which are removed from donor list """
         print("smiles", smiles)
-        if "@" in smiles:
-            letter_smiles =re.sub("[^@a-zA-Z]+", "", smiles)
+        if "!" in smiles:
+            letter_smiles =re.sub("[^!a-zA-Z]+", "", smiles)
 
-            temp = np.array([i for i in range(len(letter_smiles)) if letter_smiles.startswith('@', i)])
+            temp = np.array([i for i in range(len(letter_smiles)) if letter_smiles.startswith('!', i)])
             self.excluded_donors = temp - np.arange(len(temp))-1
 
-            return smiles.replace('@','')
+            return smiles.replace('!','')
         else:
             return smiles
 

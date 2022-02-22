@@ -127,7 +127,7 @@ def atoms_to_mol2_file(atoms, mol_obj, filename, title_line=''):
     """
 
     try:
-        import openbabel
+        from openbabel import openbabel
     except ModuleNotFoundError:
         logger.error('autode not found. Calculations not available')
         raise RequiresOpenBabel
