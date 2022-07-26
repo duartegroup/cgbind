@@ -9,7 +9,7 @@ from subprocess import Popen, DEVNULL, PIPE, STDOUT
 class obabel():
     # TODO are keywords allowed
     # TODO Check if babel exists
-    keywords = {"crit": 1e-6, 'ff': 'UFF', 'steps': 2500, 'rvdw': 10, 'rele': 10, 'freq': 10, 'log': True}
+    keywords = {"crit": 1e-6, 'ff': 'UFF', 'steps': 25000, 'rvdw': 10, 'rele': 10, 'freq': 10, 'log': True}
     energy = None
 
     def __init__(self, molecule=None):
