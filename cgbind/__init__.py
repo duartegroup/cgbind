@@ -26,3 +26,10 @@ try:
 
 except ModuleNotFoundError:
     pass
+
+try:
+    from cgbind.obabel_wrapper import ob
+    __all__ += ['ob']
+
+except ModuleNotFoundError:
+    pass
