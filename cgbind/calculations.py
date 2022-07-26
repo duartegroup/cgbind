@@ -18,42 +18,6 @@ def optimise(molecule, method, keywords, n_cores=None, cartesian_constraints=Non
     """
     logger.info('Running an optimisation calculation')
 
-    n_cores = Config.n_cores if n_cores is None else int(n_cores)
-
-    try:
-        from autode.calculation import Calculation
-        from autode.wrappers.XTB import xtb
-        from autode.wrappers.ORCA import orca
-        from autode.wrappers.keywords import OptKeywords
-
-    except ModuleNotFoundError:
-        logger.error('autode not found. Calculations not available')
-        raise RequiresAutodE
-
-    if keywords is None:
-        if method == orca:
-
-            keywords = OptKeywords(['LooseOpt', 'PBE', 'D3BJ', 'def2-SVP'])
-            logger.warning(f'No keywords were set for the optimisation but an'
-                           f' ORCA calculation was requested. '
-                           f'Using {str(keywords)}')
-
-        elif method == xtb:
-            keywords = xtb.keywords.opt
-
-        elif method == ob:
-            None # TODO
-
-        else:
-            logger.critical('No keywords were set for the optimisation '
-                            'calculation')
-            raise Exception
-
-    else:
-        # If the keywords are specified as a list convert them to a set of
-        # OptKeywords, required for autodE
-        if type(keywords) is list:
-            keywords = OptKeywords(keywords)
 
 
     if method == ob:
@@ -64,7 +28,44 @@ def optimise(molecule, method, keywords, n_cores=None, cartesian_constraints=Non
         # TODO energy in normal units
 
     else:
-        # If QM we use autode:
+    # If QM we use autode:
+
+        n_cores = Config.n_cores if n_cores is None else int(n_cores)
+
+        try:
+            from autode.calculation import Calculation
+            from autode.wrappers.XTB import xtb
+            from autode.wrappers.ORCA import orca
+            from autode.wrappers.keywords import OptKeywords
+
+        except ModuleNotFoundError:
+            logger.error('autode not found. Calculations not available')
+            raise RequiresAutodE
+
+        if keywords is None:
+            if method == orca:
+
+                keywords = OptKeywords(['LooseOpt', 'PBE', 'D3BJ', 'def2-SVP'])
+                logger.warning(f'No keywords were set for the optimisation but an'
+                               f' ORCA calculation was requested. '
+                               f'Using {str(keywords)}')
+
+            elif method == xtb:
+                keywords = xtb.keywords.opt
+
+            elif method == ob:
+                None # TODO
+
+            else:
+                logger.critical('No keywords were set for the optimisation '
+                                'calculation')
+                raise Exception
+
+        else:
+            # If the keywords are specified as a list convert them to a set of
+            # OptKeywords, required for autodE
+            if type(keywords) is list:
+                keywords = OptKeywords(keywords)
 
 
         opt = Calculation(name=molecule.name + '_opt',
