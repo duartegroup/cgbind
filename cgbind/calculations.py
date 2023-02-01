@@ -206,7 +206,7 @@ def get_charges(molecule) -> Optional[List[float]]:
     ade_mol = _cgbind_mol_to_autode(molecule)
 
     try:
-        from autode.calculation import Calculation
+        from autode.calculations import Calculation
         from autode.wrappers.XTB import xtb
         from autode.exceptions import MethodUnavailable
         from autode.wrappers.keywords import SinglePointKeywords
