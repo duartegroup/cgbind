@@ -40,7 +40,8 @@ def _cgbind_mol_to_autode(
 
     if hasattr(cgbind_mol, "conformers"):
         if cgbind_mol.conformers is not None:
-            for conf in cgbind_mol.conformers:
+            # todo right first conformer is same as the base molecule
+            for conf in cgbind_mol.conformers[1:]:
                 ade_conf = _conformer_to_autode(conf, ade_mol)
                 ade_mol.conformers.append(ade_conf)
 
@@ -87,6 +88,8 @@ def optimise(molecule, method, keywords, n_cores=None, cartesian_constraints=Non
 
     n_cores = Config.n_cores if n_cores is None else int(n_cores)
     ade_mol = _cgbind_mol_to_autode(molecule)
+    # autodE needs cartesian constraints in molecule
+    ade_mol.constraints.cartesian = cartesian_constraints
 
     try:
         from autode.calculations import Calculation
@@ -124,11 +127,10 @@ def optimise(molecule, method, keywords, n_cores=None, cartesian_constraints=Non
                       molecule=ade_mol,
                       method=method,
                       keywords=keywords,
-                      n_cores=n_cores,
-                      cartesian_constraints=cartesian_constraints)
+                      n_cores=n_cores)
     opt.run()
     molecule.energy = float(ade_mol.energy.to('Ha'))
-    # todo is it sufficient to only update coordinates?
+    # todo is it sufficient to only update coordinates? does atom have any other info?
     opt_coords = np.array(ade_mol.coordinates.to('ang')).copy()
     assert opt_coords.shape == (molecule.n_atoms, 3)
     molecule.set_atoms(coords=opt_coords)
