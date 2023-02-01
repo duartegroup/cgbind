@@ -89,7 +89,7 @@ def optimise(molecule, method, keywords, n_cores=None, cartesian_constraints=Non
     ade_mol = _cgbind_mol_to_autode(molecule)
 
     try:
-        from autode.calculation import Calculation
+        from autode.calculations import Calculation
         from autode.wrappers.XTB import xtb
         from autode.wrappers.ORCA import orca
         from autode.wrappers.keywords import OptKeywords
@@ -153,7 +153,7 @@ def singlepoint(molecule, method, keywords, n_cores=None):
     ade_mol = _cgbind_mol_to_autode(molecule)
 
     try:
-        from autode.calculation import Calculation
+        from autode.calculations import Calculation
         from autode.wrappers.XTB import xtb
         from autode.wrappers.ORCA import orca
         from autode.wrappers.keywords import SinglePointKeywords
