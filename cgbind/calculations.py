@@ -223,7 +223,7 @@ def get_charges(molecule) -> Optional[List[float]]:
                              keywords=xtb.keywords.sp)
         xtb_sp.run()
 
-        charges = [float(chrg) for chrg in ade_mol.partial_charges()]
+        charges = [float(chrg) for chrg in ade_mol.partial_charges]
 
     except MethodUnavailable:
         logger.error('Could not calculate without an XTB install')
