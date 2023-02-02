@@ -40,7 +40,7 @@ def _cgbind_mol_to_autode(
 
     if hasattr(cgbind_mol, "conformers"):
         if cgbind_mol.conformers is not None:
-            # todo right first conformer is same as the base molecule
+            # todo first conformer is same as the base molecule
             for conf in cgbind_mol.conformers[1:]:
                 ade_conf = _conformer_to_autode(conf, ade_mol)
                 ade_mol.conformers.append(ade_conf)
