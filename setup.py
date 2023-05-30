@@ -11,13 +11,8 @@ extensions = []
 # By default don't build the ESP C++ extension on Windows
 if '--esp_gen' in sys.argv or sys.platform != 'win32':
 
-    # Try to build the extension from the Cython generated C
-    if os.path.exists(os.path.join(here, 'cgbind', 'ext', 'esp_gen.c')):
-        ext = 'c'
-    else:
-        ext = 'pyx'
-
-    extensions.append(Extension('esp_gen', [f'cgbind/ext/esp_gen.{ext}']))
+    # Generate with cython always (to keep up with cython versions)
+    extensions.append(Extension('esp_gen', [f'cgbind/ext/esp_gen.pyx']))
 
 if '--esp_gen' in sys.argv:
     sys.argv.remove('--esp_gen')
