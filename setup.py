@@ -21,7 +21,6 @@ if '--esp_gen' in sys.argv or sys.platform != 'win32':
 if '--esp_gen' in sys.argv:
     sys.argv.remove('--esp_gen')
 
-package_data={"vltools.nms": ["nms.h", "nms_ext.pyx"]}
 setup(name='cgbind',
       version='1.0.4',
       description='Metallocage construction and binding affinity calculations',
